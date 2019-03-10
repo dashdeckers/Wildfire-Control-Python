@@ -1,5 +1,5 @@
-import state
 from elements import Dirt
+
 
 class Agent:
 	def __init__(self, x, y, env):
@@ -8,21 +8,20 @@ class Agent:
 		self.env = env
 
 	def get_pos(self):
-		return (self.x, self.y)
+		return self.x, self.y
 
 	def get_new_coords(self, direction):
 		if direction == "N":
-			return (self.x, self.y - 1)
+			return self.x, self.y - 1
 		if direction == "S":
-			return (self.x, self.y + 1)
+			return self.x, self.y + 1
 		if direction == "E":
-			return (self.x + 1, self.y)
+			return self.x + 1, self.y
 		if direction == "W":
-			return (self.x - 1, self.y)
+			return self.x - 1, self.y
 
 	def update(self):
 		if self.env.world[self.x][self.y].burning:
-			print("Agent has died")
 			return "Dead"
 
 	def move(self, direction):
