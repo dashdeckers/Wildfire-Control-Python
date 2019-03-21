@@ -1,12 +1,13 @@
 import elements
 import agent
+from random import randint
 
 class Environment:
 	def __init__(self, width, height):
 		self.running = True
 
-		self.wind_speed = 3
-		self.wind_vector = (1, 1)
+		self.wind_speed = randint(0, 3)
+		self.wind_vector = (randint(0, 1), randint(0, 1))
 
 		self.width = width
 		self.height = height
@@ -14,13 +15,19 @@ class Environment:
 		
 		self.burning_cells = set()
 		self.barriers = set()
-		self.agents = set()
+		self.agents = list()
+
+		self.total_fuel = self.get_total_fuel()
+		self.fuel_burnt = 0
 		
 		self.agents.add(agent.Agent(5, 5, self))
 		burning_cell = self.world[int(width/2)][int(height/2)]
 		burning_cell.burning = True
 		self.burning_cells.add(burning_cell)
-		
+
+	def reset_env(self):
+		self.__init__(self.width, self.height)
+
 	def create_world(self, width, height):
 		world = list()
 		for x in range(width):
@@ -61,7 +68,9 @@ class Environment:
 			status = agent.update()
 			if status == "Dead":
 				agents_to_remove.add(agent)
-		self.agents.difference_update(agents_to_remove)
+		self.agents = self.agents - agents_to_remove
+
+		self.fuel_burnt += len(self.burning_cells)
 
 		cells_to_remove = set()
 		cells_to_add = set()
@@ -79,12 +88,15 @@ class Environment:
 		self.burning_cells.difference_update(cells_to_remove)
 		self.burning_cells.update(cells_to_add)
 
-	def get_fitness(self):
+	def get_total_fuel(self):
 		total_fuel = 0
 		for x in range(self.world):
 			for y in range(self.world[0]):
 				total_fuel += self.get_at(x, y).fuel
 		return total_fuel
+
+	def get_fitness(self):
+		return self.fuel_burnt
 
 	def get_features(self):
 		features = list()
