@@ -1,3 +1,6 @@
+# Vim temp files
+*.swp
+
 # Tags file
 tags
 
