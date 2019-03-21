@@ -13,7 +13,7 @@ class ForestFire(gym.Env):
     def step(self, action):
         if action in ["N", "S", "E", "W"]:
             self.env.agents[0].move(action)
-        if action == "Dig":
+        if action == "D":
             self.env.agents[0].dig()
         self.env.update()
         return [self.env.get_features(), self.env.get_fitness(), self.env.running, {}]
