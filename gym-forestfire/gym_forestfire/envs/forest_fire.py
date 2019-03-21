@@ -13,7 +13,7 @@ class ForestFire(gym.Env):
     def step(self, action):
         if action in ["N", "S", "E", "W"]:
             self.env.agents[0].move(action)
-        if action == "Dig":
+        if action == "D":
             self.env.agents[0].dig()
         self.env.update()
         return [self.env.get_features(), self.env.get_fitness(), self.env.running, {}]
@@ -152,7 +152,10 @@ class Environment:
     def get_fitness(self):
         return self.fuel_burnt
 
+    # returns: [distance_to, angle_to, x, y] of closest fire + [#burning cells]
     def get_features(self):
+        if not self.burning_cells:
+            return [-1, -1, -1, -1, 0]
         features = list()
 
         for agent in self.agents:
