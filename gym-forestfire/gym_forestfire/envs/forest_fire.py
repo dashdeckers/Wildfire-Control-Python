@@ -135,7 +135,10 @@ class Environment:
     def get_fitness(self):
         return self.fuel_burnt
 
+    # returns: [distance_to, angle_to, x, y] of closest fire + [#burning cells]
     def get_features(self):
+        if not self.burning_cells:
+            return [-1, -1, -1, -1, 0]
         features = list()
 
         for agent in self.agents:
