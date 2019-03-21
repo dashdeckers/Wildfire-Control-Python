@@ -5,5 +5,6 @@ import gym_forestfire
 # and show the map with env.render()
 
 env = gym.make('gym-forestfire-v0')
+env2 = gym.make('CartPole-v0')
 env.render()
 print("Success!")
