@@ -7,7 +7,7 @@ class ForestFire(gym.Env):
     metadata = {'render.modes' : ['human']}
 
     def __init__(self):
-        self.env = Environment(10, 10)
+        self.env = Environment(20, 10)
 
     # If the action is not handled, the agent does nothing
     def step(self, action):
@@ -81,12 +81,6 @@ class Environment:
 
     def set_at(self, x, y, cell):
         self.world[x][y] = cell
-
-    def get_agent_coords(self):
-        coords = set()
-        for agent in self.agents:
-            coords.add((agent.x, agent.y))
-        return coords
 
     def inbounds(self, x, y):
         return x >= 0 and x < self.width and y >= 0 and y < self.height
