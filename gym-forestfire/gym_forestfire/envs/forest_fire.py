@@ -21,7 +21,7 @@ class ForestFire(gym.Env):
         if action == "DoNothing":
             pass
         self.env.update()
-        return [self.env.world, self.env.get_fitness(), self.env.running, {}]
+        return [self.env.get_features(), self.env.get_fitness(), self.env.running, {}]
 
     def reset(self):
         self.env.reset_env()
@@ -52,19 +52,19 @@ class Environment:
         self.running = True
 
         self.wind_speed = randint(0, 3)
-        self.wind_vector = (randint(0, 1), randint(0, 1))
+        self.wind_vector = (randint(-1, 1), randint(-1, 1))
 
         self.width = width
         self.height = height
         self.world = self.create_world(width, height)
-        
+
         self.burning_cells = set()
         self.barriers = set()
         self.agents = list()
 
         self.total_fuel = self.get_total_fuel()
         self.fuel_burnt = 0
-        
+
         self.agents.append(Agent(1, 1, self))
         burning_cell = self.world[int(width/2)][int(height/2)]
         burning_cell.burning = True
@@ -85,8 +85,9 @@ class Environment:
     def get_at(self, x, y):
         return self.world[x][y]
 
+    # Set the coordinates (x, y) by accessing world[y=row][x=col]
     def set_at(self, x, y, cell):
-        self.world[x][y] = cell
+        self.world[y][x] = cell
 
     def get_agent_coords(self):
         coords = set()
@@ -155,11 +156,12 @@ class Environment:
                     closest_fire = cell
 
             (ax, ay) = agent.get_pos()
-            features.add(distance)
-            features.add(closest_fire.angle_to(agent))
-            features.add(ax)
-            features.add(ay)
-            features.add(len(self.burning_cells))
+            features.append(distance)
+            features.append(closest_fire.angle_to(agent, self))
+            features.append(ax)
+            features.append(ay)
+            features.append(len(self.burning_cells))
+        return features
 
 
 class Element:
@@ -209,7 +211,7 @@ class Element:
         if metric == "manhattan":
             return abs(self.x - cell.x) + abs(self.y - cell.y)
         if metric == "euclidean":
-            return math.sqrt(math.pow(self.x - cell.x, 2) 
+            return math.sqrt(math.pow(self.x - cell.x, 2)
                             + math.pow(self.y - cell.y, 2))
 
     def wind_angle_to(self, cell, env):
@@ -253,7 +255,7 @@ class Grass(Element):
         self.r = 2
         self.color = "Light Green"
         self.type = "Grass"
-        
+
         self.burnable = True
         self.burning = False
         self.temp = 0

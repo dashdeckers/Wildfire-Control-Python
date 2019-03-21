@@ -1,14 +1,17 @@
 import math
 
+
 class Element:
 	def __init__(self, x, y):
 		self.x = x
 		self.y = y
 
 	def get_pos(self):
-		return (self.x, self.y)
+		return self.x, self.y
 
 	def get_color(self):
+		if self.type == "Dirt":
+			return self.color
 		if self.fuel <= 0:
 			return "Black"
 		if self.burning:
@@ -38,7 +41,7 @@ class Element:
 		env_factor = math.pow(env.wind_speed * angle + distance, -1)
 		self.temp += cell.heat * env_factor
 
-		if (self.temp > self.threshold and not self.burning):
+		if self.temp > self.threshold and not self.burning:
 			self.burning = True
 			return "Ignited"
 		return "No Change"
@@ -55,7 +58,7 @@ class Element:
 		(wx, wy) = env.wind_vector
 		return abs(math.atan2(wx*cy - wy*cx, wx*cx + wy*cy))
 
-	def angle_to(self, cell, env):
+	def angle_to(self, cell):
 		(cx, cy) = (self.x - cell.x, self.y - cell.y)
 		(rx, ry) = (0, 1)
 		return abs(math.atan2(rx*cy - ry*cx, rx*cx + ry*cy))
@@ -64,7 +67,7 @@ class Element:
 		neighbours = set()
 		for x in range(self.r + 1):
 			for y in range(self.r + 1 - x):
-				if (x == 0 and y == 0):
+				if x == 0 and y == 0:
 					continue
 				if env.inbounds(self.x + x, self.y + y):
 					cell = env.get_at(self.x + x, self.y + y)
@@ -99,6 +102,7 @@ class Grass(Element):
 		self.threshold = 5
 		self.fuel = 5
 
+
 class Dirt(Element):
 	def __init__(self, x, y):
 		super().__init__(x, y)
@@ -109,6 +113,6 @@ class Dirt(Element):
 		self.burnable = False
 		self.burning = False
 		self.temp = 0
-		self.heat = 3
-		self.threshold = 10
-		self.fuel = 5
+		self.heat = 0
+		self.threshold = 0
+		self.fuel = 0

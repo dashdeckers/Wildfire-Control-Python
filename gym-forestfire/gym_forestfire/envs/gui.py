@@ -1,5 +1,6 @@
 from tkinter import *
 
+
 class Cell():
     def __init__(self, master, x, y, size, element):
         self.master = master
@@ -9,7 +10,7 @@ class Cell():
         self.element = element
 
     def draw(self, draw_agent=False):
-        if self.master != None:
+        if self.master is not None:
             if draw_agent:
                 fill = "Pink"
             else:
@@ -22,6 +23,7 @@ class Cell():
             ymax = ymin + self.size
 
             self.master.create_rectangle(xmin, ymin, xmax, ymax, fill=fill, outline=outline)
+
 
 class Grid(Canvas):
     def __init__(self, master, env):
@@ -52,7 +54,7 @@ class Grid(Canvas):
         for row in range(len(self.grid)):
             for col in range(len(self.grid[0])):
                 if (row, col) in agent_coords:
-                    self.grid[row][col].draw(True)
+                    self.grid[row][col].draw(draw_agent=True)
                 else:
                     self.grid[row][col].draw()
 
@@ -68,5 +70,5 @@ class Grid(Canvas):
 
     def update_simulation(self, event):
         if self.env.running:
-            self.draw()
             self.after(10, self.env.update())
+            self.draw()
