@@ -1,3 +1,9 @@
+# Tags file
+tags
+
+# Any logging files
+*.log
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -49,6 +49,8 @@ class Environment:
 		cell = self.get_at(x, y)
 		return cell.type in ["Grass", "Dirt"] and not cell.burning
 
+	# Take the still running check out of the update() method,
+	# make an isTerminal() method which deals with this situation
 	def update(self):
 		print("Updating Environment")
 		if not self.agents or not self.burning_cells:

@@ -1,0 +1,1 @@
+An OpenAI Gym environment simulating the spread of a forest fire.
