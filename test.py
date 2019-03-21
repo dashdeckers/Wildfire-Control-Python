@@ -13,6 +13,7 @@ print("Success!")
 
 def run(env):
     while env.env.running:
-        env.step("")
+        action = env.action_space.sample()
+        env.step(action)
         env.render()
         time.sleep(0.1)

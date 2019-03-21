@@ -2,18 +2,20 @@ import gym, math
 from gym import error, spaces, utils
 from gym.utils import seeding
 from random import randint
+from gym import spaces
 
 class ForestFire(gym.Env):
     metadata = {'render.modes' : ['human']}
 
     def __init__(self):
+        self.action_space = spaces.Discrete(6)
         self.env = Environment(20, 10)
 
     # If the action is not handled, the agent does nothing
     def step(self, action):
-        if action in ["N", "S", "E", "W"]:
+        if action in ["N", "S", "E", "W"] or action in range(4):
             self.env.agents[0].move(action)
-        if action == "D":
+        if action in ["D", 4]:
             self.env.agents[0].dig()
         self.env.update()
         return [self.env.get_features(), self.env.get_fitness(), self.env.running, {}]
@@ -108,8 +110,6 @@ class Environment:
 
     def update(self):
         print("Updating Environment")
-        if not self.agents or not self.burning_cells:
-            self.running = False
 
         agents_to_remove = list()
         for agent in self.agents:
@@ -135,6 +135,10 @@ class Environment:
                             cells_to_add.add(n_cell)
         self.burning_cells.difference_update(cells_to_remove)
         self.burning_cells.update(cells_to_add)
+
+        if not self.agents or not self.burning_cells:
+            self.running = False
+
 
     def get_total_fuel(self):
         total_fuel = 0
@@ -295,13 +299,13 @@ class Agent:
         return (self.x, self.y)
 
     def get_new_coords(self, direction):
-        if direction == "N":
+        if direction in ["N", 0]:
             return (self.x, self.y - 1)
-        if direction == "S":
+        if direction in ["S", 1]:
             return (self.x, self.y + 1)
-        if direction == "E":
+        if direction in ["E", 2]:
             return (self.x + 1, self.y)
-        if direction == "W":
+        if direction in ["W", 3]:
             return (self.x - 1, self.y)
 
     def update(self):
