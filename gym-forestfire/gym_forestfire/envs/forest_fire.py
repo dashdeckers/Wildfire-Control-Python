@@ -1,11 +1,7 @@
-import gym
+import gym, math
 from gym import error, spaces, utils
 from gym.utils import seeding
 from random import randint
-import math
-
-# Somehow, we cannot import extra files so I just copied the relevant
-# classes into this file.
 
 class ForestFire(gym.Env):
     metadata = {'render.modes' : ['human']}
@@ -26,13 +22,12 @@ class ForestFire(gym.Env):
         self.env.reset_env()
 
     def render(self, mode='human', close=False):
-        for row in range(self.env.height):
-            for col in range(self.env.width):
-                # get_pos returns (x, y), where x == col and y == row
-                if self.env.agents and self.env.agents[0].get_pos() == (col, row):
+        for y in range(self.env.height):
+            for x in range(self.env.width):
+                if self.env.agents and self.env.agents[0].get_pos() == (x, y):
                     print("A", end="")
                     continue
-                element = self.env.world[row][col]
+                element = self.env.world[x][y]
                 if element.burning:
                     print("@", end="")
                     continue
@@ -84,9 +79,8 @@ class Environment:
     def get_at(self, x, y):
         return self.world[x][y]
 
-    # Set the coordinates (x, y) by accessing world[y=row][x=col]
     def set_at(self, x, y, cell):
-        self.world[y][x] = cell
+        self.world[x][y] = cell
 
     def get_agent_coords(self):
         coords = set()
@@ -133,8 +127,8 @@ class Environment:
 
     def get_total_fuel(self):
         total_fuel = 0
-        for x in range(self.height):
-            for y in range(self.width):
+        for x in range(self.width):
+            for y in range(self.height):
                 total_fuel += self.get_at(x, y).fuel
         return total_fuel
 
