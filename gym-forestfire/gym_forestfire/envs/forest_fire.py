@@ -40,6 +40,23 @@ class ForestFire(gym.Env):
                     print("O", end="")
             print("")
 
+    def vars(self):
+        # Print relevant information on wind
+        if (self.env.wind_vector[0] == 0 and self.env.wind_vector[1] == 0) or self.env.wind_speed == 0:
+            print("No wind!")
+        else:
+            wind_direction = ""
+            if self.env.wind_vector[1] == 1:
+                wind_direction += "S"
+            elif self.env.wind_vector[1] == -1:
+                wind_direction += "N"
+            if self.env.wind_vector[0] == 1:
+                wind_direction += "E"
+            elif self.env.wind_vector[0] == -1:
+                wind_direction += "W"
+            print("Wind direction: " + wind_direction)
+            print("Wind speed: ", self.env.wind_speed)
+
 
 class Environment:
     def __init__(self, width, height):
