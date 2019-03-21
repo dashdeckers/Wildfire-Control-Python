@@ -1,9 +1,8 @@
 import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
-
-#from state import Environment
-#from agent import Agent
+from random import randint
+import math
 
 # Somehow, we cannot import extra files so I just copied the relevant
 # classes into this file.
@@ -47,25 +46,6 @@ class ForestFire(gym.Env):
                     print("O", end="")
             print("")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-from random import randint
 
 class Environment:
     def __init__(self, width, height):
@@ -121,8 +101,6 @@ class Environment:
         cell = self.get_at(x, y)
         return cell.type in ["Grass", "Dirt"] and not cell.burning
 
-    # Take the still running check out of the update() method,
-    # make an isTerminal() method which deals with this situation
     def update(self):
         print("Updating Environment")
         if not self.agents or not self.burning_cells:
@@ -183,13 +161,6 @@ class Environment:
             features.add(ay)
             features.add(len(self.burning_cells))
 
-
-
-
-
-
-
-import math
 
 class Element:
     def __init__(self, x, y):
@@ -305,11 +276,6 @@ class Dirt(Element):
         self.fuel = 5
 
 
-
-
-
-
-
 class Agent:
     def __init__(self, x, y, env):
         self.x = x
@@ -341,4 +307,3 @@ class Agent:
 
     def dig(self):
         self.env.set_at(self.x, self.y, Dirt(self.x, self.y))
-
