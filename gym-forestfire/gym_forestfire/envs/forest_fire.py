@@ -13,13 +13,12 @@ class ForestFire(gym.Env):
     def __init__(self):
         self.env = Environment(10, 10)
 
+    # If the action is not handled, the agent does nothing
     def step(self, action):
         if action in ["N", "S", "E", "W"]:
             self.env.agents[0].move(action)
         if action == "Dig":
             self.env.agents[0].dig()
-        if action == "DoNothing":
-            pass
         self.env.update()
         return [self.env.get_features(), self.env.get_fitness(), self.env.running, {}]
 
