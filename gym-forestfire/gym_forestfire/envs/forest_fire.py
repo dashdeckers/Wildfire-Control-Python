@@ -1,13 +1,15 @@
 import gym, math
 from gym import error, spaces, utils
 from gym.utils import seeding
-from random import randint
+import random as r
+#from random import randint
 from gym import spaces
 
 class ForestFire(gym.Env):
     metadata = {'render.modes' : ['human']}
 
     def __init__(self):
+        r.seed(0)
         self.action_space = spaces.Discrete(6)
         self.env = Environment(20, 10)
 
@@ -64,8 +66,8 @@ class Environment:
     def __init__(self, width, height):
         self.running = True
 
-        self.wind_speed = randint(0, 3)
-        self.wind_vector = (randint(-1, 1), randint(-1, 1))
+        self.wind_speed = r.randint(0, 3)
+        self.wind_vector = (r.randint(-1, 1), r.randint(-1, 1))
 
         self.width = width
         self.height = height
