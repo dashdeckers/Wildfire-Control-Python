@@ -1,9 +1,7 @@
 import gym, math
-from gym import error, spaces, utils
-from gym.utils import seeding
 import random as r
-#from random import randint
-from gym import spaces
+from gym import error, spaces, utils, spaces
+from gym.utils import seeding
 
 class ForestFire(gym.Env):
     metadata = {'render.modes' : ['human']}
