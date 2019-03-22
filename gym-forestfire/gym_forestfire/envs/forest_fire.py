@@ -42,8 +42,7 @@ class ForestFire(gym.Env):
                     print("O", end="")
             print("")
 
-    def vars(self):
-        # Print relevant information on wind
+    def wind_info(self):
         if (self.env.wind_vector[0] == 0 and self.env.wind_vector[1] == 0) or self.env.wind_speed == 0:
             print("No wind!")
         else:
@@ -138,7 +137,6 @@ class Environment:
 
         if not self.agents or not self.burning_cells:
             self.running = False
-
 
     def get_total_fuel(self):
         total_fuel = 0
