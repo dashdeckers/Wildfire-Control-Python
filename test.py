@@ -1,9 +1,6 @@
 import gym, gym_forestfire
 import time
 
-# Usage: pass an action ("N", "S", "E", "W", "D", "") to sim.step(),
-# and show the map with sim.render()
-
 sim = gym.make('gym-forestfire-v0')
 #cart = gym.make('CartPole-v0')
 #lake = gym.make('FrozenLake-v0')
