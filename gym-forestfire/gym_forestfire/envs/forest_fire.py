@@ -7,6 +7,42 @@ from gym.utils import seeding
 WIDTH = 20
 HEIGHT = 10
 
+"""
+> Features need to return:
+
+For each agent:
+    The position (x, y) of the agent
+    For the furthest fire element in each direction (N, S, E, W):
+        The distance between the fire and the agent
+        The angle to the fire from the agent
+The total number of burning cells
+
+Resulting in a list of length: (# agents) * 10 + 1
+
+This change needs to be reflected in the observation space
+
+
+> Q-Table approach:
+
+All simple implementation use a pre-initialized matrix as a Q-Table,
+but because we have a continuous state space we do not have a fixed
+number of either columns or rows (the other is the action space).
+
+To work around this, we have the following options (from easy to hard):
+- Discretize the state space by rounding the distance and angle vars
+- Implement a HashTable, which doesn't need to know the size beforehand
+- Implement a DQN, which approximates the Q-Function with a Neural Net
+
+Discretization and the HashTable should be used together, and should be
+our first attempt. It will be less accurate (rounding), less optimized
+than a matrix, and might use a lot of memory (inherent to the Q-Table
+approach)
+
+The DQN will use less memory and won't introduce inaccuracy via rounding,
+but will be much more computationally expensive.
+
+"""
+
 class ForestFire(gym.Env):
     metadata = {'render.modes' : ['human']}
 

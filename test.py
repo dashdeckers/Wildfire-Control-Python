@@ -1,32 +1,35 @@
 import gym, gym_forestfire
 import time
 
-# Usage: pass an action ("N", "S", "E", "W", "D", "") to step()
-# and show the map with env.render()
+# Usage: pass an action ("N", "S", "E", "W", "D", "") to sim.step(),
+# and show the map with sim.render()
 
-env = gym.make('gym-forestfire-v0')
-env.render()
+sim = gym.make('gym-forestfire-v0')
+#cart = gym.make('CartPole-v0')
+#lake = gym.make('FrozenLake-v0')
+sim.render()
 print("Success!")
 
 
-def run(env):
-    while env.env.running:
-        action = env.action_space.sample()
-        env.step(action)
-        env.render()
+def run(sim):
+    while sim.env.running:
+        action = sim.action_space.sample()
+        sim.step(action)
+        sim.render()
         time.sleep(0.1)
+
 
 def time_simulation_run():
     import timeit
     setup = """
 import gym, gym_forestfire
-env = gym.make('gym-forestfire-v0')
+sim = gym.make('gym-forestfire-v0')
     """
     code = """
-env.reset()
-while env.env.running:
-    action = env.action_space.sample()
-    env.step(action)
+sim.reset()
+while sim.env.running:
+    action = sim.action_space.sample()
+    sim.step(action)
     """
     num_runs = 100
     total = timeit.timeit(setup=setup, stmt=code, number=num_runs)
