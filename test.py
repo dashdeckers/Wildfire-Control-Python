@@ -5,7 +5,6 @@ import time
 # and show the map with env.render()
 
 env = gym.make('gym-forestfire-v0')
-env2 = gym.make('CartPole-v0')
 env.render()
 print("Success!")
 
@@ -26,8 +25,8 @@ env = gym.make('gym-forestfire-v0')
     code = """
 env.reset()
 while env.env.running:
-    #action = env.action_space.sample()
-    env.step("")
+    action = env.action_space.sample()
+    env.step(action)
     """
     num_runs = 100
     total = timeit.timeit(setup=setup, stmt=code, number=num_runs)
