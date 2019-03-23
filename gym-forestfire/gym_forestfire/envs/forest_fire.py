@@ -1,7 +1,11 @@
 import gym, math
 import random as r
+import numpy as np
 from gym import error, spaces, utils, spaces
 from gym.utils import seeding
+
+WIDTH = 20
+HEIGHT = 10
 
 class ForestFire(gym.Env):
     metadata = {'render.modes' : ['human']}
@@ -9,7 +13,11 @@ class ForestFire(gym.Env):
     def __init__(self):
         r.seed(0)
         self.action_space = spaces.Discrete(6)
-        self.env = Environment(20, 10)
+        # feature vector: [distance_to NF, angle_to NF, x, y, #b_cells]
+        self.observation_space = spaces.Box(low=np.array([0, -math.pi, 0, 0, 0]),
+                high=np.array([WIDTH+HEIGHT, math.pi, WIDTH, HEIGHT, WIDTH*HEIGHT]),
+                dtype=np.float32)
+        self.env = Environment(WIDTH, HEIGHT)
 
     # If the action is not handled, the agent does nothing
     def step(self, action):
@@ -108,8 +116,6 @@ class Environment:
         return cell.type in ["Grass", "Dirt"] and not cell.burning
 
     def update(self):
-        print("Updating Environment")
-
         agents_to_remove = list()
         for agent in self.agents:
             status = agent.update()
