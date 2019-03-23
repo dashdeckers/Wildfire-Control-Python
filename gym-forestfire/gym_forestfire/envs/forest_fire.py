@@ -152,7 +152,7 @@ class Environment:
         return total_fuel
 
     def get_fitness(self):
-        return self.fuel_burnt
+        return (-1) * self.fuel_burnt
 
     # returns: [distance_to, angle_to, x, y] of closest fire + [#burning cells]
     def get_features(self):
