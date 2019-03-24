@@ -121,10 +121,8 @@ class Environment:
         self.total_fuel = self.get_total_fuel()
         self.fuel_burnt = 0
 
-        self.agents.append(Agent(1, 1, self))
-        burning_cell = self.world[int(width/2)][int(height/2)]
-        burning_cell.burning = True
-        self.burning_cells.add(burning_cell)
+        self.add_agent_at(1, 1)
+        self.set_fire_at("center")
 
     def reset_env(self):
         self.__init__(self.width, self.height)
@@ -137,6 +135,19 @@ class Environment:
                 line.append(Grass(x, y))
             world.append(line)
         return world
+
+    def add_agent_at(self, x, y):
+        self.agents.append(Agent(x, y, self))
+
+    # takes an (x, y) tuple or a string
+    def set_fire_at(self, pos):
+        if pos == "center":
+            (x, y) = (int(self.width/2), int(self.height/2))
+        else:
+            (x, y) = pos
+        burning_cell = self.world[x][y]
+        burning_cell.burning = True
+        self.burning_cells.add(burning_cell)
 
     def get_at(self, x, y):
         return self.world[x][y]
