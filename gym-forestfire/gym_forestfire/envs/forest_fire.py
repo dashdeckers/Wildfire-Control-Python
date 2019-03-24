@@ -44,7 +44,16 @@ class ForestFire(gym.Env):
         # the environment is a 2D array of elements, plus an agent
         self.env = Environment(WIDTH, HEIGHT)
 
-    # take action and update the environment
+    """
+    Take an action and update the environment.
+
+    This returns: 
+
+    The features in a list, 
+    The reward/fitness as a value,
+    A boolean for whether the simultion is still running,
+    Some debugging info.
+    """
     def step(self, action):
         if action in ["N", "S", "E", "W"] or action in range(4):
             self.env.agents[0].move(action)
@@ -52,7 +61,7 @@ class ForestFire(gym.Env):
             self.env.agents[0].dig()
         # If the action is not handled, the agent does nothing
         self.env.update()
-        return [self.env.get_features(), self.env.get_fitness(), self.env.running, {}]
+        return [self.env.get_features(rounding=True), self.env.get_fitness(), self.env.running, {}]
 
     # resets environment to default values
     def reset(self):
@@ -99,7 +108,7 @@ class ForestFire(gym.Env):
     Returns the minimum and maximum possible observation values.
     This does not generalize to n_agents, only works for 1 agent!
     """
-    def get_max_min_obs():
+    def get_max_min_obs(self):
         min_ob = np.zeros(14)
         max_ob = np.zeros(14)
         # x coordinate
@@ -235,6 +244,8 @@ class Environment:
                         status = n_cell.get_heat_from(cell, self)
                         if status == "Ignited":
                             cells_to_add.add(n_cell)
+        self.burning_cells = list(set(self.burning_cells) - cells_to_remove)
+        self.burning_cells += list(cells_to_add)
 
         if not self.agents or not self.burning_cells:
             self.running = False
@@ -277,7 +288,7 @@ class Environment:
 
     Resulting in a list of length: (# agents) * 10 + 4
     """
-    def get_features(self):
+    def get_features(self, rounding=False):
         if not self.burning_cells:
             return [-1] * (len(self.agents) * 10 + 4)
 
@@ -286,8 +297,14 @@ class Environment:
             features += [agent.x, agent.y]
             corner_points = self.get_corner_points_of_fire()
             for fire in corner_points:
-                features.append(fire.distance_to(agent, "euclidean"))
-                features.append(fire.angle_to(agent))
+                if rounding:
+                    distance = round(fire.distance_to(agent, "euclidean"), 3)
+                    features.append(distance)
+                    angle = round(fire.angle_to(agent), 3)
+                    features.append(angle)
+                else:
+                    features.append(fire.distance_to(agent, "euclidean"))
+                    features.append(fire.angle_to(agent))
 
         features.append(len(self.burning_cells))
         features.append(self.wind_speed)
