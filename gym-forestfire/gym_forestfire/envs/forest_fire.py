@@ -7,27 +7,6 @@ from gym.utils import seeding
 WIDTH = 20
 HEIGHT = 10
 
-"""
-> Q-Table approach:
-
-All simple implementation use a pre-initialized matrix as a Q-Table,
-but because we have a continuous state space we do not have a fixed
-number of either columns or rows (the other is the action space).
-
-To work around this, we have the following options (from easy to hard):
-- Discretize the state space by rounding the distance and angle vars
-- Implement a HashTable, which doesn't need to know the size beforehand
-- Implement a DQN, which approximates the Q-Function with a Neural Net
-
-Discretization and the HashTable should be used together, and should be
-our first attempt. It will be less accurate (rounding), less optimized
-than a matrix, and might use a lot of memory (inherent to the Q-Table
-approach)
-
-The DQN will use less memory and won't introduce inaccuracy via rounding,
-but will be much more computationally expensive.
-
-"""
 
 class ForestFire(gym.Env):
     metadata = {'render.modes' : ['human']}
@@ -43,6 +22,8 @@ class ForestFire(gym.Env):
         self.observation_space = spaces.Box(low=min_ob, high=max_ob, dtype=np.float32)
         # the environment is a 2D array of elements, plus an agent
         self.env = Environment(WIDTH, HEIGHT)
+        # how many decimal point to round the features to (False = no rounding)
+        self.rounding = 1 # False
 
     """
     Take an action and update the environment.
@@ -61,11 +42,12 @@ class ForestFire(gym.Env):
             self.env.agents[0].dig()
         # If the action is not handled, the agent does nothing
         self.env.update()
-        return [self.env.get_features(rounding=True), self.env.get_fitness(), self.env.running, {}]
+        return [self.env.get_features(self.rounding), self.env.get_fitness(), self.env.running, {}]
 
     # resets environment to default values
     def reset(self):
         self.env.reset_env()
+        return self.env.get_features(self.rounding)
 
     # prints an ascii map of the environment
     def render(self, mode='human', close=False):
@@ -111,8 +93,8 @@ class ForestFire(gym.Env):
     This does not generalize to n_agents, only works for 1 agent!
     """
     def get_max_min_obs(self):
-        min_ob = np.zeros(14)
-        max_ob = np.zeros(14)
+        min_ob = np.zeros(10)#14)
+        max_ob = np.zeros(10)#14)
         # x coordinate
         min_ob[0] = 0
         max_ob[0] = WIDTH
@@ -127,6 +109,7 @@ class ForestFire(gym.Env):
             else:
                 min_ob[idx] = math.pi * (-1)
                 max_ob[idx] = math.pi
+        """
         # num burning cells
         min_ob[10] = 0
         max_ob[10] = WIDTH * HEIGHT
@@ -139,6 +122,7 @@ class ForestFire(gym.Env):
         # wind y
         min_ob[13] = 0
         max_ob[13] = 1
+        """
         return min_ob, max_ob
 
 
@@ -152,8 +136,8 @@ class Environment:
         self.world = self.create_world(width, height)
 
         # wind variables
-        self.wind_speed = r.randint(0, 3)
-        self.wind_vector = (r.randint(-1, 1), r.randint(-1, 1))
+        self.wind_speed = 3# r.randint(0, 3)
+        self.wind_vector = (1, 1) #(r.randint(-1, 1), r.randint(-1, 1))
 
         # book-keeping variables
         self.burning_cells = list()
@@ -354,6 +338,9 @@ class Environment:
     The windspeed and direction
 
     Resulting in a list of length: (# agents) * 10 + 4
+
+    By default, do not round values. If an integer is passed to it, it
+    will round the features to that many decimal points
     """
     def get_features(self, rounding=False):
         if not self.burning_cells:
@@ -365,18 +352,18 @@ class Environment:
             corner_points = self.get_corner_points_of_fire()
             for fire in corner_points:
                 if rounding:
-                    distance = round(fire.distance_to(agent, "euclidean"), 3)
+                    distance = round(fire.distance_to(agent, "euclidean"), rounding)
                     features.append(distance)
-                    angle = round(fire.angle_to(agent), 3)
+                    angle = round(fire.angle_to(agent), rounding)
                     features.append(angle)
                 else:
                     features.append(fire.distance_to(agent, "euclidean"))
                     features.append(fire.angle_to(agent))
-
+        """
         features.append(len(self.burning_cells))
         features.append(self.wind_speed)
         features += list(self.wind_vector)
-
+        """
         return features
 
 
@@ -488,13 +475,13 @@ class Grass(Element):
         self.r = 2
         self.color = "Light Green"
         self.type = "Grass"
-
         self.burnable = True
         self.burning = False
         self.temp = 0
-        self.heat = 3
-        self.threshold = 5
-        self.fuel = 5
+
+        self.heat = 2
+        self.threshold = 3
+        self.fuel = 6
 
 
 class Dirt(Element):
@@ -503,13 +490,13 @@ class Dirt(Element):
         self.r = 0
         self.color = "Brown"
         self.type = "Dirt"
-
         self.burnable = False
         self.burning = False
         self.temp = 0
+
         self.heat = 3
-        self.threshold = 10
-        self.fuel = 5
+        self.threshold = 1
+        self.fuel = 1
 
 
 class Agent:
