@@ -67,8 +67,13 @@ really learn, however.
 But, the map is too small and the fire is spreading too fast for the agent
 to achieve a decent score, especially not while still learning!
 
-The reward could be tweaked a bit? I don't think thats the best idea right
-now, but Marco did say something about that we should ask him again.
+The reward needs to be tweaked a bit. We cant use fuel burnt because that
+gives insanely low rewards in general and more importantly it gives higher
+rewards if the agent dies and that cant be fixed with a penalty for dying.
+Reward should be positive for the amount of not burning tiles left?
+
+Another problem is that it has a high reward at the start so it doesnt do
+anything. Dunno what to do about that, probably something kinda technical.
 
 I also didnt do a parameter sweep yet, so maybe we should do that as well.
 
@@ -82,6 +87,8 @@ class Q_Learner:
         self.QT = dict()
         # list of rewards over episodes
         self.rewards = list()
+        # to print the map if we get a record score
+        self.best_reward = -99999999
         # chance of taking random action
         self.eps = 0.1
         # delayed reward factor
@@ -93,11 +100,20 @@ class Q_Learner:
         self.debug["State Exists Count"] = 0
         self.debug["Q-Table Accessed Count"] = 0
 
+    # reset the Q-Table, rewards, and simulation
     def reset(self):
         self.QT = dict()
         self.rewards = list()
         self.sim.reset()
 
+    """
+    A dynamic Q-Table: QT[state] = numpy.array(num_actions)
+
+    Access the reward for a state, action pair: Q(s, a)
+    by calling qtable(state, action).
+
+    Get all actions and rewards via qtable(state)
+    """
     def qtable(self, state, action=None):
         self.debug["Q-Table Accessed Count"] += 1
         state = tuple(state)
@@ -108,12 +124,22 @@ class Q_Learner:
             return self.QT[state]
         return self.QT[state][action]
 
+    # choose an action via e-greedy method
     def choose_action(self, state):
         if random.uniform(0, 1) < self.eps:
             return self.sim.action_space.sample()
         else:
             return np.argmax(self.qtable(tuple(state)))
 
+    """
+    Q-Learning algorithm
+
+    Until the simulation is over:
+
+    Choose an action (randomly e percent of the time, optimally otherwise)
+    Update the environment with that action
+    Update the Q-Table entry for the previous state and action
+    """
     def learn(self, n_episodes=1000):
         self.eps = 0.1
         for e in range(n_episodes):
@@ -130,9 +156,14 @@ class Q_Learner:
                         np.max(self.qtable(sprime)) - self.qtable(state, action))
                 state = sprime
 
+            if total_reward > self.best_reward:
+                self.best_reward = total_reward
+                self.sim.render()
+
             print(f"Episode {e + 1}: Total Reward --> {total_reward}")
             self.rewards.append(total_reward)
 
+    # play the simulation by choosing optimal Q-Table actions
     def play_optimal(self):
         self.eps = 0
         running = True
@@ -143,6 +174,7 @@ class Q_Learner:
             state, _, running, _ = self.sim.step(action)
             time.sleep(0.1)
 
+    # plot the rewards against the episodes
     def show_rewards(self):
         plt.plot(self.rewards)
         plt.ylabel("Reward Values")

@@ -4,8 +4,8 @@ import numpy as np
 from gym import error, spaces, utils, spaces
 from gym.utils import seeding
 
-WIDTH = 30
-HEIGHT = 30
+WIDTH = 20
+HEIGHT = 20
 
 
 class ForestFire(gym.Env):
@@ -42,7 +42,10 @@ class ForestFire(gym.Env):
             self.env.agents[0].dig()
         # If the action is not handled, the agent does nothing
         self.env.update()
-        return [self.env.get_features(self.rounding), self.env.get_fitness(), self.env.running, {}]
+        return [self.env.get_features(self.rounding),
+                self.env.get_fitness(),
+                self.env.running,
+                {}]
 
     # resets environment to default values
     def reset(self):
@@ -72,7 +75,8 @@ class ForestFire(gym.Env):
 
     # prints information on windspeed and direction
     def wind_info(self):
-        if (self.env.wind_vector[0] == 0 and self.env.wind_vector[1] == 0) or self.env.wind_speed == 0:
+        if (self.env.wind_vector[0] == 0 and self.env.wind_vector[1] == 0) \
+                or self.env.wind_speed == 0:
             print("No wind!")
         else:
             wind_direction = ""
@@ -483,9 +487,9 @@ class Grass(Element):
         self.burning = False
         self.temp = 0
 
-        self.heat = 2
+        self.heat = 0.2
         self.threshold = 3
-        self.fuel = 6
+        self.fuel = 60
 
 
 class Dirt(Element):
