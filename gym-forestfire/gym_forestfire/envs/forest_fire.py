@@ -106,6 +106,8 @@ class ForestFire(gym.Env):
 
     """
     Returns the minimum and maximum possible observation values.
+
+    TODO:
     This does not generalize to n_agents, only works for 1 agent!
     """
     def get_max_min_obs(self):
@@ -157,6 +159,7 @@ class Environment:
         self.burning_cells = list()
         self.agents = list()
         self.fuel_burnt = 0
+        self.borders_reached = ""
 
         # create an agent and set the fire
         self.add_agent_at(1, 1)
@@ -200,7 +203,18 @@ class Environment:
 
     # checks if (x, y) is within bounds
     def inbounds(self, x, y):
-        return x >= 0 and x < self.width and y >= 0 and y < self.height
+        return 0 <= x < self.width and 0 <= y < self.height
+
+    # checks if (x, y) is at the border, if yes it remembers which one
+    def atbounds(self, x, y):
+        if y == 0 and "N" not in self.borders_reached:
+            self.borders_reached += "N"
+        if y == self.height - 1 and "S" not in self.borders_reached:
+            self.borders_reached += "S"
+        if x == self.width - 1 and "E" not in self.borders_reached:
+            self.borders_reached += "E"
+        if x == 0 and "W" not in self.borders_reached:
+            self.borders_reached += "W"
 
     # checks if the cell at (x, y) is traversable
     def traversable(self, x, y):
@@ -213,6 +227,7 @@ class Environment:
     Checks if any agents are on burning cells and should die
 
     Keeps count of the total amount of fuel burnt up
+    Keeps track of the borders reached by the fire
 
     Spreads the fire:
         Reduces fuel of burning cells, removing them if burnt out
@@ -234,6 +249,7 @@ class Environment:
         cells_to_remove = set()
         cells_to_add = set()
         for cell in self.burning_cells:
+            self.atbounds(cell.x, cell.y)
             status = cell.time_step()
             if status == "Burnt Out":
                 cells_to_remove.add(cell)
@@ -262,7 +278,51 @@ class Environment:
     def get_fitness(self):
         return (-1) * self.fuel_burnt
 
-    # returns the most N, S, E, and W burning cells
+    # returns the middle burnt-out cell along a border if there are no
+    # burning cells on that border
+    # TODO: has some index errors, does not work yet
+    def get_border_point(self, border):
+        c_vals = list()
+        if border in ["N", "S"]:
+            axis_length = self.width
+        elif border in ["E", "W"]:
+            axis_length = self.height
+        for i in range(axis_length-1):
+            print(i)
+            if border == "N":
+                e = self.world[0][i]
+            if border == "S":
+                e = self.world[axis_length - 1][i]
+            if border == "E":
+                e = self.world[i][0]
+            if border == "W":
+                e = self.world[i][axis_length - 1]
+
+            if e.burning:
+                return False
+            if e.fuel == 0 and border in ["N", "S"]:
+                c_vals.append(e.x)
+            if e.fuel == 0 and border in ["E", "W"]:
+                c_vals.append(e.y)
+
+        if c_vals:
+            avg_c = sum(c_vals) / len(c_vals)
+            if border == "N":
+                return self.world[int(avg_c)][0]
+            if border == "S":
+                return self.world[int(avg_c)][axis_length - 1]
+            if border == "E":
+                return self.world[0][int(avg_c)]
+            if border == "W":
+                return self.world[axis_length - 1][int(avg_c)]
+
+    """
+    Returns the most N, S, E, and W burning cells
+
+    Incase the fire has reached the edge of the map and burnt out,
+    we take the center point (=average) of the burnt out cells as
+    our point instead.
+    """
     def get_corner_points_of_fire(self):
         N = S = E = W = self.burning_cells[0]
         for fire in self.burning_cells:
@@ -274,6 +334,13 @@ class Environment:
                 N = fire
             if fire.y > S.y:
                 S = fire
+        """
+        for direction in self.borders_reached:
+            point = self.get_border_point(direction)
+            if point:
+                exec(f"{direction} = point")
+                print(f"{direction} = {point}")
+        """
         return (N, S, E, W)
 
     """
