@@ -4,8 +4,8 @@ import numpy as np
 from gym import error, spaces, utils, spaces
 from gym.utils import seeding
 
-WIDTH = 20
-HEIGHT = 20
+WIDTH = 10
+HEIGHT = 10
 
 
 class ForestFire(gym.Env):
@@ -146,6 +146,7 @@ class Environment:
 
         # book-keeping variables
         self.burning_cells = list()
+        self.burnt_cells = list()
         self.agents = list()
         self.fuel_burnt = 0
         self.borders_reached = ""
@@ -217,6 +218,7 @@ class Environment:
 
     Keeps count of the total amount of fuel burnt up
     Keeps track of the borders reached by the fire
+    Keeps track of the number of burnt out cells
 
     Spreads the fire:
         Reduces fuel of burning cells, removing them if burnt out
@@ -252,6 +254,8 @@ class Environment:
         self.burning_cells = list(set(self.burning_cells) - cells_to_remove)
         self.burning_cells += list(cells_to_add)
 
+        self.burnt_cells += cells_to_remove
+
         if not self.agents or not self.burning_cells:
             self.running = False
 
@@ -265,10 +269,17 @@ class Environment:
 
     # returns the amount of fuel already burnt as a negative number
     def get_fitness(self):
+        fire_spread = len(self.burning_cells) + len(self.burnt_cells) / 10
+        death_penalty = 0
+        if not self.agents:
+            death_penalty = 100000
+        return int((-1) * (fire_spread + death_penalty))
+        """
         extra_penalty = 0
         if not self.agents:
             extra_penalty = int(self.fuel_burnt / 4)
         return (-1) * self.fuel_burnt - extra_penalty
+        """
 
     # returns the middle burnt-out cell along a border if there are no
     # burning cells on that border

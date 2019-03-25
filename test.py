@@ -52,7 +52,7 @@ The DQN will use less memory and won't introduce inaccuracy via rounding,
 but will be much more computationally expensive.
 
 
-> Q-Learner:
+> Q-Learner (Q-Table approach):
 
 The class implements Q-Learning with:
 - A dynamic table (a dict / hashtable)
@@ -65,18 +65,31 @@ give identical actions and get updated together. We can see that it doesnt
 really learn, however.
 
 But, the map is too small and the fire is spreading too fast for the agent
-to achieve a decent score, especially not while still learning!
+to achieve a decent score, especially not while still learning! (fixed)
 
 The reward needs to be tweaked a bit. We cant use fuel burnt because that
 gives insanely low rewards in general and more importantly it gives higher
 rewards if the agent dies and that cant be fixed with a penalty for dying.
 Reward should be positive for the amount of not burning tiles left?
+Or maybe it should be the number of burning cells, plus a discounted
+negative reward for the number of burnt cells? (did this)
+It also needs a significant negative reward for dying. (and this)
+
+We could also decay the exploration rate e at a slowing rate:
+e = min_e + (max_e - min_e) * e^(-e_decay_rate * episode_num)
+
+Maybe we could somehow pass knowledge that digging is almost always good
+to the algorithm by optimistic initialization of those actions? But then
+optimal action is always digging, not moving...
 
 Another problem is that it has a high reward at the start so it doesnt do
 anything. Dunno what to do about that, probably something kinda technical.
 
 I also didnt do a parameter sweep yet, so maybe we should do that as well.
 
+Lastly, 1000 episodes are just not enough. In much simpler environment
+examples (like frozenlake), they run for 10,000 episodes and check the
+average reward per 1000 episodes.
 """
 
 class Q_Learner:
@@ -151,9 +164,13 @@ class Q_Learner:
                 action = self.choose_action(state)
                 sprime, reward, running, _ = self.sim.step(action)
                 total_reward += reward
+                """
                 self.qtable(state)[action] = self.qtable(state, action) + \
                         self.alpha * (reward + self.gamma * \
                         np.max(self.qtable(sprime)) - self.qtable(state, action))
+                """
+                self.qtable(state)[action] = (1 - self.alpha) * self.qtable(state, action) \
+                        + self.alpha * (reward + self.gamma * np.max(self.qtable(sprime)))
                 state = sprime
 
             if total_reward > self.best_reward:
