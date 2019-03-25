@@ -4,8 +4,8 @@ import numpy as np
 from gym import error, spaces, utils, spaces
 from gym.utils import seeding
 
-WIDTH = 20
-HEIGHT = 10
+WIDTH = 30
+HEIGHT = 30
 
 
 class ForestFire(gym.Env):
@@ -260,7 +260,10 @@ class Environment:
 
     # returns the amount of fuel already burnt as a negative number
     def get_fitness(self):
-        return (-1) * self.fuel_burnt
+        extra_penalty = 0
+        if not self.agents:
+            extra_penalty = int(self.fuel_burnt / 2)
+        return (-1) * self.fuel_burnt - extra_penalty
 
     # returns the middle burnt-out cell along a border if there are no
     # burning cells on that border
