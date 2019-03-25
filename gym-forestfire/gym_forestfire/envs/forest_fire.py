@@ -68,6 +68,7 @@ class ForestFire(gym.Env):
                 if element.type == "Dirt":
                     print("O", end="")
             print("")
+        print("")
 
     # prints information on windspeed and direction
     def wind_info(self):
@@ -262,7 +263,7 @@ class Environment:
     def get_fitness(self):
         extra_penalty = 0
         if not self.agents:
-            extra_penalty = int(self.fuel_burnt / 2)
+            extra_penalty = int(self.fuel_burnt / 4)
         return (-1) * self.fuel_burnt - extra_penalty
 
     # returns the middle burnt-out cell along a border if there are no
