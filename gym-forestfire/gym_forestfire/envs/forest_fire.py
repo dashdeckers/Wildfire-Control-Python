@@ -44,7 +44,7 @@ class ForestFire(gym.Env):
         self.env.update()
         return [self.env.get_features(self.rounding),
                 self.env.get_fitness(),
-                self.env.running,
+                not self.env.running, # to be consistent with conventions
                 {}]
 
     # resets environment to default values

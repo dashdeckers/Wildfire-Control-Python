@@ -75,12 +75,10 @@ Or maybe it should be the number of burning cells, plus a discounted
 negative reward for the number of burnt cells? (did this)
 It also needs a significant negative reward for dying. (and this)
 
-We could also decay the exploration rate e at a slowing rate:
-e = min_e + (max_e - min_e) * e^(-e_decay_rate * episode_num)
-
-Maybe we could somehow pass knowledge that digging is almost always good
-to the algorithm by optimistic initialization of those actions? But then
-optimal action is always digging, not moving...
+Maybe a more precise modelling of the reward:
+(Bonues) * #_Fires_Hitting_Dirt - (Penalty) * #_Burning_Cells
+If no agents --> Big negative reward
+If no fire   --> Big positive reward
 
 Another problem is that it has a high reward at the start so it doesnt do
 anything. Dunno what to do about that, probably something kinda technical.
@@ -96,28 +94,41 @@ class Q_Learner:
     def __init__(self, sim):
         # simulation
         self.sim = sim
+        # preprocess states (lists to tuples)
+        self.preprocess = True
         # q-table
         self.QT = dict()
         # list of rewards over episodes
         self.rewards = list()
         # to print the map if we get a record score
         self.best_reward = -99999999
-        # chance of taking random action
-        self.eps = 0.1
+        # chance of taking random action, decays over time
+        self.eps = 1
+        self.max_eps = 1
+        self.min_eps = 0.01
+        self.eps_decay_rate = 0.001
         # delayed reward factor
-        self.gamma = 1
+        self.gamma = 0.99
         # learning rate
-        self.alpha = 0.3
-        # dict to store some debugging info
-        self.debug = dict()
-        self.debug["State Exists Count"] = 0
-        self.debug["Q-Table Accessed Count"] = 0
+        self.alpha = 0.1
+        # set the hyper parameters
+        self.set_params()
 
     # reset the Q-Table, rewards, and simulation
     def reset(self):
         self.QT = dict()
         self.rewards = list()
         self.sim.reset()
+        self.eps = 1
+
+    # set appropriate variables depending on the environment
+    def set_params(self):
+        if self.sim.spec.id == "FrozenLake-v0":
+            self.preprocess = False
+            self.alpha = 0.1
+            self.gamma = 0.99
+        elif self.sim.spec.id == "gym-forestfire-v0":
+            self.preprocess = True
 
     """
     A dynamic Q-Table: QT[state] = numpy.array(num_actions)
@@ -128,21 +139,28 @@ class Q_Learner:
     Get all actions and rewards via qtable(state)
     """
     def qtable(self, state, action=None):
-        self.debug["Q-Table Accessed Count"] += 1
-        state = tuple(state)
+        if self.preprocess:
+            state = tuple(state)
         if state not in self.QT:
             self.QT[state] = np.zeros(self.sim.action_space.n)
-        self.debug["State Exists Count"] += 1
         if action is None:
             return self.QT[state]
         return self.QT[state][action]
 
+    # decay epsilon (slower rate of decay for higher episode_num)
+    def decay_epsilon(self, episode_num):
+        self.eps = self.min_eps + \
+            (self.max_eps - self.min_eps) * \
+            np.exp(-self.eps_decay_rate * episode_num)
+
     # choose an action via e-greedy method
     def choose_action(self, state):
-        if random.uniform(0, 1) < self.eps:
-            return self.sim.action_space.sample()
+        if self.preprocess:
+            state = tuple(state)
+        if random.uniform(0, 1) > self.eps:
+            return np.argmax(self.qtable(state))
         else:
-            return np.argmax(self.qtable(tuple(state)))
+            return self.sim.action_space.sample()
 
     """
     Q-Learning algorithm
@@ -155,14 +173,14 @@ class Q_Learner:
     """
     def learn(self, n_episodes=1000):
         self.eps = 0.1
-        for e in range(n_episodes):
-            running = True
+        for episode in range(n_episodes):
+            done = False
             state = self.sim.reset()
             total_reward = 0
 
-            while running:
+            while not done:
                 action = self.choose_action(state)
-                sprime, reward, running, _ = self.sim.step(action)
+                sprime, reward, done, _ = self.sim.step(action)
                 total_reward += reward
                 """
                 self.qtable(state)[action] = self.qtable(state, action) + \
@@ -173,22 +191,24 @@ class Q_Learner:
                         + self.alpha * (reward + self.gamma * np.max(self.qtable(sprime)))
                 state = sprime
 
+            self.decay_epsilon(episode)
+
             if total_reward > self.best_reward:
                 self.best_reward = total_reward
                 self.sim.render()
 
-            print(f"Episode {e + 1}: Total Reward --> {total_reward}")
+            print(f"Episode {episode + 1}: Total Reward --> {total_reward}")
             self.rewards.append(total_reward)
 
     # play the simulation by choosing optimal Q-Table actions
     def play_optimal(self):
         self.eps = 0
-        running = True
+        done = False
         state = self.sim.reset()
-        while running:
+        while not done:
             self.sim.render()
             action = self.choose_action(state)
-            state, _, running, _ = self.sim.step(action)
+            state, _, done, _ = self.sim.step(action)
             time.sleep(0.1)
 
     # plot the rewards against the episodes
@@ -197,14 +217,24 @@ class Q_Learner:
         plt.ylabel("Reward Values")
         plt.xlabel("Episodes")
         plt.show()
-        print(f"Average reward: {sum(self.rewards)/len(self.rewards)}")
+
+    # prints the average reward per k episodes
+    def average_reward_per_k_episodes(self, k):
+        n_episodes = len(self.rewards)
+        rewards_per_k = np.split(np.array(self.rewards), n_episodes/k)
+        count = k
+        print(f"Average reward per {k} episodes:")
+        for r in rewards_per_k:
+            print(count, ":", str(sum(r/k)))
+            count += k
 
 # acts randomly
 def run_random(sim):
-    running = True
-    while running:
+    done = False
+    sim.reset()
+    while not done:
         action = sim.action_space.sample()
-        _, _, running, _ = sim.step(action)
+        _, _, done, _ = sim.step(action)
         sim.render()
         time.sleep(0.1)
 
@@ -227,5 +257,7 @@ while sim.env.running:
 
 
 
-sim = gym.make('gym-forestfire-v0')
-Q = Q_Learner(sim)
+forestfire = gym.make('gym-forestfire-v0')
+frozenlake = gym.make('FrozenLake-v0')
+Q1 = Q_Learner(forestfire)
+Q2 = Q_Learner(frozenlake)
