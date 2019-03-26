@@ -87,10 +87,10 @@ class Q_Learner:
         # to print the map if we get a record score
         self.best_reward = -99999999
         # chance of taking random action, decays over time
-        self.eps = 1
         self.max_eps = 1
         self.min_eps = 0.01
         self.eps_decay_rate = 0.001
+        self.eps = self.max_eps
         # delayed reward factor
         self.gamma = 0.99
         # learning rate
@@ -111,8 +111,18 @@ class Q_Learner:
             self.preprocess = False
             self.alpha = 0.1
             self.gamma = 0.99
+            self.max_eps = 1
+            self.min_eps = 0.01
+            self.eps_decay_rate = 0.001
+            self.eps = self.max_eps
         elif self.sim.spec.id == "gym-forestfire-v0":
             self.preprocess = True
+            self.alpha = 0.2
+            self.gamma = 0.99
+            self.max_eps = 1
+            self.min_eps = 0.2
+            self.eps_decay_rate = 0.001
+            self.eps = self.max_eps
 
     """
     A dynamic Q-Table: QT[state] = numpy.array(num_actions)

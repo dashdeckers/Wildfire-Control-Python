@@ -301,8 +301,8 @@ class Environment:
     Spread Blocked:
     Positively counts the number of times a fire wanted to spread to
     a cell which was not burnable.
-    TODO: Should maybe be tweaked to count each barrier only once?
-            (do this in element.get_neighbours() and env.update())
+
+    TODO: Spread Blocked + some measure of percentage of map burnt
     """
     def get_fitness(self, version="Burning Cells"):
         death_penalty = 0
