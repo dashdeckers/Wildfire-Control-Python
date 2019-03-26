@@ -1,0 +1,4 @@
+-e git+https://github.com/dashdeckers/Wildfire-Control-Python@00e3918df7bc547a1a36ef8a97116b0c80bf3d07#egg=gym_forestfire&subdirectory=gym-forestfire
+keras-rl==0.4.2
+matplotlib==3.0.3
+tensorflow==1.13.1

@@ -3,6 +3,8 @@ import time, random
 import numpy as np
 import matplotlib.pyplot as plt
 
+from keras.models import Sequential
+
 """
 > Features:
 
@@ -197,12 +199,12 @@ class Q_Learner:
             self.rewards.append(total_reward)
 
     # play the simulation by choosing optimal Q-Table actions
-    def play_optimal(self):
+    def play_optimal(self, eps=0):
         done = False
         state = self.sim.reset()
         while not done:
             self.sim.render()
-            action = self.choose_action(state, eps=0)
+            action = self.choose_action(state, eps=eps)
             state, _, done, _ = self.sim.step(action)
             time.sleep(0.1)
 
