@@ -61,11 +61,22 @@ The class implements Q-Learning with:
 - Reduced the features (removed the last 4 entries). 
 
 The last two points are done in the hope that similar states collapse to 
-give identical actions and get updated together. We can see that it doesnt 
-really learn, however.
+give identical actions and get updated together. We can see that that's
+not enough, however.
 
-But, the map is too small and the fire is spreading too fast for the agent
-to achieve a decent score, especially not while still learning! (fixed)
+I didnt do a parameter sweep yet, so maybe we should do that.
+
+Another problem is that it has a high reward at the start so it doesnt do
+anything. Dunno what to do about that, probably something kinda technical.
+
+Lastly, 1000 episodes are just not enough. In much simpler environment
+examples (like frozenlake), they run for 10,000 episodes and check the
+average reward per 1000 episodes.
+
+In general, this is not gonna cut it. We need a DQN.
+
+
+> Reward:
 
 The reward needs to be tweaked a bit. We cant use fuel burnt because that
 gives insanely low rewards in general and more importantly it gives higher
@@ -80,14 +91,6 @@ Maybe a more precise modelling of the reward:
 If no agents --> Big negative reward
 If no fire   --> Big positive reward
 
-Another problem is that it has a high reward at the start so it doesnt do
-anything. Dunno what to do about that, probably something kinda technical.
-
-I also didnt do a parameter sweep yet, so maybe we should do that as well.
-
-Lastly, 1000 episodes are just not enough. In much simpler environment
-examples (like frozenlake), they run for 10,000 episodes and check the
-average reward per 1000 episodes.
 """
 
 class Q_Learner:
