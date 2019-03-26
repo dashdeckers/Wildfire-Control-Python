@@ -138,10 +138,13 @@ class Q_Learner:
             np.exp(-self.eps_decay_rate * episode_num)
 
     # choose an action via e-greedy method
-    def choose_action(self, state):
+    def choose_action(self, state, eps=None):
         if self.preprocess:
             state = tuple(state)
-        if random.uniform(0, 1) > self.eps:
+
+        eps_threshold = self.eps if eps is None else eps
+
+        if random.uniform(0, 1) > eps_threshold:
             return np.argmax(self.qtable(state))
         else:
             return self.sim.action_space.sample()
@@ -156,7 +159,6 @@ class Q_Learner:
     Update the Q-Table entry for the previous state and action
     """
     def learn(self, n_episodes=1000):
-        self.eps = 0.1
         for episode in range(n_episodes):
             done = False
             state = self.sim.reset()
@@ -186,12 +188,11 @@ class Q_Learner:
 
     # play the simulation by choosing optimal Q-Table actions
     def play_optimal(self):
-        self.eps = 0
         done = False
         state = self.sim.reset()
         while not done:
             self.sim.render()
-            action = self.choose_action(state)
+            action = self.choose_action(state, eps=0)
             state, _, done, _ = self.sim.step(action)
             time.sleep(0.1)
 
