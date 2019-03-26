@@ -385,7 +385,8 @@ class Environment:
         return (N, S, E, W)
 
     """
-    Returns:
+    > Features:
+
     For each agent:
         The position (x, y) of the agent
         For the furthest fire element in each direction (N, S, E, W):
@@ -395,9 +396,22 @@ class Environment:
     The windspeed and direction
 
     Resulting in a list of length: (# agents) * 10 + 4
+    [a_x, a_y, DN, AN, DS, AS, DE, AE, DW, AW, #fires, w_speed, w_x, w_y]
 
-    By default, do not round values. If an integer is passed to it, it
-    will round the features to that many decimal points
+    These still need to be improved though!!!
+
+    > Ranges:
+
+    - Discrete Values:
+    a_x             --> [0, WIDTH)
+    a_y             --> [0, HEIGHT)
+    #fires          --> [0, WIDTH * HEIGHT]
+    w_speed         --> [0, 3]
+    w_x, w_y        --> [0, 1]
+
+    - Continuous Values:
+    DN, DS, DE, DW  --> [0, WIDTH + HEIGHT] or [0, sqrt(WIDTH^2 + HEIGHT^2)]
+    AN, AS, AE, AW  --> [-pi, pi]
     """
     def get_features(self, rounding=False):
         if not self.burning_cells:
