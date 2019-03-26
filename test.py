@@ -61,35 +61,16 @@ The class implements Q-Learning with:
 - Reduced the features (removed the last 4 entries). 
 
 The last two points are done in the hope that similar states collapse to 
-give identical actions and get updated together. We can see that that's
-not enough, however.
+give identical actions and get updated together. This really distorts the
+agents view of the environment, however, and introduces a lot of inaccuracy
 
 I didnt do a parameter sweep yet, so maybe we should do that.
 
-Another problem is that it has a high reward at the start so it doesnt do
-anything. Dunno what to do about that, probably something kinda technical.
+Also, 1000 episodes are just not enough. Much more simple environments
+(like frozenlake) need to run for 10,000 episodes before reaching decent
+scores.
 
-Lastly, 1000 episodes are just not enough. In much simpler environment
-examples (like frozenlake), they run for 10,000 episodes and check the
-average reward per 1000 episodes.
-
-In general, this is not gonna cut it. We need a DQN.
-
-
-> Reward:
-
-The reward needs to be tweaked a bit. We cant use fuel burnt because that
-gives insanely low rewards in general and more importantly it gives higher
-rewards if the agent dies and that cant be fixed with a penalty for dying.
-Reward should be positive for the amount of not burning tiles left?
-Or maybe it should be the number of burning cells, plus a discounted
-negative reward for the number of burnt cells? (did this)
-It also needs a significant negative reward for dying. (and this)
-
-Maybe a more precise modelling of the reward:
-(Bonues) * #_Fires_Hitting_Dirt - (Penalty) * #_Burning_Cells
-If no agents --> Big negative reward
-If no fire   --> Big positive reward
+In general, this is not gonna cut it anyway. We need a DQN.
 
 """
 

@@ -4,8 +4,23 @@ import numpy as np
 from gym import error, spaces, utils, spaces
 from gym.utils import seeding
 
+# Map Dimensions
 WIDTH = 10
 HEIGHT = 10
+# "Random" or [wind_speed, (wind_x, wind_y)]
+WIND_PARAMS = [3, (1, 1)]
+# False or num_decimals
+FEAT_ROUNDING = 1
+# "Spread Blocked", "Fuel Burnt" or "Burning Cells"
+FITNESS_MEASURE = "Spread Blocked"
+# (agent_x, agent_y)
+AGENT_LOC = (1, 1)
+# Slow spread: high fuel (~60), low heat (<0.3), medium threshold (~3)
+GRASS_PARAMS = {
+    "heat" : 0.2,
+    "threshold" : 3,
+    "fuel" : 60
+}
 
 
 class ForestFire(gym.Env):
@@ -23,7 +38,7 @@ class ForestFire(gym.Env):
         # the environment is a 2D array of elements, plus an agent
         self.env = Environment(WIDTH, HEIGHT)
         # how many decimal point to round the features to (False = no rounding)
-        self.rounding = 1 # False
+        self.rounding = FEAT_ROUNDING
 
     """
     Take an action and update the environment.
@@ -43,7 +58,7 @@ class ForestFire(gym.Env):
         # If the action is not handled, the agent does nothing
         self.env.update()
         return [self.env.get_features(self.rounding),
-                self.env.get_fitness(),
+                self.env.get_fitness(FITNESS_MEASURE),
                 not self.env.running, # to be consistent with conventions
                 {}]
 
@@ -141,8 +156,12 @@ class Environment:
         self.world = self.create_world(width, height)
 
         # wind variables
-        self.wind_speed = 3# r.randint(0, 3)
-        self.wind_vector = (1, 1) #(r.randint(-1, 1), r.randint(-1, 1))
+        if WIND_PARAMS == "Random":
+            self.wind_speed = r.randint(0, 3)
+            self.wind_vector = (r.randint(-1, 1), r.randint(-1, 1))
+        else:
+            self.wind_speed = WIND_PARAMS[0]
+            self.wind_vector = WIND_PARAMS[1]
 
         # book-keeping variables
         self.burning_cells = list()
@@ -150,9 +169,10 @@ class Environment:
         self.agents = list()
         self.fuel_burnt = 0
         self.borders_reached = ""
+        self.barriers = set()
 
         # create an agent and set the fire
-        self.add_agent_at(1, 1)
+        self.add_agent_at(AGENT_LOC[0], AGENT_LOC[1])
         self.set_fire_at("center")
 
     # resets the environment by calling the initializer again
@@ -245,7 +265,8 @@ class Environment:
             if status == "Burnt Out":
                 cells_to_remove.add(cell)
             if status == "No Change":
-                neighbours = cell.get_neighbours(self)
+                neighbours, barrier_list = cell.get_neighbours(self)
+                self.barriers.update(barrier_list)
                 for n_cell in neighbours:
                     if n_cell.burnable:
                         status = n_cell.get_heat_from(cell, self)
@@ -267,19 +288,36 @@ class Environment:
                 total_fuel += self.get_at(x, y).fuel
         return total_fuel
 
-    # returns the amount of fuel already burnt as a negative number
-    def get_fitness(self):
-        fire_spread = len(self.burning_cells) + len(self.burnt_cells) / 10
+    """
+    Returns the fitness of the current state
+
+    Burning Cells:
+    Negatively counts the number of burning cells and also counts
+    the number of burnt out cells but with a factor of 1/10
+
+    Fuel Burnt:
+    Negatively counts the total amount of fuel already burnt up
+
+    Spread Blocked:
+    Positively counts the number of times a fire wanted to spread to
+    a cell which was not burnable.
+    TODO: Should maybe be tweaked to count each barrier only once?
+            (do this in element.get_neighbours() and env.update())
+    """
+    def get_fitness(self, version="Burning Cells"):
         death_penalty = 0
         if not self.agents:
             death_penalty = 100000
-        return int((-1) * (fire_spread + death_penalty))
-        """
-        extra_penalty = 0
-        if not self.agents:
-            extra_penalty = int(self.fuel_burnt / 4)
-        return (-1) * self.fuel_burnt - extra_penalty
-        """
+
+        if version == "Burning Cells":
+            fire_spread = len(self.burning_cells) + len(self.burnt_cells) / 10
+            return int((-1) * (fire_spread + death_penalty))
+
+        if version == "Fuel Burnt":
+            return int((-1) * (self.fuel_burnt + death_penalty))
+
+        if version == "Spread Blocked":
+            return int(len(self.barriers) - death_penalty)
 
     # returns the middle burnt-out cell along a border if there are no
     # burning cells on that border
@@ -465,6 +503,7 @@ class Element:
     # cell.r cityblock/manhattan steps from the origin cell is a neighbour
     def get_neighbours(self, env):
         neighbours = set()
+        barriers = set()
         for x in range(self.r + 1):
             for y in range(self.r + 1 - x):
                 if (x == 0 and y == 0):
@@ -473,19 +512,27 @@ class Element:
                     cell = env.get_at(self.x + x, self.y + y)
                     if cell.burnable:
                         neighbours.add(cell)
+                    else:
+                        barriers.add(cell)
                 if env.inbounds(self.x - x, self.y + y):
                     cell = env.get_at(self.x - x, self.y + y)
                     if cell.burnable:
                         neighbours.add(cell)
+                    else:
+                        barriers.add(cell)
                 if env.inbounds(self.x + x, self.y - y):
                     cell = env.get_at(self.x + x, self.y - y)
                     if cell.burnable:
                         neighbours.add(cell)
+                    else:
+                        barriers.add(cell)
                 if env.inbounds(self.x - x, self.y - y):
                     cell = env.get_at(self.x - x, self.y - y)
                     if cell.burnable:
                         neighbours.add(cell)
-        return neighbours
+                    else:
+                        barriers.add(cell)
+        return neighbours, barriers
 
 
 class Grass(Element):
@@ -498,9 +545,9 @@ class Grass(Element):
         self.burning = False
         self.temp = 0
 
-        self.heat = 0.2
-        self.threshold = 3
-        self.fuel = 60
+        self.heat = GRASS_PARAMS["heat"]
+        self.threshold = GRASS_PARAMS["threshold"]
+        self.fuel = GRASS_PARAMS["fuel"]
 
 
 class Dirt(Element):
