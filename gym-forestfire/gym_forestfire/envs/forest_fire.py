@@ -34,7 +34,9 @@ class ForestFire(gym.Env):
         # the observation space consists of 14 continuous and discrete values
         # see features for more information
         (max_ob, min_ob) = self.get_max_min_obs()
-        self.observation_space = spaces.Box(low=min_ob, high=max_ob, dtype=np.float32)
+        self.observation_space = spaces.Box(low=min_ob, 
+                                            high=max_ob, 
+                                            dtype=np.float32)
         # the environment is a 2D array of elements, plus an agent
         self.env = Environment(WIDTH, HEIGHT)
         # how many decimal point to round the features to (False = no rounding)
@@ -412,6 +414,8 @@ class Environment:
     - Continuous Values:
     DN, DS, DE, DW  --> [0, WIDTH + HEIGHT] or [0, sqrt(WIDTH^2 + HEIGHT^2)]
     AN, AS, AE, AW  --> [-pi, pi]
+
+    TODO: Normalize them maybe? Make it an option though
     """
     def get_features(self, rounding=False):
         if not self.burning_cells:
