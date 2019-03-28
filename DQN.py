@@ -108,7 +108,7 @@ class DQN_Learner:
         eps_threshold = self.eps if eps is None else eps
         # exploitation vs exploration
         if random.uniform(0, 1) > eps_threshold:
-            return np.argmax(self.model.predict(state))
+            return np.argmax(self.model.predict(state)[0])
         else:
             return self.sim.action_space.sample()
 
@@ -163,7 +163,8 @@ class DQN_Learner:
 
             if total_reward > self.best_reward:
                 self.best_reward = total_reward
-                self.sim.render()
+                if self.sim.spec.id == "gym-forestfire-v0":
+                    self.sim.render()
 
             print(f"Episode {episode + 1}: Total Reward --> {total_reward}")
             print(f"e: {self.eps}")
