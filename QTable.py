@@ -44,7 +44,7 @@ scores.
 In general, this is not gonna cut it anyway. We need a DQN.
 """
 
-class Q_Learner:
+class QT_Learner:
     def __init__(self, sim):
         # simulation
         self.sim = sim
@@ -72,8 +72,9 @@ class Q_Learner:
     def reset(self):
         self.QT = dict()
         self.rewards = list()
+        self.best_reward = -99999999
         self.sim.reset()
-        self.eps = 1
+        self.eps = self.max_eps
 
     # set appropriate variables depending on the environment
     def set_params(self):
@@ -121,9 +122,9 @@ class Q_Learner:
     def choose_action(self, state, eps=None):
         if self.preprocess:
             state = tuple(state)
-
+        # epsilon is either fixed, or passed as argument
         eps_threshold = self.eps if eps is None else eps
-
+        # exploitation vs exploration
         if random.uniform(0, 1) > eps_threshold:
             return np.argmax(self.qtable(state))
         else:
