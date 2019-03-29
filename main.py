@@ -50,6 +50,13 @@ Make a super class from which all controllers should inherit. This will
 contain methods such as average_reward_per_k, show_rewards etc. If this
 is possible in python: make subclasses HAVE to override methods such as
 learn, choose_action etc
+
+Make a method get_state_from_pos() to test the features in more detail
+Maybe even a set_fire_to() method to be even more precise
+
+Implement the percent_burnt() to balance reward and to stop the simulation
+early when all hope is lost (and give a large negative reward when that
+happens)
 """
 
 forestfire = gym.make('gym-forestfire-v0')

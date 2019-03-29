@@ -126,9 +126,10 @@ class DQN_Learner:
             # update the weights according to the loss
             target = reward
             if not done:
-                # target = reward + discounted reward for next state
+                # target = reward + decay_rate * max_q_value(next_state)
                 target = reward + self.gamma * \
                         np.amax(self.model.predict(sprime)[0])
+            # future_target = max_??
             target_f = self.model.predict(state)
             target_f[0][action] = target
             self.model.fit(state, target_f, epochs=1, verbose=0)

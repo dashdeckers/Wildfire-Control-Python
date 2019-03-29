@@ -279,7 +279,7 @@ class Environment:
 
         self.burnt_cells += cells_to_remove
 
-        if not self.agents or not self.burning_cells:
+        if not self.agents or not self.burning_cells: # or fire_out_of_control
             self.running = False
 
     # returns the total amount of fuel available on the map
@@ -307,6 +307,8 @@ class Environment:
     TODO: Spread Blocked + some measure of percentage of map burnt
     """
     def get_fitness(self, version="Burning Cells"):
+        # if self.fire_out_of_control:
+        #   return VERY_LOW_REWARD
         death_penalty = 0
         if not self.agents:
             death_penalty = 100000
