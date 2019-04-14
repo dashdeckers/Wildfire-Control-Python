@@ -12,7 +12,7 @@ tf.logging.set_verbosity(tf.logging.ERROR)
 """
 Just keeping track of ideas and knowledge:
 
-- Subgoals: 
+- Subgoals:
 A* or maybe some NN that does small tasks like move/dig to location (x, y), and
 then train the main algorithm to have this new action space (eg. of moving to
 any location instead of the standard 6 actions)
@@ -60,11 +60,7 @@ happens)
 """
 
 forestfire = gym.make('gym-forestfire-v0')
-frozenlake = gym.make('FrozenLake-v0')
-cartpole = gym.make('CartPole-v0')
-Q1 = QT_Learner(forestfire)
-Q2 = QT_Learner(frozenlake)
 
-DQN1 = DQN_Learner(forestfire)
-DQN2 = DQN_Learner(frozenlake)
-DQN3 = DQN_Learner(cartpole)
+QT = QT_Learner(forestfire)
+
+DQN = DQN_Learner(forestfire)

@@ -21,6 +21,7 @@ GRASS_PARAMS = {
     "threshold" : 3,
     "fuel" : 60
 }
+USE_FULL_STATE = True
 
 
 class ForestFire(gym.Env):
@@ -29,25 +30,38 @@ class ForestFire(gym.Env):
     def __init__(self):
         # set the random seed for reproducability
         r.seed(0)
-        # the action space consists of 6 discrete actions
-        self.action_space = spaces.Discrete(6)
-        # the observation space consists of 14 continuous and discrete values
-        # see features for more information
-        (max_ob, min_ob) = self.get_max_min_obs()
-        self.observation_space = spaces.Box(low=min_ob, 
-                                            high=max_ob, 
-                                            dtype=np.float32)
+        # whether we use features or the full state
+        self.full_state = USE_FULL_STATE
         # the environment is a 2D array of elements, plus an agent
         self.env = Environment(WIDTH, HEIGHT)
         # how many decimal point to round the features to (False = no rounding)
         self.rounding = FEAT_ROUNDING
+        # the action space consists of 6 discrete actions
+        self.action_space = spaces.Discrete(6)
+        # useful to have direct access to
+        self.width = WIDTH
+        self.height = HEIGHT
+        # the observation space consists of 14 continuous and discrete values
+        # see features for more information
+        # if we are using the full state, then the observation space is of size
+        # (WIDTH, HEIGHT, 5)
+        if self.full_state:
+            self.observation_space = spaces.Box(low=0,
+                                                high=1,
+                                                shape=(WIDTH, HEIGHT, 5),
+                                                dtype=np.bool)
+        else:
+            (max_ob, min_ob) = self.get_max_min_obs()
+            self.observation_space = spaces.Box(low=min_ob,
+                                                high=max_ob,
+                                                dtype=np.float32)
 
     """
     Take an action and update the environment.
 
-    This returns: 
+    This returns:
 
-    The features in a list, 
+    The features in a list,
     The reward/fitness as a value,
     A boolean for whether the simultion is still running,
     Some debugging info.
@@ -59,7 +73,7 @@ class ForestFire(gym.Env):
             self.env.agents[0].dig()
         # If the action is not handled, the agent does nothing
         self.env.update()
-        return [self.env.get_features(self.rounding),
+        return [self.env.get_features(self.full_state, self.rounding),
                 self.env.get_fitness(FITNESS_MEASURE),
                 not self.env.running, # to be consistent with conventions
                 {}]
@@ -67,7 +81,7 @@ class ForestFire(gym.Env):
     # resets environment to default values
     def reset(self):
         self.env.reset_env()
-        return self.env.get_features(self.rounding)
+        return self.env.get_features(self.full_state, self.rounding)
 
     # prints an ascii map of the environment
     def render(self, mode='human', close=False):
@@ -305,6 +319,11 @@ class Environment:
     a cell which was not burnable.
 
     TODO: Spread Blocked + some measure of percentage of map burnt
+    TODO: -1 every time step, +1000 for the fire dying out
+                                \__ * (1 - %_burnt)  (???)
+            \__ this seems good except there is not much positive
+                feedback at the beginning to get the agent on the
+                right path.
     """
     def get_fitness(self, version="Burning Cells"):
         # if self.fire_out_of_control:
@@ -419,7 +438,10 @@ class Environment:
 
     TODO: Normalize them maybe? Make it an option though
     """
-    def get_features(self, rounding=False):
+    def get_features(self, full_state=False, rounding=False):
+        if full_state:
+            return self.get_full_state()
+
         if not self.burning_cells:
             return [-1] * (len(self.agents) * 10 + 4)
 
@@ -443,6 +465,28 @@ class Environment:
         """
         return features
 
+    # get the entire map as a list of positions, each
+    # position is a one-hot encoded list of possible values
+    # [grass, road, burning, burnt, agent]
+    def get_full_state(self):
+        full_state = np.zeros((HEIGHT, WIDTH, 5))
+        for y in range(self.height):
+            for x in range(self.width):
+                if self.agents and self.agents[0].get_pos() == (x, y):
+                    full_state[x][y][4] = 1
+                    continue
+                element = self.world[x][y]
+                if element.burning:
+                    full_state[x][y][2] = 1
+                    continue
+                if element.type in ["Grass", "Dirt"] and element.fuel == 0:
+                    full_state[x][y][3] = 1
+                    continue
+                if element.type == "Grass":
+                    full_state[x][y][0] = 1
+                if element.type == "Dirt":
+                    full_state[x][y][1] = 1
+        return full_state
 
 class Element:
     def __init__(self, x, y):
