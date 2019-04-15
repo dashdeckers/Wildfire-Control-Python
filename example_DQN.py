@@ -7,11 +7,14 @@ from keras.optimizers import Adam
 
 from collections import deque
 
+'''
+https://towardsdatascience.com/reinforcement-learning-w-keras-openai-dqns-1eed3a5338c
+'''
 class DQN:
     def __init__(self, env):
         self.env     = env
         self.memory  = deque(maxlen=2000)
-        
+
         self.gamma = 0.85
         self.epsilon = 1.0
         self.epsilon_min = 0.01
@@ -45,7 +48,7 @@ class DQN:
 
     def replay(self):
         batch_size = 32
-        if len(self.memory) < batch_size: 
+        if len(self.memory) < batch_size:
             return
 
         samples = random.sample(self.memory, batch_size)
@@ -87,7 +90,7 @@ for trial in range(trials):
         # reward = reward if not done else -20
         new_state = new_state.reshape(1,2)
         dqn_agent.remember(cur_state, action, reward, new_state, done)
-        
+
         dqn_agent.replay()       # internally iterates default (prediction) model
         dqn_agent.target_train() # iterates target model
 
