@@ -11,8 +11,8 @@ HEIGHT = 10
 WIND_PARAMS = [3, (1, 1)]
 # False or num_decimals
 FEAT_ROUNDING = 1
-# "Spread Blocked", "Fuel Burnt" or "Burning Cells"
-FITNESS_MEASURE = "Spread Blocked"
+# "Spread Blocked", "Fuel Burnt", "Burning Cells", or "Ignitions and Percentage"
+FITNESS_MEASURE = "Ignitions and Percentage"
 # (agent_x, agent_y)
 AGENT_LOC = (1, 1)
 # Slow spread: high fuel (~60), low heat (<0.3), medium threshold (~3)
@@ -182,6 +182,8 @@ class Environment:
         # book-keeping variables
         self.burning_cells = list()
         self.burnt_cells = list()
+        self.ignited_cells = 0
+        self.new_ignited_cells = 0
         self.agents = list()
         self.fuel_burnt = 0
         self.borders_reached = ""
@@ -292,6 +294,8 @@ class Environment:
         self.burning_cells += list(cells_to_add)
 
         self.burnt_cells += cells_to_remove
+        self.ignited_cells += len(cells_to_add)
+        self.new_ignited_cells += len(cells_to_add)
 
         if not self.agents or not self.burning_cells: # or fire_out_of_control
             self.running = False
@@ -303,6 +307,10 @@ class Environment:
             for y in range(self.height):
                 total_fuel += self.get_at(x, y).fuel
         return total_fuel
+
+    # returns the percentage of the map that is burnt
+    def get_percent_burnt(self):
+        return len(self.burnt_cells) / (self.width * self.height)
 
     """
     Returns the fitness of the current state
@@ -318,19 +326,23 @@ class Environment:
     Positively counts the number of times a fire wanted to spread to
     a cell which was not burnable.
 
-    TODO: Spread Blocked + some measure of percentage of map burnt
-    TODO: -1 every time step, +1000 for the fire dying out
-                                \__ * (1 - %_burnt)  (???)
+    Ignitions and Percentage:
+    -1 for every new ignited field
+    +1000 * (1 - percent_burnt) when the fire dies out
+    -1000 if the agent dies
+    Not cumulative, only new ignitions not past ignitions are counted
+           \
             \__ this seems good except there is not much positive
                 feedback at the beginning to get the agent on the
                 right path.
     """
     def get_fitness(self, version="Burning Cells"):
-        # if self.fire_out_of_control:
-        #   return VERY_LOW_REWARD
         death_penalty = 0
+        contained_bonus = 0
         if not self.agents:
-            death_penalty = 100000
+            death_penalty = 1000
+        if not self.burning_cells:
+            contained_bonus = 1000
 
         if version == "Burning Cells":
             fire_spread = len(self.burning_cells) + len(self.burnt_cells) / 10
@@ -341,6 +353,16 @@ class Environment:
 
         if version == "Spread Blocked":
             return int(len(self.barriers) - death_penalty)
+
+        if version == "Ignitions and Percentage":
+            ignitions = (-1) * self.new_ignited_cells
+            self.new_ignited_cells = 0
+            contained = contained_bonus * (1 - self.get_percent_burnt())
+            print(f"Ignitions reward: {ignitions}")
+            print(f"Percent Burnt: {self.get_percent_burnt()}")
+            print(f"Contained reward: {contained}")
+            print(f"Death penalty {death_penalty}\n")
+            return ignitions + contained - death_penalty
 
     # returns the middle burnt-out cell along a border if there are no
     # burning cells on that border
