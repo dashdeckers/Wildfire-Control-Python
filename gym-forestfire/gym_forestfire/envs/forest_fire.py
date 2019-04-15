@@ -337,6 +337,8 @@ class Environment:
                 right path.
     """
     def get_fitness(self, version="Burning Cells"):
+        # TODO: it should also be game-over (same as when the agent dies) when
+        # the fire reaches a border
         death_penalty = 0
         contained_bonus = 0
         if not self.agents:
