@@ -1,5 +1,44 @@
 import time
 
+# to be able to use getch() to get a character and not wait for enter
+try:
+    # Win32
+    from msvcrt import getch
+except ImportError:
+    # UNIX
+    def getch():
+        import sys, tty, termios
+        fd = sys.stdin.fileno()
+        old = termios.tcgetattr(fd)
+        try:
+            tty.setraw(fd)
+            return sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old)
+
+# acts based on keyboard input
+def run_human(sim):
+    done = False
+    sim.reset()
+    while not done:
+        print("WASD to move, Space to dig, 'n' to wait, 'q' to quit.\n")
+        char = getch()
+        if char == 'q':
+            break
+        elif char == 'w':
+            _, _, done, _ = sim.step("N")
+        elif char == 's':
+            _, _, done, _ = sim.step("S")
+        elif char == 'd':
+            _, _, done, _ = sim.step("E")
+        elif char == 'a':
+            _, _, done, _ = sim.step("W")
+        elif char == ' ':
+            _, _, done, _ = sim.step("D")
+        elif char == 'n':
+            _, _, done, _ = sim.step(" ")
+        sim.render()
+
 # acts randomly
 def run_random(sim):
     done = False
