@@ -20,6 +20,7 @@ except ImportError:
 def run_human(sim):
     done = False
     sim.reset()
+    sim.render()
     while not done:
         print("WASD to move, Space to dig, 'n' to wait, 'q' to quit.\n")
         char = getch()
