@@ -1,7 +1,7 @@
 import gym, gym_forestfire
 from QTable import QT_Learner
 from DQN import DQN_Learner
-from Misc import run_random
+from Misc import run_random, time_simulation_run
 
 # suppress unecessary warnings from tensorflow
 import os

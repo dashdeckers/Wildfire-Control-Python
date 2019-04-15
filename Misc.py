@@ -11,7 +11,7 @@ def run_random(sim):
         time.sleep(0.1)
 
 # times the simulation
-def time_simulation_run():
+def time_simulation_run(num_runs=100):
     import timeit
     setup = """
 import gym, gym_forestfire
@@ -23,6 +23,5 @@ while sim.env.running:
     action = sim.action_space.sample()
     sim.step(action)
     """
-    num_runs = 100
     total = timeit.timeit(setup=setup, stmt=code, number=num_runs)
     print("Total:", total, "Average per run", total / num_runs)
