@@ -29,9 +29,9 @@ The class implements Q-Learning with:
 - A dynamic table (a dict / hashtable)
 - Constant windspeed + direction
 - Discretization of the feature/state space (rounding to 1 decimal)
-- Reduced the features (removed the last 4 entries). 
+- Reduced the features (removed the last 4 entries).
 
-The last two points are done in the hope that similar states collapse to 
+The last two points are done in the hope that similar states collapse to
 give identical actions and get updated together. This really distorts the
 agents view of the environment, however, and introduces a lot of inaccuracy
 
