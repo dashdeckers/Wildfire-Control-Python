@@ -131,6 +131,8 @@ class DQN_Learner:
                 target = reward + self.gamma * \
                         np.amax(self.target.predict(sprime)[0])
             # perform gradient descent on (target - predicted)^2
+            # TODO: understand the loss function here. I dont think it is
+            # completely correct
             predicted = self.model.predict(state)
             self.model.fit(state, (target - predicted)**2, epochs=1, verbose=0)
 
