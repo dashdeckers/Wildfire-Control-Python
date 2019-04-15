@@ -52,6 +52,7 @@ class DQN_Learner:
         self.target = keras.models.clone_model(self.model)
         self.target.set_weights(self.model.get_weights())
         # memory stack for experience replay
+        # TODO: Pre-initialize memory with random-run data
         self.memory = deque(maxlen=100000)
 
     # create the neural net
