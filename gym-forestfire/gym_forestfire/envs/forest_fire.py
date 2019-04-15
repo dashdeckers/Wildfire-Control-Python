@@ -24,7 +24,7 @@ GRASS_PARAMS = {
 # use full pixel input instead of features
 USE_FULL_STATE = True
 # print information on fitness etc
-VERBOSE = False
+VERBOSE = True
 
 
 class ForestFire(gym.Env):
@@ -37,7 +37,7 @@ class ForestFire(gym.Env):
         self.full_state = USE_FULL_STATE
         # the environment is a 2D array of elements, plus an agent
         self.env = Environment(WIDTH, HEIGHT)
-        # how many decimal point to round the features to (False = no rounding)
+        # num of decimal points to round the features to (False = no rounding)
         self.rounding = FEAT_ROUNDING
         # the action space consists of 6 discrete actions
         self.action_space = spaces.Discrete(6)
@@ -46,7 +46,7 @@ class ForestFire(gym.Env):
         self.height = HEIGHT
         # the observation space consists of 14 continuous and discrete values
         # see features for more information
-        # if we are using the full state, then the observation space is of size
+        # if we are using the full state, then the obs. space is of size:
         # (WIDTH, HEIGHT, 5)
         if self.full_state:
             self.observation_space = spaces.Box(low=0,
@@ -78,7 +78,7 @@ class ForestFire(gym.Env):
         self.env.update()
         return [self.env.get_features(self.full_state, self.rounding),
                 self.env.get_fitness(FITNESS_MEASURE),
-                not self.env.running, # to be consistent with conventions
+                not self.env.running, # NOT: to be consistent with conventions
                 {}]
 
     # resets environment to default values
@@ -268,6 +268,9 @@ class Environment:
         If any neighbouring cells ignite, add them to burning cells
 
     If there are no more agents or burning cells, set running to false
+
+    TODO: Optimize this, when we are sure of the fitness function we want
+    to use, we can remove some unnecessary bookkeeping
     """
     def update(self):
         agents_to_remove = set()
@@ -362,57 +365,20 @@ class Environment:
 
         if version == "Ignitions and Percentage":
             ignitions = (-1) * self.new_ignited_cells
-            self.new_ignited_cells = 0
             contained = contained_bonus * (1 - self.get_percent_burnt())
             reward = ignitions + contained - death_penalty
+            # reset the new ignited cells to zero
+            self.new_ignited_cells = 0
             if self.verbose:
                 print(f"New ignitions reward: {ignitions}")
-                # this only counts burnt and not burning but thats fine because
-                # the percentage is only used when the fire has died out anyway
+                # this only counts burnt and not burning but thats fine,
+                # the percentage is only used when the fire has died out
                 print(f"Num burnt cells: {len(self.burnt_cells)}")
                 print(f"Percent Burnt: {self.get_percent_burnt()}")
                 print(f"Contained reward: {contained}")
                 print(f"Death penalty {death_penalty}")
                 print(f"Total reward at current step: {reward}\n")
             return reward
-
-    # returns the middle burnt-out cell along a border if there are no
-    # burning cells on that border
-    # TODO: has some index errors, does not work yet
-    def get_border_point(self, border):
-        c_vals = list()
-        if border in ["N", "S"]:
-            axis_length = self.width
-        elif border in ["E", "W"]:
-            axis_length = self.height
-        for i in range(axis_length-1):
-            print(i)
-            if border == "N":
-                e = self.world[0][i]
-            if border == "S":
-                e = self.world[axis_length - 1][i]
-            if border == "E":
-                e = self.world[i][0]
-            if border == "W":
-                e = self.world[i][axis_length - 1]
-
-            if e.burning:
-                return False
-            if e.fuel == 0 and border in ["N", "S"]:
-                c_vals.append(e.x)
-            if e.fuel == 0 and border in ["E", "W"]:
-                c_vals.append(e.y)
-
-        if c_vals:
-            avg_c = sum(c_vals) / len(c_vals)
-            if border == "N":
-                return self.world[int(avg_c)][0]
-            if border == "S":
-                return self.world[int(avg_c)][axis_length - 1]
-            if border == "E":
-                return self.world[0][int(avg_c)]
-            if border == "W":
-                return self.world[axis_length - 1][int(avg_c)]
 
     """
     Returns the most N, S, E, and W burning cells
@@ -432,13 +398,6 @@ class Environment:
                 N = fire
             if fire.y > S.y:
                 S = fire
-        """
-        for direction in self.borders_reached:
-            point = self.get_border_point(direction)
-            if point:
-                exec(f"{direction} = point")
-                print(f"{direction} = {point}")
-        """
         return (N, S, E, W)
 
     """
@@ -499,9 +458,18 @@ class Environment:
         """
         return features
 
-    # get the entire map as a list of positions, each
-    # position is a one-hot encoded list of possible values
-    # [grass, road, burning, burnt, agent]
+    '''
+    Get the raw pixel input of the map as a 3D numpy matrix of size:
+    (HEIGHT, WIDTH, 5). Height and Width are switched because we are
+    using x, y indexing.
+
+    The depth is 5 because we are using one-hot encoded lists of possible
+    values: [grass, dirt, burning, burnt, agent]
+
+    TODO: Could be optimized, do we need one-hot encoding? Cant we just use
+    categorical data such as 1=grass, 2=dirt? I dont think so but dont know
+    why not.
+    '''
     def get_full_state(self):
         full_state = np.zeros((HEIGHT, WIDTH, 5))
         for y in range(self.height):
@@ -542,7 +510,7 @@ class Element:
     def get_pos(self):
         return (self.x, self.y)
 
-    # reduces fuel by 1 if it is burning, returns "Burnt out" if fuel reaches 0
+    # reduces fuel by 1 if it is burning, returns "Burnt out" if it reaches 0
     def time_step(self):
         if self.burning:
             self.fuel -= 1
@@ -585,7 +553,7 @@ class Element:
             return math.sqrt(math.pow(self.x - cell.x, 2)
                             + math.pow(self.y - cell.y, 2))
 
-    # returns the angle between the vector (cell, other_cell) and the wind vector
+    # returns the angle between vector (cell, other_cell) and the wind vector
     def wind_angle_to(self, cell, env):
         (cx, cy) = (self.x - cell.x, self.y - cell.y)
         (wx, wy) = env.wind_vector
