@@ -366,7 +366,8 @@ class Environment:
             print(f"Num burnt cells: {len(self.burnt_cells)}")
             print(f"Percent Burnt: {self.get_percent_burnt()}")
             print(f"Contained reward: {contained}")
-            print(f"Death penalty {death_penalty}\n")
+            print(f"Death penalty {death_penalty}")
+            print(f"Total Reward: {ignitions+contained-death_penalty}\n")
             return ignitions + contained - death_penalty
 
     # returns the middle burnt-out cell along a border if there are no
