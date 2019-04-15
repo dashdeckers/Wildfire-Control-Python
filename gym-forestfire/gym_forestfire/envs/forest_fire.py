@@ -696,6 +696,7 @@ class Agent:
 
     # moves in direction if the cell at the new coordinates is 
     # traversable, inbounds, and not occupied by another agent
+    # TODO: not possible to move into a fire. is this what we want?
     def move(self, direction):
         (newX, newY) = self.get_new_coords(direction)
         if (newX, newY) not in [a.get_pos() for a in self.env.agents]:
