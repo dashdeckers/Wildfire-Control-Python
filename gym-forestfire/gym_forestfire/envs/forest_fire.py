@@ -360,15 +360,16 @@ class Environment:
             ignitions = (-1) * self.new_ignited_cells
             self.new_ignited_cells = 0
             contained = contained_bonus * (1 - self.get_percent_burnt())
-            print(f"Ignitions reward: {ignitions}")
+            print(f"New ignitions reward: {ignitions}")
             # this only counts burnt and not burning but thats fine because
             # the percentage is only used when the fire has died out anyway
             print(f"Num burnt cells: {len(self.burnt_cells)}")
             print(f"Percent Burnt: {self.get_percent_burnt()}")
             print(f"Contained reward: {contained}")
             print(f"Death penalty {death_penalty}")
-            print(f"Total Reward: {ignitions+contained-death_penalty}\n")
-            return ignitions + contained - death_penalty
+            reward = ignitions + contained - death_penalty
+            print(f"Total reward at current step: {reward}\n")
+            return reward
 
     # returns the middle burnt-out cell along a border if there are no
     # burning cells on that border
