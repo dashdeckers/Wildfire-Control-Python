@@ -1,7 +1,7 @@
 # Wildfire-Control-Python
 The custom OpenAI Gym environment simulates the spread of fire from a 2D, birds-eye-view perspective. 
 To contain the fire, the agent (a bulldozer) should learn to dig a road around the fire, enclosing it completely. 
-By doing so, we take away the fuel that the fire needs to spread further. Testing on Ubuntu only.
+By doing so, we take away the fuel that the fire needs to spread further. Tested on Ubuntu only.
 
 ## Environment Usage:
 
