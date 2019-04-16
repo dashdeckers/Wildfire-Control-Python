@@ -2,3 +2,4 @@
 keras-rl==0.4.2
 matplotlib==3.0.3
 tensorflow==1.13.1
+pydot==1.4.1

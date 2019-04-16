@@ -1,6 +1,7 @@
 from keras.models import Sequential
 from keras.layers import Dense, Conv2D
 from keras.optimizers import Adam
+from keras.utils import plot_model
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,8 +18,10 @@ to and why.
 """
 
 # TODO: tune parameters
+# TODO: learn to inspect models in keras, as well as how fitting and predicting
+# works exactly
 class DQN_Learner:
-    def __init__(self, sim):
+    def __init__(self, sim, name=None):
         if not sim.spec.id == "gym-forestfire-v0":
             print("DQN currently only supports ForestFire...")
             return
@@ -48,6 +51,9 @@ class DQN_Learner:
         self.target_update_cnt = 1000
         # the neural network
         self.model = self._make_model()
+        # TODO: loading the model does not work, seems to be an open issue?
+        if name:
+            self._load(name)
         # the target neural network
         self.target = keras.models.clone_model(self.model)
         self.target.set_weights(self.model.get_weights())
@@ -93,7 +99,7 @@ class DQN_Learner:
         return model
 
     # add a memory
-    def remember(self, state, action, reward, sprime, done):
+    def _remember(self, state, action, reward, sprime, done):
         self.memory.append((state, action, reward, sprime, done))
 
     # choose action with e-greedy policy with current or given eps value
@@ -108,7 +114,7 @@ class DQN_Learner:
 
     # decay epsilon (slower rate of decay for higher episode_num)
     # TODO: configure this to anneal to min_eps in exactly X episodes
-    def decay_epsilon(self, episode_num):
+    def _decay_epsilon(self, episode_num):
         self.eps = self.min_eps + \
             (self.max_eps - self.min_eps) * \
             np.exp(-self.eps_decay_rate * episode_num)
@@ -117,7 +123,7 @@ class DQN_Learner:
     # TODO: implement error clipping
     # TODO: understand the last few lines of code in this function. not sure
     # if the new or the old syntax is correct bc i dont understand the old
-    def replay(self, batch_size):
+    def _replay(self, batch_size):
         # take a random sample of size batch_size from memory
         minibatch = random.sample(self.memory, batch_size)
         # for each memory in the sample
@@ -165,12 +171,12 @@ class DQN_Learner:
                 total_reward += reward
 
                 # store experience in replay memory
-                self.remember(state, action, reward, sprime, done)
+                self._remember(state, action, reward, sprime, done)
                 # experience replay: learn from sampled memories
                 if len(self.memory) > batch_size:
-                    self.replay(batch_size)
+                    self._replay(batch_size)
                     # decay the exploration rate
-                    self.decay_epsilon(episode)
+                    self._decay_epsilon(episode)
 
                 # every C iterations, update the target network
                 target_update_counter -= 1
@@ -219,9 +225,19 @@ class DQN_Learner:
             print(count, ":", str(sum(r/k)))
             count += k
 
-    def load(self, name):
+    # saves a visualization of the model to a file
+    def show_model(self, name="model"):
+        if name == "model":
+            plot_model(self.model, show_shapes=True, to_file='model.png')
+        if name == "target":
+            plot_model(self.target, show_shapes=True, to_file='target.png')
+
+    # loads the weights of the model from file.
+    # pass name to class initialization to use load
+    def _load(self, name):
         self.model.load_weights(name)
 
+    # saves the weights of the model to file
     def save(self, name):
         self.model.save_weights(name)
 
