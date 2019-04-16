@@ -471,7 +471,7 @@ class Environment:
     why not.
     '''
     def get_full_state(self):
-        full_state = np.zeros((HEIGHT, WIDTH, 5))
+        full_state = np.zeros((WIDTH, HEIGHT, 5))
         for y in range(self.height):
             for x in range(self.width):
                 if self.agents and self.agents[0].get_pos() == (x, y):

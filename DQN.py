@@ -1,5 +1,5 @@
 from keras.models import Sequential
-from keras.layers import Dense, Conv2D
+from keras.layers import Dense, Conv2D, Flatten
 from keras.optimizers import Adam
 from keras.utils import plot_model
 
@@ -72,12 +72,15 @@ class DQN_Learner:
     # TODO: adjust the filter sizes and strides to new input size? 
     # originally, input size was 84x84x4 so that used to fit well
     def _make_model(self):
+        input_shape = (self.sim.width, self.sim.height, 5)
         layers = [
             Conv2D(filters=32,
                    kernel_size=(5, 5),
                    strides=4,
                    padding='same',
-                   activation='relu'),
+                   activation='relu',
+                   data_format='channels_last',
+                   input_shape=input_shape),
             Conv2D(filters=64,
                    kernel_size=(3, 3),
                    strides=2,
@@ -88,6 +91,7 @@ class DQN_Learner:
                    strides=1,
                    padding='same',
                    activation='relu'),
+            Flatten(),
             Dense(units=512,
                   activation='relu'),
             Dense(units=self.action_size,
@@ -96,6 +100,7 @@ class DQN_Learner:
         model = Sequential(layers)
         model.compile(loss='mse',
                       optimizer=Adam(lr=self.alpha))
+        model.summary()
         return model
 
     # add a memory

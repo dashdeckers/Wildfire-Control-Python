@@ -32,9 +32,40 @@ QT = QT_Learner(forestfire)
 
 DQN = DQN_Learner(forestfire)
 
-# testing
+# just for testing
 import numpy as np
 m = DQN.model
 s = DQN.sim.reset()
 s = np.reshape(s, [1] + list(s.shape))
 p = m.predict(s)
+
+
+from keras.models import Sequential
+from keras.layers import Dense, Conv2D
+from keras.optimizers import Adam
+
+layers = [
+    Conv2D(filters=32,
+           kernel_size=(5, 5),
+           strides=4,
+           padding='same',
+           activation='relu',
+           data_format='channels_last',
+           input_shape=(10, 10, 5)),
+    Conv2D(filters=64,
+           kernel_size=(3, 3),
+           strides=2,
+           padding='same',
+           activation='relu'),
+    Conv2D(filters=64,
+           kernel_size=(2, 2),
+           strides=1,
+           padding='same',
+           activation='relu'),
+    Dense(units=512,
+          activation='relu'),
+    Dense(units=6,
+          activation='linear')
+]
+
+
