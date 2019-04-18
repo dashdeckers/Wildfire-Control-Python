@@ -97,7 +97,8 @@ class DQN_Learner:
             Dense(units=self.action_size,
                   activation='linear')
         ]
-        model = Sequential(layers)
+        # lets leave out the second and third conv layers
+        model = Sequential(layers[:1] + layers[3:])
         model.compile(loss='mse',
                       optimizer=Adam(lr=self.alpha))
         model.summary()
@@ -158,6 +159,7 @@ class DQN_Learner:
     def learn(self, n_episodes=1000, batch_size=32):
         target_update_counter = self.target_update_cnt
         for episode in range(n_episodes):
+            t0 = time.time()
             total_reward = 0
             done = False
             # initialize state
@@ -198,7 +200,8 @@ class DQN_Learner:
                 self.sim.render()
 
             print(f"Episode {episode + 1}: Total Reward --> {total_reward}")
-            print(f"e: {self.eps}")
+            print(f"Epsilon: {self.eps}")
+            print(f"Time taken: {time.time() - t0}\n")
             self.rewards.append(total_reward)
 
     # play the simulation by choosing optimal actions

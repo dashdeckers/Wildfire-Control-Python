@@ -24,7 +24,7 @@ GRASS_PARAMS = {
 # use full pixel input instead of features
 USE_FULL_STATE = True
 # print information on fitness etc
-VERBOSE = True
+VERBOSE = False
 
 
 class ForestFire(gym.Env):
