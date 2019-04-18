@@ -51,7 +51,7 @@ class DQN_Learner:
         self.target_update_cnt = 1000
         # the neural network
         self.model = self._make_model()
-        # TODO: loading the model does not work, seems to be an open issue?
+        # load a model from file if a name is given
         if name:
             self._load(name)
         # the target neural network

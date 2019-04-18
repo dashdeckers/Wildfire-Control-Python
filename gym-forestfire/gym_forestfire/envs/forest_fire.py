@@ -24,7 +24,7 @@ GRASS_PARAMS = {
 # use full pixel input instead of features
 USE_FULL_STATE = True
 # print information on fitness etc
-VERBOSE = False
+VERBOSE = True
 
 
 class ForestFire(gym.Env):
@@ -186,11 +186,9 @@ class Environment:
         # book-keeping variables
         self.burning_cells = list()
         self.burnt_cells = list()
-        self.ignited_cells = 0
         self.new_ignited_cells = 0
         self.agents = list()
         self.fuel_burnt = 0
-        self.borders_reached = ""
         self.barriers = set()
 
         # create an agent and set the fire
@@ -237,21 +235,10 @@ class Environment:
     def inbounds(self, x, y):
         return 0 <= x < self.width and 0 <= y < self.height
 
-    # checks if (x, y) is at the border, if yes it remembers which one
-    def atbounds(self, x, y):
-        if y == 0 and "N" not in self.borders_reached:
-            self.borders_reached += "N"
-        if y == self.height - 1 and "S" not in self.borders_reached:
-            self.borders_reached += "S"
-        if x == self.width - 1 and "E" not in self.borders_reached:
-            self.borders_reached += "E"
-        if x == 0 and "W" not in self.borders_reached:
-            self.borders_reached += "W"
-
     # checks if the cell at (x, y) is traversable
     def traversable(self, x, y):
         cell = self.get_at(x, y)
-        return cell.type in ["Grass", "Dirt"] and not cell.burning
+        return cell.type in ["Grass", "Dirt"]
 
     """
     Main update loop:
@@ -259,7 +246,6 @@ class Environment:
     Checks if any agents are on burning cells and should die
 
     Keeps count of the total amount of fuel burnt up
-    Keeps track of the borders reached by the fire
     Keeps track of the number of burnt out cells
 
     Spreads the fire:
@@ -285,7 +271,6 @@ class Environment:
         cells_to_remove = set()
         cells_to_add = set()
         for cell in self.burning_cells:
-            self.atbounds(cell.x, cell.y)
             status = cell.time_step()
             if status == "Burnt Out":
                 cells_to_remove.add(cell)
@@ -301,7 +286,6 @@ class Environment:
         self.burning_cells += list(cells_to_add)
 
         self.burnt_cells += cells_to_remove
-        self.ignited_cells += len(cells_to_add)
         self.new_ignited_cells += len(cells_to_add)
 
         if not self.agents or not self.burning_cells: # or fire_out_of_control
@@ -671,7 +655,6 @@ class Agent:
 
     # moves in direction if the cell at the new coordinates is 
     # traversable, inbounds, and not occupied by another agent
-    # TODO: not possible to move into a fire. is this what we want?
     def move(self, direction):
         (newX, newY) = self.get_new_coords(direction)
         if (newX, newY) not in [a.get_pos() for a in self.env.agents]:
