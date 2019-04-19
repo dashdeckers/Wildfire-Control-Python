@@ -17,6 +17,11 @@ description of the effect they have, as well as the values they are set
 to and why.
 """
 
+# TODO: smaller rewards (+-100), graph is hard to read
+# TODO: play optimal doesnt work
+# TODO: greyscale instead of one-hot-encoding
+# TODO: 4-stacked frames
+# TODO: 84x84 input (scale it)
 # TODO: tune parameters
 # TODO: learn to inspect models in keras, as well as how fitting and predicting
 # works exactly
