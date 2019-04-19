@@ -333,9 +333,9 @@ class Environment:
         death_penalty = 0
         contained_bonus = 0
         if not self.agents:
-            death_penalty = 1000
+            death_penalty = 100
         if not self.burning_cells:
-            contained_bonus = 1000
+            contained_bonus = 100
 
         if version == "Burning Cells":
             fire_spread = len(self.burning_cells) + len(self.burnt_cells) / 10
