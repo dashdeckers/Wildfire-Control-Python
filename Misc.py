@@ -18,7 +18,9 @@ except ImportError:
 
 # acts based on keyboard input
 def run_human(sim):
+    key_map = {'w':'N', 's':'S', 'd':'E', 'a':'W', ' ':'D', 'n':' '}
     done = False
+    total_reward = 0
     sim.reset()
     sim.render()
     while not done:
@@ -26,19 +28,11 @@ def run_human(sim):
         char = getch()
         if char == 'q':
             break
-        elif char == 'w':
-            _, _, done, _ = sim.step("N")
-        elif char == 's':
-            _, _, done, _ = sim.step("S")
-        elif char == 'd':
-            _, _, done, _ = sim.step("E")
-        elif char == 'a':
-            _, _, done, _ = sim.step("W")
-        elif char == ' ':
-            _, _, done, _ = sim.step("D")
-        elif char == 'n':
-            _, _, done, _ = sim.step(" ")
+        elif char in key_map:
+            _, reward, done, _ = sim.step(key_map[char])
+            total_reward += reward
         sim.render()
+    print(f"Total Reward: {total_reward}")
 
 # acts randomly
 def run_random(sim):
