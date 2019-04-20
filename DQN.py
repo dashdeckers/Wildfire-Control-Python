@@ -25,7 +25,7 @@ to and why.
 # TODO: learn to inspect models in keras, as well as how fitting and predicting
 # works exactly
 class DQN_Learner:
-    def __init__(self, sim, name=None):
+    def __init__(self, sim, small_network=False, name=None):
         if not sim.spec.id == "gym-forestfire-v0":
             print("DQN currently only supports ForestFire...")
             return
@@ -41,7 +41,7 @@ class DQN_Learner:
         # list of rewards over episodes
         self.rewards = list()
         # to print the map if we get a record score
-        self.best_reward = -99999999
+        self.best_reward = -10000
         # exploration rate, decays over time
         self.max_eps = 1.0
         self.min_eps = 0.01
@@ -54,7 +54,7 @@ class DQN_Learner:
         # number of iterations before updating the target network
         self.target_update_cnt = 1000
         # the neural network
-        self.model = self._make_model()
+        self.model = self._make_model(small_network)
         # load a model from file if a name is given
         if name:
             self._load(name)
@@ -65,33 +65,39 @@ class DQN_Learner:
         # TODO: Pre-initialize memory with random-run data
         self.memory = deque(maxlen=100000)
 
-    # create the neural net
-    # replicated architecture from original DQN paper:
-    # input layer: WIDTH x HEIGHT x 5
-    # conv layer: 32 filters of 8x8 with stride 4 + ReLu
-    # conv layer: 64 filters of 4x4 with stride 2 + ReLu
-    # conv layer: 64 filters of 3x3 with stride 1 + ReLu
-    # dense layer: 512 units + ReLu
-    # dense layer: 6 units (output layer, 6 possible actions)
-    # TODO: adjust the filter sizes and strides to new input size? 
-    # originally, input size was 84x84x4 so that used to fit well
-    def _make_model(self):
+    '''
+    Create the neural net:
+
+    layers_original is the replicated architecture from original DQN paper:
+    input layer: WIDTH x HEIGHT x 5
+    conv layer: 32 filters of 8x8 with stride 4 + ReLu
+    conv layer: 64 filters of 4x4 with stride 2 + ReLu
+    conv layer: 64 filters of 3x3 with stride 1 + ReLu
+    dense layer: 512 units + ReLu
+    dense layer: 6 units (output layer, 6 possible actions)
+
+    layers_small is a smaller network with:
+    conv layer: 32 filters of 8x8 with stride 4 + ReLu
+    dense layer: 52 units + ReLu
+    dense layer: 6 units (output layer, 6 possible actions)
+    '''
+    def _make_model(self, small_network=False):
         input_shape = (self.sim.width, self.sim.height, 5)
-        layers = [
+        layers_original = [
             Conv2D(filters=32,
-                   kernel_size=(5, 5),
+                   kernel_size=(8, 8),
                    strides=4,
                    padding='same',
                    activation='relu',
                    data_format='channels_last',
                    input_shape=input_shape),
             Conv2D(filters=64,
-                   kernel_size=(3, 3),
+                   kernel_size=(4, 4),
                    strides=2,
                    padding='same',
                    activation='relu'),
             Conv2D(filters=64,
-                   kernel_size=(2, 2),
+                   kernel_size=(3, 3),
                    strides=1,
                    padding='same',
                    activation='relu'),
@@ -101,8 +107,24 @@ class DQN_Learner:
             Dense(units=self.action_size,
                   activation='linear')
         ]
-        # lets leave out the second and third conv layers
-        model = Sequential(layers[:1] + layers[3:])
+        layers_small = [
+            Conv2D(filters=32,
+                   kernel_size=(5, 5),
+                   strides=4,
+                   padding='same',
+                   activation='relu',
+                   data_format='channels_last',
+                   input_shape=input_shape),
+            Flatten(),
+            Dense(units=52,
+                  activation='relu'),
+            Dense(units=self.action_size,
+                  activation='linear')
+        ]
+        if small_network:
+            model = Sequential(layers_small)
+        else:
+            model = Sequential(layers_original)
         model.compile(loss='mse',
                       optimizer=Adam(lr=self.alpha))
         model.summary()
@@ -131,14 +153,14 @@ class DQN_Learner:
 
     # sample randomly from memory
     # TODO: implement error clipping
-    # TODO: understand the last few lines of code in this function. not sure
-    # if the new or the old syntax is correct bc i dont understand the old
     def _replay(self, batch_size):
         # take a random sample of size batch_size from memory
         minibatch = random.sample(self.memory, batch_size)
         # for each memory in the sample
         for state, action, reward, sprime, done in minibatch:
-            # target value is the reward if it is a terminal state
+            # the target value is the estimated q-value the current state
+            # should have, based on the q-values of the next state.
+            # it is the reward if the current state is a terminal state
             target = reward
             # otherwise, it is calculated via the predicted value from the
             # target network on sprime, the discounting factor, and the reward
@@ -146,13 +168,15 @@ class DQN_Learner:
                 # target = reward + discount_factor * max_q_value(next_state)
                 target = reward + self.gamma * \
                         np.amax(self.target.predict(sprime)[0])
-            # perform gradient descent on (target - predicted)^2
-            # TODO: understand the loss function here. I dont think it is
-            # completely correct
+            # so the predicted value for the current state and action taken
+            # should be more like the target value
             predicted = self.model.predict(state)
-            self.model.fit(state, (target - predicted)**2, epochs=1, verbose=0)
+            predicted[0][action] = target
+            self.model.fit(state, predicted, epochs=1, verbose=0)
 
             '''
+            (target - predicted)**2
+
             # old syntax, from example
             target_f = self.model.predict(state)
             target_f[0][action] = target
