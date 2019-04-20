@@ -9,7 +9,7 @@ WIDTH = 10
 HEIGHT = 10
 # "Random" or [wind_speed, (wind_x, wind_y)]
 WIND_PARAMS = [3, (1, 1)]
-# False or num_decimals
+# Num of decimal points to round the features to (False = no )
 FEAT_ROUNDING = 1
 # "Spread Blocked", "Fuel Burnt", "Burning Cells", or "Ignitions and Percentage"
 FITNESS_MEASURE = "Ignitions and Percentage"
@@ -33,12 +33,8 @@ class ForestFire(gym.Env):
     def __init__(self):
         # set the random seed for reproducability
         r.seed(0)
-        # whether we use features or the full state
-        self.full_state = USE_FULL_STATE
         # the environment is a 2D array of elements, plus an agent
         self.env = Environment(WIDTH, HEIGHT)
-        # num of decimal points to round the features to (False = no rounding)
-        self.rounding = FEAT_ROUNDING
         # the action space consists of 6 discrete actions
         self.action_space = spaces.Discrete(6)
         # useful to have direct access to
@@ -48,7 +44,7 @@ class ForestFire(gym.Env):
         # see features for more information
         # if we are using the full state, then the obs. space is of size:
         # (WIDTH, HEIGHT, 5)
-        if self.full_state:
+        if USE_FULL_STATE:
             self.observation_space = spaces.Box(low=0,
                                                 high=1,
                                                 shape=(WIDTH, HEIGHT, 5),
@@ -76,7 +72,7 @@ class ForestFire(gym.Env):
             self.env.agents[0].dig()
         # If the action is not handled, the agent does nothing
         self.env.update()
-        return [self.env.get_features(self.full_state, self.rounding),
+        return [self.env.get_features(),
                 self.env.get_fitness(FITNESS_MEASURE),
                 not self.env.running, # NOT: to be consistent with conventions
                 {}]
@@ -84,7 +80,7 @@ class ForestFire(gym.Env):
     # resets environment to default values
     def reset(self):
         self.env.reset_env()
-        return self.env.get_features(self.full_state, self.rounding)
+        return self.env.get_features()
 
     # prints an ascii map of the environment
     def render(self, mode='human', close=False):
@@ -415,13 +411,14 @@ class Environment:
 
     TODO: Normalize them maybe? Make it an option though
     """
-    def get_features(self, full_state=False, rounding=False):
-        if full_state:
+    def get_features(self):
+        if USE_FULL_STATE:
             return self.get_full_state()
 
         if not self.burning_cells:
             return [-1] * (len(self.agents) * 10 + 4)
 
+        rounding = FEAT_ROUNDING
         features = list()
         for agent in self.agents:
             features += [agent.x, agent.y]

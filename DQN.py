@@ -17,13 +17,10 @@ description of the effect they have, as well as the values they are set
 to and why.
 """
 
-# TODO: play optimal doesnt work
 # TODO: greyscale instead of one-hot-encoding
 # TODO: 4-stacked frames
 # TODO: 84x84 input (scale it)
 # TODO: tune parameters
-# TODO: learn to inspect models in keras, as well as how fitting and predicting
-# works exactly
 class DQN_Learner:
     def __init__(self, sim, small_network=False, name=None):
         if not sim.spec.id == "gym-forestfire-v0":
@@ -31,11 +28,6 @@ class DQN_Learner:
             return
         # the environment / simulation
         self.sim = sim
-        # input dimensions / state size
-        if self.sim.spec.id == "gym-forestfire-v0" and self.sim.full_state:
-            self.state_size = self.sim.width * self.sim.height * 5
-        else:
-            self.state_size = self.sim.observation_space.shape[0]
         # output dimensions / action size
         self.action_size = self.sim.action_space.n
         # list of rewards over episodes
@@ -233,6 +225,7 @@ class DQN_Learner:
             self.rewards.append(total_reward)
 
     # play the simulation by choosing optimal actions
+    # TODO: doesnt work? try again first though...
     def play_optimal(self, eps=0):
         done = False
         state = self.sim.reset()
