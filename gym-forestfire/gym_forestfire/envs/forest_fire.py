@@ -15,6 +15,8 @@ FEAT_ROUNDING = 1
 FITNESS_MEASURE = "Ignitions and Percentage"
 # (agent_x, agent_y)
 AGENT_LOC = (4, 4)
+# "center_block", "center_point", or (x, y)
+FIRE_LOC = "center_block"
 # Slow spread: high fuel (~60), low heat (<0.3), medium threshold (~3)
 GRASS_PARAMS = {
     "heat" : 0.3,
@@ -189,7 +191,7 @@ class Environment:
 
         # create an agent and set the fire
         self.add_agent_at(AGENT_LOC[0], AGENT_LOC[1])
-        self.set_fire_at("center")
+        self.set_fire_at(FIRE_LOC)
 
     # resets the environment by calling the initializer again
     def reset_env(self):
@@ -211,7 +213,17 @@ class Environment:
 
     # takes an (x, y) tuple or a string and sets that element on fire
     def set_fire_at(self, pos):
-        if pos == "center":
+        if pos == "center_block":
+            (x, y) = (int(self.width/2), int(self.height/2))
+            burning = [self.world[x+1][y],
+                       self.world[x][y+1],
+                       self.world[x][y],
+                       self.world[x+1][y+1]]
+            for burning_cell in burning:
+                burning_cell.burning = True
+                self.burning_cells.append(burning_cell)
+            return
+        elif pos == "center_point":
             (x, y) = (int(self.width/2), int(self.height/2))
         else:
             (x, y) = pos
@@ -647,7 +659,8 @@ class Agent:
     # if the agent is on a burning cell, the agent dies
     def update(self):
         if self.env.world[self.x][self.y].burning:
-            print("Agent has died")
+            if VERBOSE:
+                print("Agent has died")
             return "Dead"
 
     # moves in direction if the cell at the new coordinates is 
