@@ -6,8 +6,27 @@ from keras.utils import plot_model
 import matplotlib.pyplot as plt
 import numpy as np
 import random, time, keras
+import keras.backend as K
 from collections import deque
 
+# run learn(), and then open http://localhost:6006 in browser to visualize
+# currently quite shit, most of the information needs validation data which
+# we dont have because we are doing online learning and not standard ML.
+# weight histograms for example dont show up, we only have loss
+tensorboard = keras.callbacks.TensorBoard(
+    log_dir="./logs",
+    histogram_freq=0,
+    batch_size=1,
+    write_graph=True,
+    write_grads=True
+)
+
+# helper function to feed tensorboard the dict it wants
+def named_logs(model, logs):
+    result = {}
+    for l in zip(model.metrics_names, logs):
+        result[l[0]] = l[1]
+    return result
 
 """
 This pretty much (apart from the TODO's) implements the DQN algorithm.
@@ -56,6 +75,9 @@ class DQN_Learner:
         # memory stack for experience replay
         # TODO: Pre-initialize memory with random-run data
         self.memory = deque(maxlen=100000)
+
+        tensorboard.set_model(self.model)
+        self.iteration = 0
 
     '''
     Create the neural net:
@@ -167,7 +189,10 @@ class DQN_Learner:
             # should be more like the target value
             predicted = self.model.predict(state)
             predicted[0][action] = target
-            self.model.fit(state, predicted, epochs=1, verbose=0)
+            logs = self.model.train_on_batch(state, predicted)#, epochs=1, verbose=0)
+                           #callbacks=[self.logging_callback])
+            tensorboard.on_epoch_end(self.iteration, named_logs(self.model, [logs]))
+            self.iteration += 1
 
             '''
             (target - predicted)**2
@@ -226,8 +251,11 @@ class DQN_Learner:
 
             print(f"Episode {episode + 1}: Total Reward --> {total_reward}")
             print(f"Epsilon: {self.eps}")
+            # TODO: the learning rate never changes
+            print(f"Learning Rate: {K.eval(self.model.optimizer.lr)}")
             print(f"Time taken: {time.time() - t0}\n")
             self.rewards.append(total_reward)
+        tensorboard.on_train_end(None)
 
     # play the simulation by choosing optimal actions
     def play_optimal(self, eps=0):
@@ -264,6 +292,13 @@ class DQN_Learner:
             plot_model(self.model, show_shapes=True, to_file='model.png')
         if name == "target":
             plot_model(self.target, show_shapes=True, to_file='target.png')
+
+    # some feel for the gradients
+    def show_gradients(self):
+        weights = self.model.get_weights()
+        for i in range(len(weights)):
+            layer = weights[i]
+            print(f"Layer: {i}, Max: {np.max(layer)}, Min: {np.min(layer)}")
 
     # loads the weights of the model from file.
     # pass name to class initialization to use load
