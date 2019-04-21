@@ -145,6 +145,9 @@ class DQN_Learner:
 
     # sample randomly from memory
     # TODO: implement error clipping
+    # TODO: with 4-stacked memory, each element will be a list and i think
+    # they take the cumulative reward for those stacks to fit with and predict
+    # from the last state (??? thats already frame skipping ???)
     def _replay(self, batch_size):
         # take a random sample of size batch_size from memory
         minibatch = random.sample(self.memory, batch_size)
@@ -176,6 +179,8 @@ class DQN_Learner:
             '''
 
     # the DQN algorithm. some of the algorithm is moved to the replay method
+    # TODO: preinitialize, then always add a 4-stack of frames to memory.
+    # This will have consequences for replay() as well
     def learn(self, n_episodes=1000, batch_size=32):
         target_update_counter = self.target_update_cnt
         for episode in range(n_episodes):
@@ -225,7 +230,6 @@ class DQN_Learner:
             self.rewards.append(total_reward)
 
     # play the simulation by choosing optimal actions
-    # TODO: doesnt work? try again first though...
     def play_optimal(self, eps=0):
         done = False
         state = self.sim.reset()
