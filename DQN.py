@@ -9,7 +9,8 @@ import random, time, keras
 import keras.backend as K
 from collections import deque
 
-# run learn(), and then open http://localhost:6006 in browser to visualize
+# run DQN.learn(), in a separate terminal run "tensorboard --logdir ./logs",
+# and then open "localhost:6006" in browser to visualize
 # currently quite shit, most of the information needs validation data which
 # we dont have because we are doing online learning and not standard ML.
 # weight histograms for example dont show up, we only have loss
