@@ -17,6 +17,8 @@ FITNESS_MEASURE = "Ignitions and Percentage"
 AGENT_LOC = (4, 4)
 # "center_block", "center_point", or (x, y)
 FIRE_LOC = "center_block"
+# 6 actions to allow "do nothing" action, 5 to not allow it
+NUM_ACTIONS = 5
 # Slow spread: high fuel (~60), low heat (<0.3), medium threshold (~3)
 GRASS_PARAMS = {
     "heat" : 0.3,
@@ -37,8 +39,8 @@ class ForestFire(gym.Env):
         r.seed(0)
         # the environment is a 2D array of elements, plus an agent
         self.env = Environment(WIDTH, HEIGHT)
-        # the action space consists of 6 discrete actions
-        self.action_space = spaces.Discrete(6)
+        # the action space consists of 6 discrete actions, including waiting
+        self.action_space = spaces.Discrete(NUM_ACTIONS)
         # useful to have direct access to
         self.width = WIDTH
         self.height = HEIGHT
