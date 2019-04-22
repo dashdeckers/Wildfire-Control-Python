@@ -12,7 +12,7 @@ n_cpu = 32
 env = SubprocVecEnv([lambda: gym.make('gym-forestfire-v0') for i in range(n_cpu)])
 
 model = A2C(MlpPolicy, env, verbose=1)
-model.learn(total_timesteps=100000000)
+model.learn(total_timesteps=10000000)
 
 input("Press any key to continue")
 
