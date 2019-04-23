@@ -1,3 +1,4 @@
+from .elements import Dirt
 from .constants import VERBOSE
 
 class Agent:

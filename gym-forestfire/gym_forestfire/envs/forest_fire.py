@@ -1,7 +1,6 @@
 import gym
 import numpy as np
-from gym import error, spaces, utils, spaces
-from gym.utils import seeding
+from gym import spaces, spaces
 
 from .environment import Environment
 from .elements import Grass, Dirt
