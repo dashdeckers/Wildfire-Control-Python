@@ -1,3 +1,7 @@
+# Baseline algorithms and models
+baselines/
+*.pkl
+
 # JetBrains crap
 .idea/
 
@@ -12,6 +16,7 @@ tags
 
 # Any logging files
 *.log
+logs/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
