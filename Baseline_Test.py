@@ -8,7 +8,7 @@ from stable_baselines import A2C
 # to run this, first execute 'pip install stable-baselines'
 
 # multiprocess environment
-n_cpu = 32
+n_cpu = 16
 env = SubprocVecEnv([lambda: gym.make('gym-forestfire-v0') for i in range(n_cpu)])
 
 model = A2C(MlpPolicy, env, verbose=1)

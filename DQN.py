@@ -14,8 +14,9 @@ from collections import deque
 # currently quite shit, most of the information needs validation data which
 # we dont have because we are doing online learning and not standard ML.
 # weight histograms for example dont show up, we only have loss
+run_id = "mse_acc_metrics"
 tensorboard = keras.callbacks.TensorBoard(
-    log_dir="./logs",
+    log_dir="./logs/{}".format(run_id),
     histogram_freq=0,
     batch_size=1,
     write_graph=True,
@@ -141,7 +142,8 @@ class DQN_Learner:
         else:
             model = Sequential(layers_original)
         model.compile(loss='mse',
-                      optimizer=Adam(lr=self.alpha))
+                      optimizer=Adam(lr=self.alpha),
+                      metrics=['mse', 'acc'])
         model.summary()
         return model
 
@@ -192,7 +194,7 @@ class DQN_Learner:
             predicted[0][action] = target
             logs = self.model.train_on_batch(state, predicted)#, epochs=1, verbose=0)
                            #callbacks=[self.logging_callback])
-            tensorboard.on_epoch_end(self.iteration, named_logs(self.model, [logs]))
+            tensorboard.on_epoch_end(self.iteration, named_logs(self.model, logs))
             self.iteration += 1
 
             '''
