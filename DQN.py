@@ -9,27 +9,6 @@ import random, time, keras
 import keras.backend as K
 from collections import deque
 
-# run DQN.learn(), in a separate terminal run "tensorboard --logdir ./logs",
-# and then open "localhost:6006" in browser to visualize
-# currently quite shit, most of the information needs validation data which
-# we dont have because we are doing online learning and not standard ML.
-# weight histograms for example dont show up, we only have loss
-run_id = "mse_acc_metrics"
-tensorboard = keras.callbacks.TensorBoard(
-    log_dir="./logs/{}".format(run_id),
-    histogram_freq=0,
-    batch_size=1,
-    write_graph=True,
-    write_grads=True
-)
-
-# helper function to feed tensorboard the dict it wants
-def named_logs(model, logs):
-    result = {}
-    for l in zip(model.metrics_names, logs):
-        result[l[0]] = l[1]
-    return result
-
 """
 This pretty much (apart from the TODO's) implements the DQN algorithm.
 
@@ -78,7 +57,16 @@ class DQN_Learner:
         # TODO: Pre-initialize memory with random-run data
         self.memory = deque(maxlen=100000)
 
-        tensorboard.set_model(self.model)
+        # run DQN.learn(), in a separate terminal run "tensorboard --logdir ./logs",
+        # and then open "localhost:6006" in browser to visualize
+        self.tensorboard = keras.callbacks.TensorBoard(
+            log_dir="./logs/{}".format(sim.NAME),
+            histogram_freq=0,
+            batch_size=1,
+            write_graph=True,
+            write_grads=True
+        )
+        self.tensorboard.set_model(self.model)
         self.iteration = 0
 
     '''
@@ -194,7 +182,8 @@ class DQN_Learner:
             predicted[0][action] = target
             logs = self.model.train_on_batch(state, predicted)#, epochs=1, verbose=0)
                            #callbacks=[self.logging_callback])
-            tensorboard.on_epoch_end(self.iteration, named_logs(self.model, logs))
+            self.tensorboard.on_epoch_end(self.iteration, 
+                                     self._named_logs(self.model, logs))
             self.iteration += 1
 
             '''
@@ -258,7 +247,7 @@ class DQN_Learner:
             print(f"Learning Rate: {K.eval(self.model.optimizer.lr)}")
             print(f"Time taken: {time.time() - t0}\n")
             self.rewards.append(total_reward)
-        tensorboard.on_train_end(None)
+        self.tensorboard.on_train_end(None)
 
     # play the simulation by choosing optimal actions
     def play_optimal(self, eps=0):
@@ -311,4 +300,11 @@ class DQN_Learner:
     # saves the weights of the model to file
     def save(self, name):
         self.model.save_weights(name)
+
+    # helper function to feed tensorboard the dict it wants
+    def _named_logs(self, model, logs):
+        result = {}
+        for l in zip(model.metrics_names, logs):
+            result[l[0]] = l[1]
+        return result
 

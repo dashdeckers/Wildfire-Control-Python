@@ -1,5 +1,5 @@
 import gym, gym_forestfire
-from QTable import QT_Learner
+#from QTable import QT_Learner
 from DQN import DQN_Learner
 from Misc import run_random, run_human, time_simulation_run
 
@@ -27,8 +27,6 @@ express what we want the agent to do.
 """
 
 forestfire = gym.make('gym-forestfire-v0')
-
-QT = QT_Learner(forestfire)
 
 DQN = DQN_Learner(forestfire)
 
