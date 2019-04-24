@@ -20,6 +20,7 @@ Error Clipping:
 https://stackoverflow.com/questions/36462962/loss-clipping-in-tensor-flow-on-deepminds-dqn
 """
 
+# TODO: Plot TD-error, reward, Q-Value per action
 # TODO: greyscale instead of one-hot-encoding
 # TODO: 4-stacked frames
 # TODO: 84x84 input (scale it)

@@ -58,4 +58,6 @@ while sim.env.running:
     sim.step(action)
     """
     total = timeit.timeit(setup=setup, stmt=code, number=num_runs)
-    print("Total:", total, "Average per run", total / num_runs)
+    r1, r2 = round(total, 4), round(total / num_runs, 4)
+    print("Total:", r1, "Average per run", r2)
+
