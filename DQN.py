@@ -126,7 +126,7 @@ class DQN_Learner:
                       optimizer=Adam(lr=self.alpha,
                                     clipvalue=1),
                       metrics=['mse', 'acc'])
-        model.summary()
+        #model.summary()
         return model
 
     # add a memory
