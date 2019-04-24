@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import random, time, keras
 import keras.backend as K
+import tensorflow as tf
 from collections import deque
 
 """
@@ -18,6 +19,8 @@ to and why.
 
 Error Clipping:
 https://stackoverflow.com/questions/36462962/loss-clipping-in-tensor-flow-on-deepminds-dqn
+AND
+https://stackoverflow.com/questions/47840527/using-tensorflow-huber-loss-in-keras
 """
 
 # TODO: Plot TD-error, reward, Q-Value per action
@@ -122,12 +125,23 @@ class DQN_Learner:
         else:
             model = Sequential(layers_original)
         # implement error clipping. this might be it?
-        model.compile(loss='mse',
+        model.compile(loss=self.huber_loss,
                       optimizer=Adam(lr=self.alpha,
                                     clipvalue=1),
                       metrics=['mse', 'acc'])
         model.summary()
         return model
+
+    # returns the huber loss. TODO: this also has clipping?
+    def huber_loss(self, y_true, y_pred, clip_delta=1.0):
+      error = y_true - y_pred
+      cond  = tf.keras.backend.abs(error) < clip_delta
+
+      squared_loss = 0.5 * tf.keras.backend.square(error)
+      linear_loss  = clip_delta * \
+                (tf.keras.backend.abs(error) - 0.5 * clip_delta)
+
+      return tf.where(cond, squared_loss, linear_loss)
 
     # add a memory
     def _remember(self, state, action, reward, sprime, done):
@@ -177,15 +191,6 @@ class DQN_Learner:
             self.tensorboard.on_epoch_end(self.iteration,
                                      self._named_logs(self.model, logs))
             self.iteration += 1
-
-            '''
-            (target - predicted)**2
-
-            # old syntax, from example
-            target_f = self.model.predict(state)
-            target_f[0][action] = target
-            self.model.fit(state, target_f, epochs=1, verbose=0)
-            '''
 
     # the DQN algorithm. some of the algorithm is moved to the replay method
     # TODO: preinitialize, then always add a 4-stack of frames to memory.
