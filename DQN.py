@@ -15,6 +15,9 @@ This pretty much (apart from the TODO's) implements the DQN algorithm.
 I want to have a list of parameters and hyper-parameters here and a
 description of the effect they have, as well as the values they are set
 to and why.
+
+Error Clipping:
+https://stackoverflow.com/questions/36462962/loss-clipping-in-tensor-flow-on-deepminds-dqn
 """
 
 # TODO: greyscale instead of one-hot-encoding
@@ -129,8 +132,10 @@ class DQN_Learner:
             model = Sequential(layers_small)
         else:
             model = Sequential(layers_original)
+        # implement error clipping. this might be it?
         model.compile(loss='mse',
-                      optimizer=Adam(lr=self.alpha),
+                      optimizer=Adam(lr=self.alpha,
+                                    clipvalue=1),
                       metrics=['mse', 'acc'])
         model.summary()
         return model
@@ -157,7 +162,6 @@ class DQN_Learner:
             np.exp(-self.eps_decay_rate * episode_num)
 
     # sample randomly from memory
-    # TODO: implement error clipping
     # TODO: with 4-stacked memory, each element will be a list and i think
     # they take the cumulative reward for those stacks to fit with and predict
     # from the last state (??? thats already frame skipping ???)
