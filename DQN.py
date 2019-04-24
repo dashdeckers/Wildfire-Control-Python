@@ -60,19 +60,6 @@ class DQN_Learner:
         # TODO: Pre-initialize memory with random-run data
         self.memory = deque(maxlen=100000)
 
-        # Run DQN.learn(), then in a separate terminal run
-        # "tensorboard --logdir ./logs" and then open 
-        # "localhost:6006" in your browser to open TensorBoard
-        self.tensorboard = keras.callbacks.TensorBoard(
-            log_dir="./logs/{}".format(sim.NAME),
-            histogram_freq=0,
-            batch_size=1,
-            write_graph=True,
-            write_grads=True
-        )
-        self.tensorboard.set_model(self.model)
-        self.iteration = 0
-
     '''
     Create the neural net:
 
@@ -203,6 +190,19 @@ class DQN_Learner:
     # TODO: preinitialize, then always add a 4-stack of frames to memory.
     # This will have consequences for replay() as well
     def learn(self, n_episodes=1000, batch_size=32):
+        # Run DQN.learn(), then in a separate terminal run
+        # "tensorboard --logdir ./logs" and then open 
+        # "localhost:6006" in your browser to open TensorBoard
+        self.tensorboard = keras.callbacks.TensorBoard(
+            log_dir="./logs/{}".format(self.sim.NAME),
+            histogram_freq=0,
+            batch_size=1,
+            write_graph=True,
+            write_grads=True
+        )
+        self.tensorboard.set_model(self.model)
+        self.iteration = 0
+
         target_update_counter = self.target_update_cnt
         for episode in range(n_episodes):
             t0 = time.time()
