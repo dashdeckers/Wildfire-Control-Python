@@ -57,8 +57,9 @@ class DQN_Learner:
         # TODO: Pre-initialize memory with random-run data
         self.memory = deque(maxlen=100000)
 
-        # run DQN.learn(), in a separate terminal run "tensorboard --logdir ./logs",
-        # and then open "localhost:6006" in browser to visualize
+        # Run DQN.learn(), then in a separate terminal run
+        # "tensorboard --logdir ./logs" and then open 
+        # "localhost:6006" in your browser to open TensorBoard
         self.tensorboard = keras.callbacks.TensorBoard(
             log_dir="./logs/{}".format(sim.NAME),
             histogram_freq=0,
@@ -180,9 +181,8 @@ class DQN_Learner:
             # should be more like the target value
             predicted = self.model.predict(state)
             predicted[0][action] = target
-            logs = self.model.train_on_batch(state, predicted)#, epochs=1, verbose=0)
-                           #callbacks=[self.logging_callback])
-            self.tensorboard.on_epoch_end(self.iteration, 
+            logs = self.model.train_on_batch(state, predicted)
+            self.tensorboard.on_epoch_end(self.iteration,
                                      self._named_logs(self.model, logs))
             self.iteration += 1
 
