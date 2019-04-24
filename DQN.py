@@ -126,7 +126,7 @@ class DQN_Learner:
                       optimizer=Adam(lr=self.alpha,
                                     clipvalue=1),
                       metrics=['mse', 'acc'])
-        #model.summary()
+        model.summary()
         return model
 
     # add a memory
@@ -195,7 +195,7 @@ class DQN_Learner:
         # "tensorboard --logdir ./logs" and then open 
         # "localhost:6006" in your browser to open TensorBoard
         self.tensorboard = keras.callbacks.TensorBoard(
-            log_dir="./logs/{}".format(self.sim.NAME),
+            log_dir="./logs/{}".format(self.sim.get_name()),
             histogram_freq=0,
             batch_size=1,
             write_graph=True,

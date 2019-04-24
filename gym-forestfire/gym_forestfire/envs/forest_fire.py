@@ -6,7 +6,7 @@ from .environment import Environment
 from .elements import Grass, Dirt
 from .agent import Agent
 from .constants import (
-    NAME,
+    get_name,
     WIDTH,
     HEIGHT,
     NUM_ACTIONS,
@@ -36,7 +36,7 @@ class ForestFire(gym.Env):
         # useful to have direct access to
         self.width = WIDTH
         self.height = HEIGHT
-        self.NAME = NAME
+        self.get_name = get_name
         # the observation space consists of 14 continuous and discrete values
         # see features for more information
         # if we are using the full state, then the obs. space is of size:

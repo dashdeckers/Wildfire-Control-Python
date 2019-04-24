@@ -34,11 +34,13 @@ USE_FULL_STATE = True
 # print information on fitness etc
 VERBOSE = False
 
-import time
-NAME = (
+def get_name():
+    import time
+    NAME = (
 #	f"""Size:{(WIDTH, HEIGHT)}-"""
-	f"""Reward:{FITNESS_DICT[FITNESS_MEASURE]}-"""
-	f"""Waiting:{True if NUM_ACTIONS == 6 else False}-"""
+        f"""Reward:{FITNESS_DICT[FITNESS_MEASURE]}-"""
+        f"""Waiting:{True if NUM_ACTIONS == 6 else False}-"""
 #	f"""FireLoc:{FIRE_DICT[FIRE_LOC] if FIRE_LOC in FIRE_DICT else FIRE_LOC}-"""
-	f"""Time:{time.asctime( time.localtime(time.time()) ).split()[3]}"""
-)
+        f"""Time:{time.asctime( time.localtime(time.time()) ).split()[3]}"""
+    )
+    return NAME
