@@ -1,5 +1,6 @@
 from .elements import Dirt
 from .constants import VERBOSE
+from colour import Color
 
 class Agent:
     def __init__(self, x, y, env):
@@ -21,6 +22,10 @@ class Agent:
     # get the position of the agent
     def get_pos(self):
         return (self.x, self.y)
+
+    # gets the color of the element
+    def get_color(self):
+        return Color("White")
 
     # translates direction to new coordinates
     def get_new_coords(self, direction):

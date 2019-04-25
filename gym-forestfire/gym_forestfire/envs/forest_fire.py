@@ -21,8 +21,6 @@ A* distance from center of fire to some point?
 SPE measure?
 
 Implement A* anyway because of subgoals
-
-
 '''
 
 class ForestFire(gym.Env):

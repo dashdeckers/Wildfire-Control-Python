@@ -1,5 +1,6 @@
 import math
 from .constants import GRASS_PARAMS
+from colour import Color
 
 class Element:
     def __init__(self, x, y):
@@ -20,6 +21,16 @@ class Element:
     # get position of element
     def get_pos(self):
         return (self.x, self.y)
+
+    # gets the color of the element
+    def get_color(self):
+        # grass can be a different color when burning or burnt
+        if self.type in ["Grass"]:
+            if self.fuel == 0:
+                return Color("Black")
+            if self.burning:
+                return Color("Red")
+        return Color(self.color)
 
     # reduces fuel by 1 if it is burning, returns "Burnt out" if it reaches 0
     def time_step(self):
@@ -116,7 +127,7 @@ class Grass(Element):
     def __init__(self, x, y):
         super().__init__(x, y)
         self.r = 2
-        self.color = "Light Green"
+        self.color = "Green"
         self.type = "Grass"
         self.burnable = True
         self.burning = False

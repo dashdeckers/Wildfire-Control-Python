@@ -1,5 +1,6 @@
 import random as r
 import numpy as np
+from skimage.transform import resize
 
 from .elements import Grass, Dirt
 from .agent import Agent
@@ -305,33 +306,27 @@ class Environment:
         return features
 
     '''
-    Get the raw pixel input of the map as a 3D numpy matrix of size:
-    (HEIGHT, WIDTH, 5). Height and Width are switched because we are
+    Get the raw pixel input of the map as a numpy matrix of size:
+    (HEIGHT, WIDTH). Height and Width are switched because we are
     using x, y indexing.
 
-    The depth is 5 because we are using one-hot encoded lists of possible
-    values: [grass, dirt, burning, burnt, agent]
-
-    TODO: Could be optimized, do we need one-hot encoding? Cant we just use
-    categorical data such as 1=grass, 2=dirt? I dont think so but dont know
-    why not.
+    This returns a matrix containing the grayscale values of the
+    original colors (and rescales that matrix to size 84x84)
     '''
     def get_full_state(self):
-        full_state = np.zeros((WIDTH, HEIGHT, 5))
+        full_state = np.zeros((WIDTH, HEIGHT, 1))
         for y in range(self.height):
             for x in range(self.width):
                 if self.agents and self.agents[0].get_pos() == (x, y):
-                    full_state[x][y][4] = 1
+                    color = self.agents[0].get_color()
+                    full_state[x][y] = self.grayscale(color)
                     continue
                 element = self.world[x][y]
-                if element.burning:
-                    full_state[x][y][2] = 1
-                    continue
-                if element.type in ["Grass", "Dirt"] and element.fuel == 0:
-                    full_state[x][y][3] = 1
-                    continue
-                if element.type == "Grass":
-                    full_state[x][y][0] = 1
-                if element.type == "Dirt":
-                    full_state[x][y][1] = 1
-        return full_state
+                full_state[x][y] = self.grayscale(element.get_color())
+        return resize(full_state, (84, 84), anti_aliasing=True)
+
+    def grayscale(self, color):
+        r, g, b = color.red, color.green, color.blue
+        gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
+        return gray
+
