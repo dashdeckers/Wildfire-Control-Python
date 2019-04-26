@@ -54,20 +54,26 @@ color2ascii = {
 # threshold (the temperature it can have before igniting)
 def create_map():
     gray = np.empty((WIDTH, HEIGHT))
-    gray.fill(grass["gray"])
+    gray.fill(grass['gray'])
 
     temp = np.zeros((WIDTH, HEIGHT))
 
     heat = np.empty((WIDTH, HEIGHT))
-    heat.fill(grass["heat"])
+    heat.fill(grass['heat'])
 
     fuel = np.empty((WIDTH, HEIGHT))
-    fuel.fill(grass["fuel"])
+    fuel.fill(grass['fuel'])
 
     threshold = np.empty((WIDTH, HEIGHT))
-    threshold.fill(grass["threshold"])
+    threshold.fill(grass['threshold'])
 
     return np.dstack((gray, temp, heat, fuel, threshold))
+
+def reset_map():
+    env[:, :, layer['gray']].fill(grass['gray'])
+    env[:, :, layer['temp']].fill(0)
+    env[:, :, layer['heat']].fill(grass['heat'])
+    env[:, :, layer['fuel']].fill(grass['fuel'])
 
 env = create_map()
 wind_speed = 1
@@ -136,8 +142,8 @@ def apply_heat_from_to(cell, other_cell):
 def get_neighbours(cell):
     cx, cy = cell
     neighbours = list()
-    for x in range(grass["radius"] + 1):
-        for y in range(grass["radius"] + 1 - x):
+    for x in range(grass['radius'] + 1):
+        for y in range(grass['radius'] + 1 - x):
             if (x, y) == (0, 0):
                 continue
             # get the cell in each quadrant
@@ -184,10 +190,19 @@ agents = [
     Agent(1, 1),
 ]
 
+METADATA = {
+    "death_penalty" : 100,
+    "contained_bonus" : 100,
+    "new_ignitions" : 0,
+    "burnt_cells" : 0,
+}
+
 def update():
-    global agents, burning_cells, RUNNING
+    global agents, burning_cells, RUNNING, METADATA
 
     agents = [a for a in agents if not a.is_dead()]
+
+    METADATA['new_ignitions'] = 0
 
     burnt_out_cells = set()
     ignited_cells = set()
@@ -218,8 +233,8 @@ def update():
     burning_cells = burning_cells - burnt_out_cells
     burning_cells.update(ignited_cells)
 
-    print(len(burning_cells))
-    print(burning_cells)
+    METADATA['new_ignitions'] += len(ignited_cells)
+    METADATA['burnt_cells'] += len(burnt_out_cells)
 
     if not agents or not burning_cells:
         RUNNING = False
@@ -234,10 +249,23 @@ def render():
         print("")
     print("")
 
+def get_reward(method):
+    reward = 0
+    if method == "Ignitions_Percentage":
+        reward -= METADATA['new_ignitions']
+        if not agents:
+            reward -= METADATA['death_penalty']
+        if not burning_cells:
+            perc_burnt = METADATA['burnt_cells'] / (WIDTH * HEIGHT)
+            reward += METADATA['contained_bonus'] * (1 - perc_burnt)
+    else:
+        raise Exception(f"{method} is not a valid fitness measure")
+    return reward
 
 from Misc import getch
 def run_human():
     key_map = {'w':'N', 's':'S', 'd':'E', 'a':'W', ' ':'D', 'n':' '}
+    reset_map()
     set_fire_to((5, 5))
     render()
     while RUNNING:
