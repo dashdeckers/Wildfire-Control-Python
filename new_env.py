@@ -14,13 +14,13 @@ def inbounds(x, y):
     return 0 <= x < WIDTH and 0 <= y < HEIGHT
 
 grass = {
-    "gray" : grayscale(Color("Green")),
-    "gray_burning" : grayscale(Color("Red")),
-    "gray_burnt" : grayscale(Color("Black")),
-    "heat" : 0.3,
-    "fuel" : 20,
+    "gray"          : grayscale(Color("Green")),
+    "gray_burning"  : grayscale(Color("Red")),
+    "gray_burnt"    : grayscale(Color("Black")),
+    "heat"      : 0.3,
+    "fuel"      : 20,
     "threshold" : 3,
-    "radius" : 2
+    "radius"    : 2
 }
 
 dirt = {
@@ -40,12 +40,18 @@ layer = {
 
 color2ascii = {
     grayscale(Color("Green")) : '+',
-    grayscale(Color("Red")) : '@',
+    grayscale(Color("Red"))   : '@',
     grayscale(Color("Black")) : '#',
     grayscale(Color("Brown")) : '0',
 }
 
-# when expanding to more element types, create another layer here
+# the entire environment consists of a WIDTHxHEIGH matrix with a
+# depth layer for each important attribute of a cell:
+# grayscale color (this layer is the input to the DQN)
+# temperature (how much heat it has gotten from burning neighbours)
+# heat (how much heat the cell can give off)
+# fuel (how much longer it can burn)
+# threshold (the temperature it can have before igniting)
 def create_map():
     gray = np.empty((WIDTH, HEIGHT))
     gray.fill(grass["gray"])
@@ -150,10 +156,13 @@ class Agent:
         self.y = y
 
     def is_dead(self):
+        # dead if the cell at position is burning
         return is_burning((self.x, self.y))
 
     def dig(self):
+        # change the color
         env[self.x, self.y, layer['gray']] = dirt['gray']
+        # set the heat to -1 (identifying property of non-burnables)
         env[self.x, self.y, layer['heat']] = dirt['heat']
 
     def move(self, direction):
