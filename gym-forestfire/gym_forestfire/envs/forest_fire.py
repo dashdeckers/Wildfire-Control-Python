@@ -6,8 +6,8 @@ from .constants import (
     dirt,
     layer,
     color2ascii,
-    FITNESS_MEASURE,
     NUM_ACTIONS,
+    VERBOSE,
     HEIGHT,
     WIDTH,
 )
@@ -34,8 +34,12 @@ class ForestFire(gym.Env):
             self.W.agents[0].dig()
         # If the action is not handled, the agent does nothing
         self.update()
+        if VERBOSE:
+        	self.W.print_info()
+        # return the layer of the map that corresponds to the grayscaled colors,
+        # the reward calculated for this state, and whether the simulation is done
         return [self.W.env[:, :, layer['gray']],
-                self.get_reward(),
+                self.W.get_reward(),
                 not self.W.RUNNING, # NOT: to be consistent with conventions
                 {}]
 
@@ -46,28 +50,14 @@ class ForestFire(gym.Env):
     def render(self):
         for y in range(HEIGHT):
             for x in range(WIDTH):
+            	# if the agent is at this location, print A
                 if self.W.agents and (self.W.agents[0].x, self.W.agents[0].y) == (x, y):
                     print("A", end="")
                     continue
+                # otherwise use the ascii mapping
                 print(color2ascii[self.W.env[x, y, layer['gray']]], end="")
             print("")
         print("")
-
-    def get_reward(self):
-        reward = 0
-        if FITNESS_MEASURE == "Ignitions_Percentage":
-            # -1 for every new ignited field
-            # +100 * (1 - percent_burnt) when fire dies out
-            # -100 when the agent dies
-            reward -= self.W.METADATA['new_ignitions']
-            if not self.W.agents:
-                reward -= self.W.METADATA['death_penalty']
-            if not self.W.burning_cells:
-                perc_burnt = self.W.METADATA['burnt_cells'] / (WIDTH * HEIGHT)
-                reward += self.W.METADATA['contained_bonus'] * (1 - perc_burnt)
-        else:
-            raise Exception(f"{FITNESS_MEASURE} is not a valid fitness measure")
-        return reward
 
     def update(self):
         self.W.agents = [a for a in self.W.agents if not a.is_dead()]

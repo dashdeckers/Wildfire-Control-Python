@@ -15,6 +15,7 @@ FITNESS_MEASURE = "Ignitions_Percentage"
 # print information on fitness etc
 VERBOSE = False
 
+# generate a unique name for TensorBoard
 NAME = (
 #   f"""Size:{(WIDTH, HEIGHT)}-"""
     f"""Reward:{FITNESS_MEASURE}-"""
@@ -22,11 +23,13 @@ NAME = (
     f"""Time:{time.asctime( time.localtime(time.time()) ).split()[3]}"""
 )
 
+# convert a color to grayscale with formula from wikipedia
 def grayscale(color):
     r, g, b = color.red, color.green, color.blue
     gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
     return gray
 
+# the parameters for grass
 grass = {
     "gray"          : grayscale(Color("Green")),
     "gray_burning"  : grayscale(Color("Red")),
@@ -37,6 +40,7 @@ grass = {
     "radius"    : 2
 }
 
+# the parameters for dirt
 dirt = {
     "gray" : grayscale(Color("Brown")),
     "heat" : -1,
@@ -44,6 +48,7 @@ dirt = {
     "threshold" : -1,
 }
 
+# which (depth) layer of the map corresponds to which attribute
 layer = {
     "gray" : 0,
     "temp" : 1,
@@ -52,6 +57,7 @@ layer = {
     "threshold" : 4,
 }
 
+# convert grayscale to ascii for rendering
 color2ascii = {
     grayscale(Color("Green")) : '+',
     grayscale(Color("Red"))   : '@',

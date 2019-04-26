@@ -1,5 +1,4 @@
 import gym, gym_forestfire
-#from QTable import QT_Learner
 from DQN import DQN_Learner
 from Misc import run_random, run_human, time_simulation_run
 

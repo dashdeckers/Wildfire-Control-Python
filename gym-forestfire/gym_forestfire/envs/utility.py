@@ -2,6 +2,8 @@ import math
 import random as r
 import numpy as np
 from .constants import (
+    FITNESS_MEASURE,
+	color2ascii,
     WIND_PARAMS,
     AGENT_LOC,
     HEIGHT,
@@ -187,4 +189,38 @@ class World:
                     if self.inbounds(*cell) and self.is_burnable(cell):
                         neighbours.append(cell)
         return neighbours
+
+    def get_reward(self):
+        reward = 0
+        if FITNESS_MEASURE == "Ignitions_Percentage":
+            # -1 for every new ignited field
+            # +100 * (1 - percent_burnt) when fire dies out
+            # -100 when the agent dies
+            reward -= self.METADATA['new_ignitions']
+            if not self.agents:
+                reward -= self.METADATA['death_penalty']
+            if not self.burning_cells:
+                perc_burnt = self.METADATA['burnt_cells'] / (WIDTH * HEIGHT)
+                reward += self.METADATA['contained_bonus'] * (1 - perc_burnt)
+        else:
+            raise Exception(f"{FITNESS_MEASURE} is not a valid fitness measure")
+        return reward
+
+    # pass a cell (x, y) to print information on it
+    def inspect(self, cell):
+    	x, y = cell
+    	cell_info = self.env[x, y, :]
+    	gray = cell_info[layer['gray']]
+    	print("[Color] Grayscale:", gray, "Ascii:", color2ascii[gray])
+    	print("[Temperature] ", cell_info[layer['temp']])
+    	print("[Heat Power] ", cell_info[layer['heat']])
+    	print("[Fuel Level] ", cell_info[layer['fuel']])
+    	print("[Ignition Threshold], ", cell_info[layer['threshold']])
+
+    # print various info about the world
+    def print_info(self):
+    	print("[New Ignitions] ", self.METADATA['new_ignitions'])
+    	print("[Total Burnt Cells] ", self.METADATA['burnt_cells'])
+    	print("[Percent Burnt] ", self.METADATA['burnt_cells'] / (WIDTH * HEIGHT))
+    	print("[Reward] ", self.get_reward())
 
