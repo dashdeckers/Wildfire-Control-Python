@@ -24,13 +24,22 @@ def run_human(sim):
     sim.reset()
     sim.render()
     while not done:
-        print("WASD to move, Space to dig, 'n' to wait, 'q' to quit.\n")
+        print("WASD to move, Space to dig, 'n' to wait, 'q' to quit.")
+        print("'i' to inspect a single cell, 'p' to print general info.\n")
         char = getch()
         if char == 'q':
             break
         elif char in key_map:
             _, reward, done, _ = sim.step(key_map[char])
             total_reward += reward
+        elif char == 'i':
+            print("Inspect a cell")
+            x = int(input("X coordinate: "))
+            y = int(input("Y coordinate: "))
+            sim.W.inspect((x, y))
+        elif char == 'p':
+            print("General Info")
+            sim.W.print_info()
         sim.render()
     print(f"Total Reward: {total_reward}")
 

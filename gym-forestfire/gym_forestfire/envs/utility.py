@@ -3,7 +3,7 @@ import random as r
 import numpy as np
 from .constants import (
     FITNESS_MEASURE,
-	color2ascii,
+    color2ascii,
     WIND_PARAMS,
     AGENT_LOC,
     HEIGHT,
@@ -208,19 +208,25 @@ class World:
 
     # pass a cell (x, y) to print information on it
     def inspect(self, cell):
-    	x, y = cell
-    	cell_info = self.env[x, y, :]
-    	gray = cell_info[layer['gray']]
-    	print("[Color] Grayscale:", gray, "Ascii:", color2ascii[gray])
-    	print("[Temperature] ", cell_info[layer['temp']])
-    	print("[Heat Power] ", cell_info[layer['heat']])
-    	print("[Fuel Level] ", cell_info[layer['fuel']])
-    	print("[Ignition Threshold], ", cell_info[layer['threshold']])
+        x, y = cell
+        cell_info = self.env[x, y, :]
+        gray = cell_info[layer['gray']]
+        print("\n[Color] Grayscale:", gray, "Ascii:", color2ascii[gray])
+        print("[Temperature] ", cell_info[layer['temp']])
+        print("[Heat Power] ", cell_info[layer['heat']])
+        print("[Fuel Level] ", cell_info[layer['fuel']])
+        print("[Ignition Threshold], ", cell_info[layer['threshold']])
+        if self.agents and (self.agents[0].x, self.agents[0].y) == (x, y):
+            agent_at_loc = True
+        else:
+            agent_at_loc = False
+        print("[Cell contains an Agent] ", agent_at_loc, "\n")
+
 
     # print various info about the world
     def print_info(self):
-    	print("[New Ignitions] ", self.METADATA['new_ignitions'])
-    	print("[Total Burnt Cells] ", self.METADATA['burnt_cells'])
-    	print("[Percent Burnt] ", self.METADATA['burnt_cells'] / (WIDTH * HEIGHT))
-    	print("[Reward] ", self.get_reward())
+        print("[New Ignitions] ", self.METADATA['new_ignitions'])
+        print("[Total Burnt Cells] ", self.METADATA['burnt_cells'])
+        print("[Percent Burnt] ", self.METADATA['burnt_cells'] / (WIDTH * HEIGHT))
+        print("[Reward] ", self.get_reward(), "\n")
 
