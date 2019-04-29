@@ -4,8 +4,11 @@ from keras.callbacks import TensorBoard
 
 # custom tensorboard class which also records TD_error, reward and learning rate
 class Custom_TensorBoard(TensorBoard):
-    def __init__(self, log_dir):
-        super().__init__(log_dir=log_dir)
+    def __init__(self, log_dir, histogram_freq=0, batch_size=1,
+                 write_graph=True, write_grads=True):
+        super().__init__(log_dir=log_dir, histogram_freq=histogram_freq,
+                         batch_size=batch_size, write_graph=write_graph,
+                         write_grads=write_grads)
 
     def on_epoch_end(self, epoch, logs, TD_error, reward):
         logs.update({'lr': K.eval(self.model.optimizer.lr)})

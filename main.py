@@ -28,6 +28,7 @@ express what we want the agent to do.
 forestfire = gym.make('gym-forestfire-v0')
 
 DQN = DQN_Learner(forestfire)
+S_DQN = DQN_Learner(forestfire, small_network=True)
 
 # just for testing
 '''

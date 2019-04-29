@@ -79,14 +79,14 @@ class DQN_Learner:
     dense layer: 6 units (output layer, 6 possible actions)
     '''
     def _make_model(self, small_network=False):
-        input_shape = (84, 84, 1)
+        input_shape = (1, 10, 10)
         layers_original = [
             Conv2D(filters=32,
                    kernel_size=(8, 8),
                    strides=4,
                    padding='same',
                    activation='relu',
-                   data_format='channels_last',
+                   data_format='channels_first',
                    input_shape=input_shape),
             Conv2D(filters=64,
                    kernel_size=(4, 4),
@@ -212,14 +212,14 @@ class DQN_Learner:
             state = self.sim.reset()
             # model expects an array of samples, even if it is only one sample.
             # so state[0] should be the actual state, thats why the reshapes
-            state = np.reshape(state, [1] + list(state.shape))
+            state = np.reshape(state, [1, 1] + list(state.shape))
 
             while not done:
                 # select action following e-greedy policy
                 action = self.choose_action(state)
                 # execute action and observe result
                 sprime, reward, done, _ = self.sim.step(action)
-                sprime = np.reshape(sprime, [1] + list(sprime.shape))
+                sprime = np.reshape(sprime, [1, 1] + list(sprime.shape))
                 # keep track of total reward
                 total_reward += reward
 
