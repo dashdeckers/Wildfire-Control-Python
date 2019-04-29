@@ -6,9 +6,9 @@ from keras.utils import plot_model
 import matplotlib.pyplot as plt
 import numpy as np
 import random, time, keras
-import keras.backend as K
 import tensorflow as tf
 from collections import deque
+from Misc import Custom_TensorBoard
 
 """
 This pretty much (apart from the TODO's) implements the DQN algorithm.
@@ -23,6 +23,7 @@ AND
 https://stackoverflow.com/questions/47840527/using-tensorflow-huber-loss-in-keras
 """
 
+# TODO: the learning rate never changes
 # TODO: Plot TD-error, reward, Q-Value per action
 # TODO: 4-stacked frames
 # TODO: tune parameters
@@ -176,10 +177,13 @@ class DQN_Learner:
             # so the predicted value for the current state and action taken
             # should be more like the target value
             predicted = self.model.predict(state)
+            TD_error = abs(predicted[0][action] - target)
             predicted[0][action] = target
             logs = self.model.train_on_batch(state, predicted)
             self.tensorboard.on_epoch_end(self.iteration,
-                                     self._named_logs(self.model, logs))
+                                          self._named_logs(self.model, logs),
+                                          TD_error=TD_error,
+                                          reward=reward)
             self.iteration += 1
 
     # the DQN algorithm. some of the algorithm is moved to the replay method
@@ -189,7 +193,7 @@ class DQN_Learner:
         # Run DQN.learn(), then in a separate terminal run
         # "tensorboard --logdir ./logs" and then open 
         # "localhost:6006" in your browser to open TensorBoard
-        self.tensorboard = keras.callbacks.TensorBoard(
+        self.tensorboard = Custom_TensorBoard(
             log_dir="./logs/{}".format(self.sim.get_name()),
             histogram_freq=0,
             batch_size=1,
@@ -243,8 +247,6 @@ class DQN_Learner:
 
             print(f"Episode {episode + 1}: Total Reward --> {total_reward}")
             print(f"Epsilon: {self.eps}")
-            # TODO: the learning rate never changes
-            print(f"Learning Rate: {K.eval(self.model.optimizer.lr)}")
             print(f"Time taken: {time.time() - t0}\n")
             self.rewards.append(total_reward)
         self.tensorboard.on_train_end(None)

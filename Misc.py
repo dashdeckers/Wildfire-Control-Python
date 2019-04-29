@@ -1,4 +1,17 @@
 import time
+from keras import backend as K
+from keras.callbacks import TensorBoard
+
+# custom tensorboard class which also records TD_error, reward and learning rate
+class Custom_TensorBoard(TensorBoard):
+    def __init__(self, log_dir):
+        super().__init__(log_dir=log_dir)
+
+    def on_epoch_end(self, epoch, logs, TD_error, reward):
+        logs.update({'lr': K.eval(self.model.optimizer.lr)})
+        logs.update({'td_error': TD_error})
+        logs.update({'reward': reward})
+        super().on_epoch_end(epoch, logs)
 
 # to be able to use getch() to get a character and not wait for enter
 try:
