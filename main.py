@@ -1,5 +1,4 @@
 import gym, gym_forestfire
-#from QTable import QT_Learner
 from DQN import DQN_Learner
 from Misc import run_random, run_human, time_simulation_run
 
@@ -31,9 +30,10 @@ forestfire = gym.make('gym-forestfire-v0')
 DQN = DQN_Learner(forestfire)
 
 # just for testing
+'''
 import numpy as np
 m = DQN.model
 s = DQN.sim.reset()
 s = np.reshape(s, [1] + list(s.shape))
 p = m.predict(s)
-
+'''

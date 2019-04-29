@@ -1,46 +1,68 @@
+from colour import Color
+
 # Map Dimensions
 WIDTH = 10
 HEIGHT = 10
-# "Random" or [wind_speed, (wind_x, wind_y)]
-WIND_PARAMS = [1, (1, 1)]
-# Num of decimal points to round the features to (False = no )
-FEAT_ROUNDING = 1
-# "Spread Blocked", "Fuel Burnt", "Burning Cells", or "Ignitions and Percentage"
-FITNESS_DICT = {
-	"Spread Blocked" : 0,
-	"Fuel Burnt" : 1,
-	"Burning Cells" : 2,
-	"Ignitions and Percentage" : 3,
-}
-FITNESS_MEASURE = "Ignitions and Percentage"
 # (agent_x, agent_y)
 AGENT_LOC = (4, 4)
-# "center_block", "center_point", or (x, y)
-FIRE_DICT = {
-	"center_point" : "center",
-	"center_block" : "block",
-}
-FIRE_LOC = "center_point"
 # 6 actions to allow "do nothing" action, 5 to not allow it
 NUM_ACTIONS = 5
-# Slow spread: high fuel (~60), low heat (<0.3), medium threshold (~3)
-GRASS_PARAMS = {
-    "heat" : 0.3,
-    "threshold" : 3,
-    "fuel" : 20
-}
-# use full pixel input instead of features
-USE_FULL_STATE = True
+# "Random" or [wind_speed, (wind_x, wind_y)]
+WIND_PARAMS = [1, (1, 1)]
+# currently the only option
+FITNESS_MEASURE = "Ignitions_Percentage"
 # print information on fitness etc
 VERBOSE = False
 
+# generate a unique name for TensorBoard
 def get_name():
     import time
     NAME = (
-#	f"""Size:{(WIDTH, HEIGHT)}-"""
-        f"""Reward:{FITNESS_DICT[FITNESS_MEASURE]}-"""
+    #   f"""Size:{(WIDTH, HEIGHT)}-"""
+        f"""Reward:{FITNESS_MEASURE}-"""
         f"""Waiting:{True if NUM_ACTIONS == 6 else False}-"""
-#	f"""FireLoc:{FIRE_DICT[FIRE_LOC] if FIRE_LOC in FIRE_DICT else FIRE_LOC}-"""
         f"""Time:{time.asctime( time.localtime(time.time()) ).split()[3]}"""
     )
     return NAME
+
+# convert a color to grayscale with formula from wikipedia
+def grayscale(color):
+    r, g, b = color.red, color.green, color.blue
+    gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
+    return gray
+
+# the parameters for grass
+grass = {
+    "gray"          : grayscale(Color("Green")),
+    "gray_burning"  : grayscale(Color("Red")),
+    "gray_burnt"    : grayscale(Color("Black")),
+    "heat"      : 0.3,
+    "fuel"      : 20,
+    "threshold" : 3,
+    "radius"    : 2
+}
+
+# the parameters for dirt
+dirt = {
+    "gray" : grayscale(Color("Brown")),
+    "heat" : -1,
+    "fuel" : -1,
+    "threshold" : -1,
+}
+
+# which (depth) layer of the map corresponds to which attribute
+layer = {
+    "gray" : 0,
+    "temp" : 1,
+    "heat" : 2,
+    "fuel" : 3,
+    "threshold" : 4,
+}
+
+# convert grayscale to ascii for rendering
+color2ascii = {
+    grayscale(Color("Green")) : '+',
+    grayscale(Color("Red"))   : '@',
+    grayscale(Color("Black")) : '#',
+    grayscale(Color("Brown")) : '0',
+}

@@ -24,9 +24,7 @@ https://stackoverflow.com/questions/47840527/using-tensorflow-huber-loss-in-kera
 """
 
 # TODO: Plot TD-error, reward, Q-Value per action
-# TODO: greyscale instead of one-hot-encoding
 # TODO: 4-stacked frames
-# TODO: 84x84 input (scale it)
 # TODO: tune parameters
 class DQN_Learner:
     def __init__(self, sim, small_network=False, name=None):
@@ -76,12 +74,11 @@ class DQN_Learner:
     dense layer: 6 units (output layer, 6 possible actions)
 
     layers_small is a smaller network with:
-    conv layer: 32 filters of 8x8 with stride 4 + ReLu
     dense layer: 52 units + ReLu
     dense layer: 6 units (output layer, 6 possible actions)
     '''
     def _make_model(self, small_network=False):
-        input_shape = (self.sim.width, self.sim.height, 5)
+        input_shape = (84, 84, 1)
         layers_original = [
             Conv2D(filters=32,
                    kernel_size=(8, 8),
@@ -107,16 +104,9 @@ class DQN_Learner:
                   activation='linear')
         ]
         layers_small = [
-            Conv2D(filters=32,
-                   kernel_size=(5, 5),
-                   strides=4,
-                   padding='same',
-                   activation='relu',
-                   data_format='channels_last',
-                   input_shape=input_shape),
-            Flatten(),
             Dense(units=52,
-                  activation='relu'),
+                  activation='relu',
+                  input_shape=input_shape),
             Dense(units=self.action_size,
                   activation='linear')
         ]

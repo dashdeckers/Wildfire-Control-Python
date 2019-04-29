@@ -54,7 +54,7 @@ sim = gym.make('gym-forestfire-v0')
     code = """
 sim.reset()
 sim.step("D")
-while sim.env.running:
+while sim.W.RUNNING:
     sim.step(" ")
     """
     total = timeit.timeit(setup=setup, stmt=code, number=num_runs)
