@@ -60,8 +60,8 @@ class DQN_Learner:
         self.target = keras.models.clone_model(self.model)
         self.target.set_weights(self.model.get_weights())
         # memory stack for experience replay
-        # TODO: Pre-initialize memory with random-run data
-        self.memory = deque(maxlen=100000)
+        # TODO: Pre-initialize memory with human-run data
+        self.memory = deque(maxlen=20000)
 
     '''
     Create the neural net:
@@ -115,16 +115,16 @@ class DQN_Learner:
             model = Sequential(layers_small)
         else:
             model = Sequential(layers_original)
-        # implement error clipping. this might be it?
-        model.compile(loss=self.huber_loss,
+        model.compile(loss='mse',
                       optimizer=Adam(lr=self.alpha,
                                     clipvalue=1),
                       metrics=['mse', 'acc'])
         model.summary()
         return model
 
-    # returns the huber loss. TODO: this also has clipping?
-    def huber_loss(self, y_true, y_pred, clip_delta=1.0):
+    # returns the huber loss
+    # according to Marco: use gradient clipping, not loss clipping
+    def _huber_loss(self, y_true, y_pred, clip_delta=1.0):
       error = y_true - y_pred
       cond  = tf.keras.backend.abs(error) < clip_delta
 
@@ -210,7 +210,7 @@ class DQN_Learner:
             done = False
             # initialize state
             state = self.sim.reset()
-            # model expects an array of samples, even if it is only one sample.
+            # model expects an array of samples, even if it is only one.
             # so state[0] should be the actual state, thats why the reshapes
             state = np.reshape(state, [1, 1] + list(state.shape))
 
