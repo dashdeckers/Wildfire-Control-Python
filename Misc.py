@@ -33,20 +33,27 @@ except ImportError:
             termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
 # acts based on keyboard input
-def run_human(sim):
+def run_human(sim, DQN=None):
     key_map = {'w':'N', 's':'S', 'd':'E', 'a':'W', ' ':'D', 'n':' '}
     done = False
     total_reward = 0
-    sim.reset()
+    state = sim.reset()
     sim.render()
     while not done:
         print("WASD to move, Space to dig, 'n' to wait, 'q' to quit.")
         print("'i' to inspect a single cell, 'p' to print general info.\n")
         char = getch()
         if char == 'q':
-            break
+            return "Cancelled"
         elif char in key_map:
-            _, reward, done, _ = sim.step(key_map[char])
+            action = key_map[char]
+            # do action, observe environment
+            sprime, reward, done, _ = sim.step(action)
+            # store experience in memory
+            if DQN is not None:
+                DQN._remember(state, action, reward, sprime, done)
+            # current state is now next state
+            state = sprime
             total_reward += reward
         elif char == 'i':
             print("Inspect a cell")
@@ -56,6 +63,8 @@ def run_human(sim):
         elif char == 'p':
             print("General Info")
             sim.W.print_info()
+        else:
+            print("Invalid action, not good if collecting memories for DQN.\n")
         sim.render()
     print(f"Total Reward: {total_reward}")
 

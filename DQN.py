@@ -105,6 +105,14 @@ class DQN_Learner:
                   activation='linear')
         ]
         layers_small = [
+            Conv2D(filters=32,
+                   kernel_size=(2, 2),
+                   strides=4,
+                   padding='same',
+                   activation='relu',
+                   data_format='channels_first',
+                   input_shape=input_shape),
+            Flatten(),
             Dense(units=52,
                   activation='relu',
                   input_shape=input_shape),
@@ -250,6 +258,25 @@ class DQN_Learner:
             print(f"Time taken: {time.time() - t0}\n")
             self.rewards.append(total_reward)
         self.tensorboard.on_train_end(None)
+
+    # play human first to collect valuable data for replay memory
+    def run_human(self):
+        import pickle
+        from Misc import run_human
+        # collect data until memory is full
+        status = "Running"
+        while len(self.memory) < 20000 and status != "Cancelled":
+            status = run_human(self.sim, self)
+            print("Memory Size: ", len(self.memory))
+        # save collected data to file
+        with open('human_data.dat', 'wb') as outfile:
+            pickle.dump(self.memory, outfile)
+
+    # load memory from pickle file
+    def load_memory(self):
+        import pickle
+        with open('human_data.dat', 'rb') as infile:
+            self.memory = pickle.load(infile)
 
     # play the simulation by choosing optimal actions
     def play_optimal(self, eps=0):

@@ -37,9 +37,9 @@ class ForestFire(gym.Env):
         # If the action is not handled, the agent does nothing
         self.update()
         if VERBOSE:
-        	self.W.print_info()
-        # return the layer of the map that corresponds to the grayscaled colors,
-        # the reward calculated for this state, and whether the simulation is done
+            self.W.print_info()
+        # return the layer of the map that is the grayscaled colors,
+        # the reward calculated for this state, and whether the sim is done
         return [self.W.env[:, :, layer['gray']],
                 self.W.get_reward(),
                 not self.W.RUNNING, # NOT: to be consistent with conventions
@@ -57,7 +57,7 @@ class ForestFire(gym.Env):
         for y in range(HEIGHT):
             print(y, end=" ")
             for x in range(WIDTH):
-            	# if the agent is at this location, print A
+                # if the agent is at this location, print A
                 if self.W.agents and (self.W.agents[0].x, self.W.agents[0].y) == (x, y):
                     print("A", end="")
                     continue
