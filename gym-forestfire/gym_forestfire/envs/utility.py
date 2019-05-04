@@ -209,6 +209,9 @@ class World:
             raise Exception(f"{FITNESS_MEASURE} is not a valid fitness measure")
         return reward
 
+    def get_state(self):
+        return self.env[:, :, layer['gray']]
+
     # pass a cell (x, y) to print information on it
     def inspect(self, cell):
         x, y = cell

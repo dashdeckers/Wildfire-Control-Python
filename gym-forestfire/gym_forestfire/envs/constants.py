@@ -36,7 +36,7 @@ grass = {
     "gray"          : grayscale(Color("Green")),
     "gray_burning"  : grayscale(Color("Red")),
     "gray_burnt"    : grayscale(Color("Black")),
-    "heat"      : 0.3,
+    "heat"      : 0.2,
     "fuel"      : 20,
     "threshold" : 3,
     "radius"    : 2

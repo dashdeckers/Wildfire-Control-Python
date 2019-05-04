@@ -40,7 +40,7 @@ class ForestFire(gym.Env):
             self.W.print_info()
         # return the layer of the map that is the grayscaled colors,
         # the reward calculated for this state, and whether the sim is done
-        return [self.W.env[:, :, layer['gray']],
+        return [self.W.get_state(),
                 self.W.get_reward(),
                 not self.W.RUNNING, # NOT: to be consistent with conventions
                 {}]
@@ -95,9 +95,6 @@ class ForestFire(gym.Env):
                             nx, ny = n_cell
                             self.W.env[nx, ny, layer['gray']] = grass['gray_burning']
                             ignited_cells.add(n_cell)
-
-        # somehow, dirt cells are being added to burning_cells
-        # heat is at -1, but fuel is at 0 for a dirt cell that turned into a burnt cell
 
         self.W.burning_cells = self.W.burning_cells - burnt_out_cells
         self.W.burning_cells.update(ignited_cells)

@@ -31,10 +31,8 @@ DQN = DQN_Learner(forestfire)
 S_DQN = DQN_Learner(forestfire, small_network=True)
 
 # just for testing
-'''
 import numpy as np
 m = DQN.model
 s = DQN.sim.reset()
-s = np.reshape(s, [1] + list(s.shape))
+s = np.reshape(s, [1, 1] + list(s.shape))
 p = m.predict(s)
-'''
