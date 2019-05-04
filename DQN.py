@@ -284,7 +284,7 @@ class DQN_Learner:
         state = self.sim.reset()
         while not done:
             self.sim.render()
-            state = np.reshape(state, [1] + list(state.shape))
+            state = np.reshape(state, [1, 1] + list(state.shape))
             action = self.choose_action(state, eps=eps)
             state, _, done, _ = self.sim.step(action)
             time.sleep(0.1)

@@ -68,7 +68,6 @@ class ForestFire(gym.Env):
 
     def update(self):
         self.W.agents = [a for a in self.W.agents if not a.is_dead()]
-
         self.W.METADATA['new_ignitions'] = 0
 
         burnt_out_cells = set()

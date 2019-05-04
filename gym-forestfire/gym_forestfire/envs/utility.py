@@ -133,6 +133,9 @@ class World:
 
     def is_burnable(self, cell):
         x, y = cell
+        # a burning cell is not burnable
+        if self.env[x, y, layer['temp']] > self.env[x, y, layer['threshold']]:
+            return False
         # a burnt out cell is not burnable
         if self.env[x, y, layer['fuel']] <= 0:
             return False
