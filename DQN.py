@@ -24,7 +24,7 @@ https://stackoverflow.com/questions/47840527/using-tensorflow-huber-loss-in-kera
 """
 
 class DQN_Learner:
-    def __init__(self, sim, small_network=False, name=None):
+    def __init__(self, sim, name=None):
         if not sim.spec.id == "gym-forestfire-v0":
             print("DQN currently only supports ForestFire...")
             return
@@ -48,7 +48,7 @@ class DQN_Learner:
         # number of iterations before updating the target network
         self.target_update_cnt = 1000
         # the neural network
-        self.model = self._make_model(small_network)
+        self.model = self._make_model(self.sim.small_network)
         # load a model from file if a name is given
         if name:
             self._load(name)

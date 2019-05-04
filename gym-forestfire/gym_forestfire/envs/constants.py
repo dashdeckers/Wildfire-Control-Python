@@ -11,6 +11,8 @@ NUM_ACTIONS = 5
 WIND_PARAMS = [1, (1, 1)]
 # currently the only option
 FITNESS_MEASURE = "Ignitions_Percentage"
+# use small (only 1 hidden dense layer) network (otherwise original architecture)
+SMALL_NETWORK = True
 # print information on fitness etc
 VERBOSE = False
 

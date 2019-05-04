@@ -7,6 +7,7 @@ from .constants import (
     layer,
     get_name,
     color2ascii,
+    SMALL_NETWORK,
     NUM_ACTIONS,
     VERBOSE,
     HEIGHT,
@@ -23,6 +24,7 @@ class ForestFire(gym.Env):
     def __init__(self):
         self.W = World()
         self.get_name = get_name
+        self.small_network = SMALL_NETWORK
         self.action_space = spaces.Discrete(NUM_ACTIONS)
         self.observation_space = spaces.Box(low=0,
                                             high=255,
