@@ -23,10 +23,6 @@ AND
 https://stackoverflow.com/questions/47840527/using-tensorflow-huber-loss-in-keras
 """
 
-# TODO: the learning rate never changes
-# TODO: Plot TD-error, reward, Q-Value per action
-# TODO: 4-stacked frames
-# TODO: tune parameters
 class DQN_Learner:
     def __init__(self, sim, small_network=False, name=None):
         if not sim.spec.id == "gym-forestfire-v0":
@@ -59,8 +55,7 @@ class DQN_Learner:
         # the target neural network
         self.target = keras.models.clone_model(self.model)
         self.target.set_weights(self.model.get_weights())
-        # memory stack for experience replay
-        # TODO: Pre-initialize memory with human-run data
+        # memory stack for experience replay (do run_human() to pre-initialize it)
         self.memory = deque(maxlen=20000)
 
     '''
@@ -122,18 +117,6 @@ class DQN_Learner:
         model.summary()
         return model
 
-    # returns the huber loss
-    # according to Marco: use gradient clipping, not loss clipping
-    def _huber_loss(self, y_true, y_pred, clip_delta=1.0):
-      error = y_true - y_pred
-      cond  = tf.keras.backend.abs(error) < clip_delta
-
-      squared_loss = 0.5 * tf.keras.backend.square(error)
-      linear_loss  = clip_delta * \
-                (tf.keras.backend.abs(error) - 0.5 * clip_delta)
-
-      return tf.where(cond, squared_loss, linear_loss)
-
     # add a memory
     def _remember(self, state, action, reward, sprime, done):
         self.memory.append((state, action, reward, sprime, done))
@@ -153,10 +136,11 @@ class DQN_Learner:
         key_map = {0:'N', 1:'S', 2:'E', 3:'W', 4:'D', 5:' '}
         if state == 'Current':
             state = self.sim.W.get_state()
+
         state = np.reshape(state, [1, 1] + list(state.shape))
         QVals = self.model.predict(state)[0]
-        maxval = -1000
-        maxidx = 0
+        maxval, maxidx = (-1000, -1)
+
         for idx, val in enumerate(QVals):
             if val > maxval:
                 (maxidx, maxval) = (idx, val)
@@ -314,15 +298,8 @@ class DQN_Learner:
             print(count, ":", str(sum(r/k)))
             count += k
 
-    # saves a visualization of the model to a file
-    def show_model(self, name="model"):
-        if name == "model":
-            plot_model(self.model, show_shapes=True, to_file='model.png')
-        if name == "target":
-            plot_model(self.target, show_shapes=True, to_file='target.png')
-
     # some feel for the gradients
-    def show_gradients(self):
+    def _show_gradients(self):
         weights = self.model.get_weights()
         for i in range(len(weights)):
             layer = weights[i]
