@@ -39,7 +39,7 @@ def create_map():
     threshold = np.empty((WIDTH, HEIGHT))
     threshold.fill(grass['threshold'])
 
-    f_mobility = np.ones((WIDTH, HEIGHT), dtype=np.float32)
+    f_mobility = np.ones((WIDTH, HEIGHT))
 
     return np.dstack((gray, temp, heat, fuel, threshold, f_mobility))
 

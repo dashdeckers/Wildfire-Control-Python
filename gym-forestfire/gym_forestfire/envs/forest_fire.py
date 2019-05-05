@@ -7,8 +7,10 @@ from .constants import (
     layer,
     get_name,
     color2ascii,
+    AGENT_SPEED_ITER,
     SMALL_NETWORK,
     NUM_ACTIONS,
+    AGENT_SPEED,
     METADATA,
     VERBOSE,
     HEIGHT,
@@ -33,12 +35,19 @@ class ForestFire(gym.Env):
                                             dtype=int)
 
     def step(self, action):
+        global AGENT_SPEED_ITER
         if action in ["N", "S", "E", "W"] or action in range(4):
             self.W.agents[0].move(action)
         if action in ["D", 4]:
             self.W.agents[0].dig()
         # If the action is not handled, the agent does nothing
-        self.update()
+
+        # update environment only every AGENT_SPEED steps
+        AGENT_SPEED_ITER -= 1
+        if AGENT_SPEED_ITER == 0:
+            self.update()
+            AGENT_SPEED_ITER = AGENT_SPEED
+
         if VERBOSE:
             self.W.print_info()
         # return the layer of the map that is the grayscaled colors,
