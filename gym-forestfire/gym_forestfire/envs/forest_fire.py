@@ -9,6 +9,7 @@ from .constants import (
     color2ascii,
     SMALL_NETWORK,
     NUM_ACTIONS,
+    METADATA,
     VERBOSE,
     HEIGHT,
     WIDTH,
@@ -70,7 +71,7 @@ class ForestFire(gym.Env):
 
     def update(self):
         self.W.agents = [a for a in self.W.agents if not a.is_dead()]
-        self.W.METADATA['new_ignitions'] = 0
+        METADATA['new_ignitions'] = 0
 
         burnt_out_cells = set()
         ignited_cells = set()
@@ -101,8 +102,8 @@ class ForestFire(gym.Env):
         self.W.burning_cells = self.W.burning_cells - burnt_out_cells
         self.W.burning_cells.update(ignited_cells)
 
-        self.W.METADATA['new_ignitions'] += len(ignited_cells)
-        self.W.METADATA['burnt_cells'] += len(burnt_out_cells)
+        METADATA['new_ignitions'] += len(ignited_cells)
+        METADATA['burnt_cells'] += len(burnt_out_cells)
 
         if not self.W.agents or not self.W.burning_cells:
             self.W.RUNNING = False

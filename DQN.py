@@ -132,6 +132,7 @@ class DQN_Learner:
             return self.sim.action_space.sample()
 
     # show the predicted Q-Values for each action in state
+    # TODO: think about how to best track these over time
     def show_best_action(self, state='Current'):
         key_map = {0:'N', 1:'S', 2:'E', 3:'W', 4:'D', 5:' '}
         if state == 'Current':

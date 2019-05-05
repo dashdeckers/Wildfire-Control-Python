@@ -5,12 +5,14 @@ WIDTH = 10
 HEIGHT = 10
 # (agent_x, agent_y)
 AGENT_LOC = (4, 4)
+# (fire_x, fire_y)
+FIRE_LOC = (5, 5)
 # 6 actions to allow "do nothing" action, 5 to not allow it
 NUM_ACTIONS = 5
 # "Random" or [wind_speed, (wind_x, wind_y)]
 WIND_PARAMS = [1, (1, 1)]
-# currently the only option
-FITNESS_MEASURE = "Ignitions_Percentage"
+# "Ignitions_Percentage" or "A-Star"
+FITNESS_MEASURE = "A-Star"
 # use small (only 1 hidden dense layer) network (otherwise original architecture)
 SMALL_NETWORK = True
 # print information on fitness etc
@@ -58,7 +60,8 @@ layer = {
     "temp" : 1,
     "heat" : 2,
     "fuel" : 3,
-    "threshold" : 4,
+    "threshold"     : 4,
+    "fire_mobility" : 5,
 }
 
 # convert grayscale to ascii for rendering
@@ -67,4 +70,11 @@ color2ascii = {
     grayscale(Color("Red"))   : '@',
     grayscale(Color("Black")) : '#',
     grayscale(Color("Brown")) : '0',
+}
+
+METADATA = {
+    "death_penalty" : 1000,
+    "contained_bonus" : 1000,
+    "new_ignitions" : 0,
+    "burnt_cells" : 0,
 }

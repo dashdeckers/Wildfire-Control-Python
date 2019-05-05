@@ -1,11 +1,14 @@
 import math
 import random as r
 import numpy as np
+import pyastar
 from .constants import (
     FITNESS_MEASURE,
     color2ascii,
     WIND_PARAMS,
     AGENT_LOC,
+    FIRE_LOC,
+    METADATA,
     HEIGHT,
     WIDTH,
     dirt,
@@ -20,6 +23,7 @@ from .constants import (
 # heat (how much heat the cell can give off)
 # fuel (how much longer it can burn)
 # threshold (the temperature it can have before igniting)
+# fire_mobility (can fire spread over these cells? for the A* algorithm)
 def create_map():
     gray = np.empty((WIDTH, HEIGHT))
     gray.fill(grass['gray'])
@@ -35,13 +39,16 @@ def create_map():
     threshold = np.empty((WIDTH, HEIGHT))
     threshold.fill(grass['threshold'])
 
-    return np.dstack((gray, temp, heat, fuel, threshold))
+    f_mobility = np.ones((WIDTH, HEIGHT), dtype=np.float32)
+
+    return np.dstack((gray, temp, heat, fuel, threshold, f_mobility))
 
 def reset_map(env):
     env[:, :, layer['gray']].fill(grass['gray'])
     env[:, :, layer['temp']].fill(0)
     env[:, :, layer['heat']].fill(grass['heat'])
     env[:, :, layer['fuel']].fill(grass['fuel'])
+    env[:, :, layer['fire_mobility']].fill(1)
 
 class Agent:
     def __init__(self, W, position):
@@ -55,8 +62,10 @@ class Agent:
     def dig(self):
         # change the color
         self.W.env[self.x, self.y, layer['gray']] = dirt['gray']
-        # set the heat to -1 (identifying property of non-burnables)
+        # set the heat to -1 (= identifying property of non-burnables)
         self.W.env[self.x, self.y, layer['heat']] = dirt['heat']
+        # set the fire mobility to inf for the A* algorithm
+        self.W.env[self.x, self.y, layer['fire_mobility']] = np.inf
 
     def move(self, direction):
         (nx, ny) = self._direction_to_coords(direction)
@@ -89,29 +98,22 @@ class World:
 
         # a cell is a tuple (x, y)
         self.burning_cells = set()
-        self.set_fire_to((5, 5))
+        self.set_fire_to(FIRE_LOC)
 
         self.agents = [
             Agent(self, AGENT_LOC),
         ]
 
-        self.METADATA = {
-            "death_penalty" : 100,
-            "contained_bonus" : 100,
-            "new_ignitions" : 0,
-            "burnt_cells" : 0,
-        }
-
     def reset(self):
         self.RUNNING = True
         reset_map(self.env)
         self.burning_cells = set()
-        self.set_fire_to((5, 5))
+        self.set_fire_to(FIRE_LOC)
         self.agents = [
             Agent(self, AGENT_LOC)
         ]
-        self.METADATA['new_ignitions'] = 0
-        self.METADATA['burnt_cells'] = 0
+        METADATA['new_ignitions'] = 0
+        METADATA['burnt_cells'] = 0
 
     def inbounds(self, x, y):
         return 0 <= x < self.WIDTH and 0 <= y < self.HEIGHT
@@ -199,12 +201,32 @@ class World:
             # -1 for every new ignited field
             # +100 * (1 - percent_burnt) when fire dies out
             # -100 when the agent dies
-            reward -= self.METADATA['new_ignitions']
+            reward -= METADATA['new_ignitions']
             if not self.agents:
-                reward -= self.METADATA['death_penalty']
+                reward -= METADATA['death_penalty']
             if not self.burning_cells:
-                perc_burnt = self.METADATA['burnt_cells'] / (WIDTH * HEIGHT)
-                reward += self.METADATA['contained_bonus'] * (1 - perc_burnt)
+                perc_burnt = METADATA['burnt_cells'] / (WIDTH * HEIGHT)
+                reward += METADATA['contained_bonus'] * (1 - perc_burnt)
+
+        if FITNESS_MEASURE == "A-Star":
+            start = np.array([FIRE_LOC[0], FIRE_LOC[1]])
+            end = np.array([WIDTH - 1, HEIGHT - 1])
+            grid = self.env[:, :, layer['fire_mobility']].astype(np.float32)
+
+            path = pyastar.astar_path(grid, start, end, allow_diagonal=False)
+            if not self.burning_cells or path.shape[0] == 0:
+                perc_burnt = METADATA['burnt_cells'] / (WIDTH * HEIGHT)
+                reward += METADATA['contained_bonus'] * (1 - perc_burnt)
+                self.RUNNING = False
+            elif not self.agents:
+                reward -= METADATA['death_penalty']
+            else:
+                reward = path.shape[0]
+            # get average distance between "center of fire" and each each corner point
+            # "center of fire" is the middle point of the fire i guess?
+            # the reward should be the average distance (maybe also * perc_unburnt?)
+            # think about whether it might game the system by blocking corners ---
+            # although maybe just try it out.
         else:
             raise Exception(f"{FITNESS_MEASURE} is not a valid fitness measure")
         return reward
@@ -231,8 +253,8 @@ class World:
 
     # print various info about the world
     def print_info(self):
-        print("[New Ignitions] ", self.METADATA['new_ignitions'])
-        print("[Total Burnt Cells] ", self.METADATA['burnt_cells'])
-        print("[Percent Burnt] ", self.METADATA['burnt_cells'] / (WIDTH * HEIGHT))
+        print("[New Ignitions] ", METADATA['new_ignitions'])
+        print("[Total Burnt Cells] ", METADATA['burnt_cells'])
+        print("[Percent Burnt] ", METADATA['burnt_cells'] / (WIDTH * HEIGHT))
         print("[Reward] ", self.get_reward(), "\n")
 
