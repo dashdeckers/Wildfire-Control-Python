@@ -8,6 +8,7 @@ from .constants import (
     get_name,
     color2ascii,
     AGENT_SPEED_ITER,
+    FITNESS_MEASURE,
     SMALL_NETWORK,
     NUM_ACTIONS,
     AGENT_SPEED,
@@ -38,7 +39,7 @@ class ForestFire(gym.Env):
         global AGENT_SPEED_ITER
         if action in ["N", "S", "E", "W"] or action in range(4):
             self.W.agents[0].move(action)
-        if action in ["D", 4]:
+        if action in ["D", 4] and not FITNESS_MEASURE == "Toy":
             self.W.agents[0].dig()
         # If the action is not handled, the agent does nothing
 
@@ -114,5 +115,5 @@ class ForestFire(gym.Env):
         METADATA['new_ignitions'] += len(ignited_cells)
         METADATA['burnt_cells'] += len(burnt_out_cells)
 
-        if not self.W.agents or not self.W.burning_cells:
+        if not self.W.agents or (not self.W.burning_cells and not FITNESS_MEASURE == "Toy"):
             self.W.RUNNING = False

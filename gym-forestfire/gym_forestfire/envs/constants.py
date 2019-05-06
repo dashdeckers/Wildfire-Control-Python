@@ -12,7 +12,7 @@ WIND_PARAMS = [1, (1, 1)]
 # 6 actions to allow "do nothing" action, 5 to not allow it
 NUM_ACTIONS = 5
 # "Ignitions_Percentage", "A-Star" or "Toy"
-FITNESS_MEASURE = "Toy"
+FITNESS_MEASURE = "A-Star"
 # number of steps agent can do before the environment updates
 AGENT_SPEED_ITER = AGENT_SPEED = 2
 # use small (only 1 hidden dense layer) network (otherwise original architecture)
@@ -44,20 +44,10 @@ grass = {
     "gray"          : grayscale(Color("Green")),
     "gray_burning"  : grayscale(Color("Red")),
     "gray_burnt"    : grayscale(Color("Black")),
-    "heat"      : 0.2,
+    "heat"      : 0.3,
     "fuel"      : 20,
     "threshold" : 3,
     "radius"    : 1,
-}
-
-grassOLD = {
-    "gray"          : grayscale(Color("Green")),
-    "gray_burning"  : grayscale(Color("Red")),
-    "gray_burnt"    : grayscale(Color("Black")),
-    "heat"      : 0.2,
-    "fuel"      : 20,
-    "threshold" : 3,
-    "radius"    : 2,
 }
 
 # the parameters for dirt
@@ -87,8 +77,8 @@ color2ascii = {
 }
 
 METADATA = {
-    "death_penalty" : 1000,
-    "contained_bonus" : 1000,
-    "new_ignitions" : 0,
-    "burnt_cells" : 0,
+    "death_penalty"   : 100,
+    "contained_bonus" : 100,
+    "new_ignitions"   : 0,
+    "burnt_cells"     : 0,
 }

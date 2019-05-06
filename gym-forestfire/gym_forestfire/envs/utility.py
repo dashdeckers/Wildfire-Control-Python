@@ -89,8 +89,9 @@ class World:
         self.RUNNING = True
         # value to subtract from calculated reward when using A* measure
         self.default_reward = 0
-        # so we dont keep giving the same reward even with no change
-        self.old_reward = 0
+        # so we dont have to recompute reward sometimes, and to not have to give 
+        # the same reward sometimes even with no change
+        self.saved_reward = 0
 
         self.env = create_map()
         if WIND_PARAMS == "Random":
@@ -211,6 +212,7 @@ class World:
             if not self.burning_cells:
                 perc_burnt = METADATA['burnt_cells'] / (WIDTH * HEIGHT)
                 reward += METADATA['contained_bonus'] * (1 - perc_burnt)
+            self.saved_reward = reward
 
         elif FITNESS_MEASURE == "A-Star":
             # get average distance between "center of fire" and two corner points.
@@ -246,23 +248,25 @@ class World:
                 print(f"Reward: {reward} - {self.default_reward} = {reward - self.default_reward}")
 
             reward -= self.default_reward
+            self.saved_reward = reward
 
         elif FITNESS_MEASURE == "Toy":
-            start = np.array([self.agents[0].y, self.agents[0].x])
-            end = np.array([WIDTH - 1, HEIGHT - 1])
-            grid = self.env[:, :, layer['fire_mobility']].astype(np.float32)
-            path = pyastar.astar_path(grid, start, end, allow_diagonal=False)
+            # simple gradient reward: the closer to the far corner the higher the reward
+            if not self.agents:
+                reward = (-1) * METADATA['death_penalty']
+            else:
+                start = np.array([self.agents[0].y, self.agents[0].x])
+                end = np.array([WIDTH - 1, HEIGHT - 1])
+                grid = self.env[:, :, layer['fire_mobility']].astype(np.float32)
+                path = pyastar.astar_path(grid, start, end, allow_diagonal=False)
 
-            reward = path.shape[0]
-            if reward == self.old_reward:
-                reward = 0
+                reward = (-1) * path.shape[0]
 
-            if path.shape[0] == 0:
-                reward = METADATA["contained_bonus"]
-                self.RUNNING = False
+                if path.shape[0] == 0:
+                    reward = METADATA['contained_bonus']
+                    self.RUNNING = False
 
-            print(reward)
-            self.old_reward = reward
+            self.saved_reward = reward
 
 
         else:
@@ -294,5 +298,5 @@ class World:
         print("[New Ignitions] ", METADATA['new_ignitions'])
         print("[Total Burnt Cells] ", METADATA['burnt_cells'])
         print("[Percent Burnt] ", METADATA['burnt_cells'] / (WIDTH * HEIGHT))
-        print("[Reward] ", self.get_reward(), "\n")
+        print("[Reward] ", self.saved_reward, "\n")
 
