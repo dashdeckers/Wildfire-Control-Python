@@ -109,7 +109,12 @@ class World:
             Agent(self, AGENT_LOC),
         ]
 
+        METADATA['iteration'] = 0
+
     def reset(self):
+        if WIND_PARAMS == "Random":
+            self.wind_speed = r.randint(0, 3)
+            self.wind_vector = (r.randint(-1, 1), r.randint(-1, 1))
         self.RUNNING = True
         reset_map(self.env)
         self.burning_cells = set()
@@ -119,6 +124,7 @@ class World:
         ]
         METADATA['new_ignitions'] = 0
         METADATA['burnt_cells'] = 0
+        METADATA['iteration'] = 0
 
     def inbounds(self, x, y):
         return 0 <= x < self.WIDTH and 0 <= y < self.HEIGHT
@@ -238,20 +244,24 @@ class World:
             elif not self.agents:
                 reward -= METADATA['death_penalty']
             else:
-                print(f"Path1 length: {path1.shape[0]}, Path2 length: {path2.shape[0]}")
                 # if only one path is blocked, it was most likely due to digging the cell
                 # exactly in the corner, in that case just take the other value
                 if path1.shape[0] == 0 or path2.shape[0] == 0:
                     reward = path1.shape[0] if path1.shape[0] != 0 else path2.shape[0]
                 else:
                     reward = (path1.shape[0] + path2.shape[0]) / 2
-                print(f"Reward: {reward} - {self.default_reward} = {reward - self.default_reward}")
+
+                #print(f"Path1 length: {path1.shape[0]}, Path2 length: {path2.shape[0]}")
+                #print(f"Reward: {reward} - {self.default_reward} = \
+                #        {reward - self.default_reward}")
 
             reward -= self.default_reward
             self.saved_reward = reward
 
         elif FITNESS_MEASURE == "Toy":
             # simple gradient reward: the closer to the far corner the higher the reward
+            # when it reaches the far corner, the agent wins and gets a big reward.
+            # otherwise the reward is always the negative A* distance
             if not self.agents:
                 reward = (-1) * METADATA['death_penalty']
             else:

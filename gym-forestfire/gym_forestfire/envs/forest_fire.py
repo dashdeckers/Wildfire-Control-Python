@@ -39,9 +39,10 @@ class ForestFire(gym.Env):
         global AGENT_SPEED_ITER
         if action in ["N", "S", "E", "W"] or action in range(4):
             self.W.agents[0].move(action)
+        # dont let the agent dig in the toy problem
         if action in ["D", 4] and not FITNESS_MEASURE == "Toy":
             self.W.agents[0].dig()
-        # If the action is not handled, the agent does nothing
+        # if the action is not handled, the agent does nothing
 
         # update environment only every AGENT_SPEED steps
         AGENT_SPEED_ITER -= 1
@@ -81,6 +82,8 @@ class ForestFire(gym.Env):
 
     def update(self):
         self.W.agents = [a for a in self.W.agents if not a.is_dead()]
+
+        METADATA['iteration'] += 1
         METADATA['new_ignitions'] = 0
 
         burnt_out_cells = set()
@@ -115,5 +118,10 @@ class ForestFire(gym.Env):
         METADATA['new_ignitions'] += len(ignited_cells)
         METADATA['burnt_cells'] += len(burnt_out_cells)
 
+        # in the toy problem, the simulation is not terminated when the fire dies out
         if not self.W.agents or (not self.W.burning_cells and not FITNESS_MEASURE == "Toy"):
+            self.W.RUNNING = False
+
+        # but it is terminated when a certain number of iterations have passed
+        if FITNESS_MEASURE == "Toy" and METADATA['iteration'] == METADATA['max_iteration']:
             self.W.RUNNING = False

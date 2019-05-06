@@ -12,7 +12,7 @@ WIND_PARAMS = [1, (1, 1)]
 # 6 actions to allow "do nothing" action, 5 to not allow it
 NUM_ACTIONS = 5
 # "Ignitions_Percentage", "A-Star" or "Toy"
-FITNESS_MEASURE = "A-Star"
+FITNESS_MEASURE = "Toy"
 # number of steps agent can do before the environment updates
 AGENT_SPEED_ITER = AGENT_SPEED = 2
 # use small (only 1 hidden dense layer) network (otherwise original architecture)
@@ -81,4 +81,6 @@ METADATA = {
     "contained_bonus" : 100,
     "new_ignitions"   : 0,
     "burnt_cells"     : 0,
+    "iteration"       : 0,
+    "max_iteration"   : 200,
 }
