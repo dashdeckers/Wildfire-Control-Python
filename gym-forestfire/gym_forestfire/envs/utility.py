@@ -87,6 +87,10 @@ class World:
         self.WIDTH = WIDTH
         self.HEIGHT = HEIGHT
         self.RUNNING = True
+        # value to subtract from calculated reward when using A* measure
+        self.default_reward = 0
+        # so we dont keep giving the same reward even with no change
+        self.old_reward = 0
 
         self.env = create_map()
         if WIND_PARAMS == "Random":
@@ -199,8 +203,8 @@ class World:
         reward = 0
         if FITNESS_MEASURE == "Ignitions_Percentage":
             # -1 for every new ignited field
-            # +100 * (1 - percent_burnt) when fire dies out
-            # -100 when the agent dies
+            # +1000 * (1 - percent_burnt) when fire dies out
+            # -1000 when the agent dies
             reward -= METADATA['new_ignitions']
             if not self.agents:
                 reward -= METADATA['death_penalty']
@@ -208,25 +212,59 @@ class World:
                 perc_burnt = METADATA['burnt_cells'] / (WIDTH * HEIGHT)
                 reward += METADATA['contained_bonus'] * (1 - perc_burnt)
 
-        if FITNESS_MEASURE == "A-Star":
+        elif FITNESS_MEASURE == "A-Star":
+            # get average distance between "center of fire" and two corner points.
+            # "center of fire" is the starting point of the fire, but should be a
+            # point on the frontier of the fire somehow
+            # subtract the starting reward each time so that we start with 0 reward
+            # when the fire has been contained, give +1000 * (1 - perc_burnt)
             start = np.array([FIRE_LOC[0], FIRE_LOC[1]])
-            end = np.array([WIDTH - 1, HEIGHT - 1])
+            end1 = np.array([0, 0])
+            end2 = np.array([WIDTH - 1, HEIGHT - 1])
             grid = self.env[:, :, layer['fire_mobility']].astype(np.float32)
 
-            path = pyastar.astar_path(grid, start, end, allow_diagonal=False)
-            if not self.burning_cells or path.shape[0] == 0:
+            path1 = pyastar.astar_path(grid, start, end1, allow_diagonal=False)
+            path2 = pyastar.astar_path(grid, start, end2, allow_diagonal=False)
+
+            if not self.default_reward:
+                self.default_reward = (path1.shape[0] + path2.shape[0]) / 2
+
+            if not self.burning_cells or (path1.shape[0] == 0 and path2.shape[0] == 0):
                 perc_burnt = METADATA['burnt_cells'] / (WIDTH * HEIGHT)
                 reward += METADATA['contained_bonus'] * (1 - perc_burnt)
                 self.RUNNING = False
             elif not self.agents:
                 reward -= METADATA['death_penalty']
             else:
-                reward = path.shape[0]
-            # get average distance between "center of fire" and each each corner point
-            # "center of fire" is the middle point of the fire i guess?
-            # the reward should be the average distance (maybe also * perc_unburnt?)
-            # think about whether it might game the system by blocking corners ---
-            # although maybe just try it out.
+                print(f"Path1 length: {path1.shape[0]}, Path2 length: {path2.shape[0]}")
+                # if only one path is blocked, it was most likely due to digging the cell
+                # exactly in the corner, in that case just take the other value
+                if path1.shape[0] == 0 or path2.shape[0] == 0:
+                    reward = path1.shape[0] if path1.shape[0] != 0 else path2.shape[0]
+                else:
+                    reward = (path1.shape[0] + path2.shape[0]) / 2
+                print(f"Reward: {reward} - {self.default_reward} = {reward - self.default_reward}")
+
+            reward -= self.default_reward
+
+        elif FITNESS_MEASURE == "Toy":
+            start = np.array([self.agents[0].y, self.agents[0].x])
+            end = np.array([WIDTH - 1, HEIGHT - 1])
+            grid = self.env[:, :, layer['fire_mobility']].astype(np.float32)
+            path = pyastar.astar_path(grid, start, end, allow_diagonal=False)
+
+            reward = path.shape[0]
+            if reward == self.old_reward:
+                reward = 0
+
+            if path.shape[0] == 0:
+                reward = METADATA["contained_bonus"]
+                self.RUNNING = False
+
+            print(reward)
+            self.old_reward = reward
+
+
         else:
             raise Exception(f"{FITNESS_MEASURE} is not a valid fitness measure")
         return reward

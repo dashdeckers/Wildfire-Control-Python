@@ -11,8 +11,8 @@ AGENT_LOC = (4, 4)
 WIND_PARAMS = [1, (1, 1)]
 # 6 actions to allow "do nothing" action, 5 to not allow it
 NUM_ACTIONS = 5
-# "Ignitions_Percentage" or "A-Star"
-FITNESS_MEASURE = "A-Star"
+# "Ignitions_Percentage", "A-Star" or "Toy"
+FITNESS_MEASURE = "Toy"
 # number of steps agent can do before the environment updates
 AGENT_SPEED_ITER = AGENT_SPEED = 2
 # use small (only 1 hidden dense layer) network (otherwise original architecture)
@@ -24,9 +24,11 @@ VERBOSE = False
 def get_name():
     import time
     NAME = (
-    #   f"""Size:{(WIDTH, HEIGHT)}-"""
+#        f"""Size:{(WIDTH, HEIGHT)}-"""
         f"""Reward:{FITNESS_MEASURE}-"""
-        f"""Waiting:{True if NUM_ACTIONS == 6 else False}-"""
+        f"""A.Speed:{AGENT_SPEED}"""
+        f"""Network:{"S" if SMALL_NETWORK else "L"}"""
+#        f"""Waiting:{True if NUM_ACTIONS == 6 else False}-"""
         f"""Time:{time.asctime( time.localtime(time.time()) ).split()[3]}"""
     )
     return NAME
@@ -45,7 +47,17 @@ grass = {
     "heat"      : 0.2,
     "fuel"      : 20,
     "threshold" : 3,
-    "radius"    : 2
+    "radius"    : 1,
+}
+
+grassOLD = {
+    "gray"          : grayscale(Color("Green")),
+    "gray_burning"  : grayscale(Color("Red")),
+    "gray_burnt"    : grayscale(Color("Black")),
+    "heat"      : 0.2,
+    "fuel"      : 20,
+    "threshold" : 3,
+    "radius"    : 2,
 }
 
 # the parameters for dirt

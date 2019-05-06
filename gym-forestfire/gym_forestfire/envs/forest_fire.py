@@ -62,12 +62,12 @@ class ForestFire(gym.Env):
         return self.W.env[:, :, layer['gray']]
 
     def render(self):
-        print("  ", end="")
+        print(" ", end="")
         for x in range(WIDTH):
             print(x, end="")
         print("")
         for y in range(HEIGHT):
-            print(y, end=" ")
+            print(y, end="")
             for x in range(WIDTH):
                 # if the agent is at this location, print A
                 if self.W.agents and (self.W.agents[0].x, self.W.agents[0].y) == (x, y):
