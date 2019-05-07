@@ -40,7 +40,8 @@ def run_human(sim, DQN=None):
     state = sim.reset()
     sim.render()
     while not done:
-        print("WASD to move, Space to dig, 'n' to wait, 'q' to quit.")
+        print("WASD to move, Space to dig,")
+        print("'n' to wait, 'q' to quit.")
         print("'i' to inspect a single cell,")
         print("'p' to print general info,")
         print("'m' to print all metadata info.\n")

@@ -115,7 +115,7 @@ class DQN_Learner:
         model.compile(loss='mse',
                       optimizer=Adam(lr=self.alpha,
                                     clipvalue=1),
-                      metrics=['mse', 'acc'])
+                      metrics=['mse'])
         model.summary()
         return model
 
@@ -294,14 +294,19 @@ class DQN_Learner:
         plt.show()
 
     # prints the average reward per k episodes
-    def average_reward_per_k_episodes(self, k):
+    def average_reward_per_k_episodes(self, k, plot=False):
         n_episodes = len(self.rewards)
         rewards_per_k = np.split(np.array(self.rewards), n_episodes/k)
-        count = k
-        print(f"Average reward per {k} episodes:")
-        for r in rewards_per_k:
-            print(count, ":", str(sum(r/k)))
-            count += k
+        if plot:
+            plt.plot(rewards_per_k)
+            plt.title(f"Average reward per {k} episodes")
+            plt.show()
+        else:
+            count = k
+            print(f"Average reward per {k} episodes:")
+            for r in rewards_per_k:
+                print(count, ":", str(sum(r/k)))
+                count += k
 
     # some feel for the gradients
     def _show_gradients(self):
