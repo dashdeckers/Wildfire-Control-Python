@@ -77,10 +77,23 @@ color2ascii = {
 }
 
 METADATA = {
+# for reward measures
     "death_penalty"   : 100,
     "contained_bonus" : 100,
-    "new_ignitions"   : 0,
-    "burnt_cells"     : 0,
     "iteration"       : 0,
     "max_iteration"   : 200,
+
+# book-keeping
+    "new_ignitions" : 0,
+    "burnt_cells"   : 0,
+
+# DQN parameters
+    "memory_size"    : 20000,
+    "max_eps"        : 1.0,
+    "min_eps"        : 0.01,
+    "eps_decay_rate" : 0.005,
+    "gamma"          : 0.99,
+    "alpha"          : 0.001,
+    "target_update"  : 1000,
+    "batch_size"     : 32,
 }

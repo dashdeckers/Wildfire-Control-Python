@@ -28,6 +28,7 @@ class ForestFire(gym.Env):
     def __init__(self):
         self.W = World()
         self.get_name = get_name
+        self.METADATA = METADATA
         self.small_network = SMALL_NETWORK
         self.action_space = spaces.Discrete(NUM_ACTIONS)
         self.observation_space = spaces.Box(low=0,

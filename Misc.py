@@ -41,7 +41,9 @@ def run_human(sim, DQN=None):
     sim.render()
     while not done:
         print("WASD to move, Space to dig, 'n' to wait, 'q' to quit.")
-        print("'i' to inspect a single cell, 'p' to print general info.\n")
+        print("'i' to inspect a single cell,")
+        print("'p' to print general info,")
+        print("'m' to print all metadata info.\n")
         char = getch()
         if char == 'q':
             return "Cancelled"
@@ -63,6 +65,8 @@ def run_human(sim, DQN=None):
         elif char == 'p':
             print("General Info")
             sim.W.print_info()
+        elif char == 'm':
+            sim.W.print_metadata()
         else:
             print("Invalid action, not good if collecting memories for DQN.\n")
         sim.render()

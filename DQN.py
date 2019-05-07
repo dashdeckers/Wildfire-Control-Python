@@ -30,6 +30,8 @@ class DQN_Learner:
             return
         # the environment / simulation
         self.sim = sim
+        # the constants
+        self.METADATA = sim.METADATA
         # output dimensions / action size
         self.action_size = self.sim.action_space.n
         # list of rewards over episodes
@@ -37,16 +39,16 @@ class DQN_Learner:
         # to print the map if we get a record score
         self.best_reward = -10000
         # exploration rate, decays over time
-        self.max_eps = 1.0
-        self.min_eps = 0.01
-        self.eps_decay_rate = 0.005
+        self.max_eps = self.METADATA['max_eps']
+        self.min_eps = self.METADATA['min_eps']
+        self.eps_decay_rate = self.METADATA['eps_decay_rate']
         self.eps = self.max_eps
         # delayed reward factor / discount rate
-        self.gamma = 0.99
+        self.gamma = self.METADATA['gamma']
         # learning rate
-        self.alpha = 0.001
+        self.alpha = self.METADATA['alpha']
         # number of iterations before updating the target network
-        self.target_update_cnt = 1000
+        self.target_update_cnt = self.METADATA['target_update']
         # the neural network
         self.model = self._make_model(self.sim.small_network)
         # load a model from file if a name is given
@@ -56,7 +58,7 @@ class DQN_Learner:
         self.target = keras.models.clone_model(self.model)
         self.target.set_weights(self.model.get_weights())
         # memory stack for experience replay (do run_human() to pre-initialize it)
-        self.memory = deque(maxlen=20000)
+        self.memory = deque(maxlen=self.METADATA['memory_size'])
 
     '''
     Create the neural net:
@@ -189,7 +191,7 @@ class DQN_Learner:
     # the DQN algorithm. some of the algorithm is moved to the replay method
     # TODO: preinitialize, then always add a 4-stack of frames to memory.
     # This will have consequences for replay() as well
-    def learn(self, n_episodes=1000, batch_size=32):
+    def learn(self, n_episodes=1000):
         # Run DQN.learn(), then in a separate terminal run
         # "tensorboard --logdir ./logs" and then open 
         # "localhost:6006" in your browser to open TensorBoard
@@ -202,6 +204,8 @@ class DQN_Learner:
         )
         self.tensorboard.set_model(self.model)
         self.iteration = 0
+
+        batch_size = self.METADATA['batch_size']
 
         target_update_counter = self.target_update_cnt
         for episode in range(n_episodes):
@@ -257,7 +261,7 @@ class DQN_Learner:
         from Misc import run_human
         # collect data until memory is full
         status = "Running"
-        while len(self.memory) < 20000 and status != "Cancelled":
+        while len(self.memory) < self.METADATA['memory_size'] and status != "Cancelled":
             status = run_human(self.sim, self)
             print("Memory Size: ", len(self.memory))
         # save collected data to file

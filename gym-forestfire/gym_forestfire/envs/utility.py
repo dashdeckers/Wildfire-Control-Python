@@ -310,3 +310,9 @@ class World:
         print("[Percent Burnt] ", METADATA['burnt_cells'] / (WIDTH * HEIGHT))
         print("[Reward] ", self.saved_reward, "\n")
 
+    # print all metadata info
+    def print_metadata(self):
+        import pprint
+        pp = pprint.PrettyPrinter()
+        pp.pprint(METADATA)
+        print("")
