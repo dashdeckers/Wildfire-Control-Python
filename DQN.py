@@ -144,6 +144,8 @@ class DQN_Learner:
         QVals = self.model.predict(state)[0]
         maxval, maxidx = (-1000, -1)
 
+        # TODO: Q-values over time, print at every run_human iteration
+
         for idx, val in enumerate(QVals):
             if val > maxval:
                 (maxidx, maxval) = (idx, val)
@@ -297,6 +299,7 @@ class DQN_Learner:
     def average_reward_per_k_episodes(self, k, plot=False):
         n_episodes = len(self.rewards)
         rewards_per_k = np.split(np.array(self.rewards), n_episodes/k)
+        # TODO: fix this
         if plot:
             plt.plot(rewards_per_k)
             plt.title(f"Average reward per {k} episodes")
@@ -313,6 +316,7 @@ class DQN_Learner:
         weights = self.model.get_weights()
         for i in range(len(weights)):
             layer = weights[i]
+            # TODO: binned histograms is where the money is actually at
             print(f"Layer: {i}, Max: {np.max(layer)}, Min: {np.min(layer)}")
 
     # loads the weights of the model from file.

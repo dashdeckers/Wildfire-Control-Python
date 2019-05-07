@@ -252,8 +252,8 @@ class World:
                     reward = (path1.shape[0] + path2.shape[0]) / 2
 
                 #print(f"Path1 length: {path1.shape[0]}, Path2 length: {path2.shape[0]}")
-                #print(f"Reward: {reward} - {self.default_reward} = \
-                #        {reward - self.default_reward}")
+                #print(f"Reward: {reward} - {self.default_reward} = " + \
+                #      f"{reward - self.default_reward}")
 
             reward -= self.default_reward
             self.saved_reward = reward
@@ -276,6 +276,7 @@ class World:
                     reward = METADATA['contained_bonus']
                     self.RUNNING = False
 
+            print("Reward: ", reward)
             self.saved_reward = reward
 
 
@@ -305,8 +306,6 @@ class World:
 
     # print various info about the world
     def print_info(self):
-        print("[New Ignitions] ", METADATA['new_ignitions'])
-        print("[Total Burnt Cells] ", METADATA['burnt_cells'])
         print("[Percent Burnt] ", METADATA['burnt_cells'] / (WIDTH * HEIGHT))
         print("[Reward] ", self.saved_reward, "\n")
 
