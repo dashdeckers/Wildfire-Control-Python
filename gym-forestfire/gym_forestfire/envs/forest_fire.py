@@ -33,6 +33,7 @@ class ForestFire(gym.Env):
         self.LOGGING = LOGGING
         self.METADATA = METADATA
         self.small_network = SMALL_NETWORK
+        self.FITNESS_MEASURE = FITNESS_MEASURE
 
         self.action_space = spaces.Discrete(NUM_ACTIONS)
         self.observation_space = spaces.Box(low=0,
@@ -71,10 +72,10 @@ class ForestFire(gym.Env):
     def render(self):
         print(" ", end="")
         for x in range(WIDTH):
-            print(x, end="")
+            print(x % 10, end="")
         print("")
         for y in range(HEIGHT):
-            print(y, end="")
+            print(y % 10, end="")
             for x in range(WIDTH):
                 # if the agent is at this location, print A
                 if self.W.agents and (self.W.agents[0].x, self.W.agents[0].y) == (x, y):

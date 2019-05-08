@@ -77,7 +77,10 @@ class DQN_Learner:
     dense layer: 6 units (output layer, 6 possible actions)
     '''
     def _make_model(self, small_network=False):
-        input_shape = (self.sim.W.WIDTH, self.sim.W.HEIGHT, 3)
+        if self.sim.FITNESS_MEASURE == "Toy":
+            input_shape = (self.sim.W.WIDTH, self.sim.W.HEIGHT)
+        else:
+            input_shape = (self.sim.W.WIDTH, self.sim.W.HEIGHT, 3)
         layers_original = [
             Conv2D(filters=32,
                    kernel_size=(8, 8),
@@ -138,25 +141,6 @@ class DQN_Learner:
             return np.argmax(self.model.predict(state)[0])
         else:
             return self.sim.action_space.sample()
-
-    # show the predicted Q-Values for each action in state
-    # TODO: think about how to best track these over time
-    def show_best_action(self, state='Current'):
-        key_map = {0:'N', 1:'S', 2:'E', 3:'W', 4:'D', 5:' '}
-        if state == 'Current':
-            state = self.sim.W.get_state()
-
-        state = np.reshape(state, [1] + list(state.shape))
-        QVals = self.model.predict(state)[0]
-        maxval, maxidx = (-1000, -1)
-
-        # TODO: Q-values over time, print at every run_human iteration
-
-        for idx, val in enumerate(QVals):
-            if val > maxval:
-                (maxidx, maxval) = (idx, val)
-            print(key_map[idx], ":", round(val, 3), " | ", end="")
-        print(f"\nBest Action: {key_map[maxidx]}")
 
     # decay epsilon (slower rate of decay for higher episode_num)
     # TODO: configure this to anneal to min_eps in exactly X episodes
@@ -255,7 +239,7 @@ class DQN_Learner:
                 state = sprime
 
             # render the last state if we reach a highscore
-            if total_reward > self.best_reward:
+            if total_reward >= 0.8 * self.best_reward:
                 self.best_reward = total_reward
                 self.sim.render()
 
@@ -285,6 +269,25 @@ class DQN_Learner:
         with open('human_data.dat', 'rb') as infile:
             self.memory = pickle.load(infile)
 
+    # show the predicted Q-Values for each action in state
+    # TODO: think about how to best track these over time
+    def show_best_action(self, state='Current'):
+        key_map = {0:'N', 1:'S', 2:'E', 3:'W', 4:'D', 5:' '}
+        if state == 'Current':
+            state = self.sim.W.get_state()
+            state = np.reshape(state, [1] + list(state.shape))
+
+        QVals = self.model.predict(state)[0]
+        maxval, maxidx = (-1000, -1)
+
+        # TODO: Q-values over time, print at every run_human iteration
+        print("| ", end="")
+        for idx, val in enumerate(QVals):
+            if val > maxval:
+                (maxidx, maxval) = (idx, val)
+            print(key_map[idx], ":", round(val, 2), " | ", end="")
+        print(f" Best: {key_map[maxidx]}")
+
     # play the simulation by choosing optimal actions
     def play_optimal(self, eps=0):
         done = False
@@ -292,6 +295,7 @@ class DQN_Learner:
         while not done:
             self.sim.render()
             state = np.reshape(state, [1] + list(state.shape))
+            self.show_best_action(state)
             action = self.choose_action(state, eps=eps)
             state, _, done, _ = self.sim.step(action)
             time.sleep(0.1)
@@ -319,14 +323,6 @@ class DQN_Learner:
             for r in rewards_per_k:
                 print(count, ":", str(sum(r/k)))
                 count += k
-
-    # some feel for the gradients
-    def _show_gradients(self):
-        weights = self.model.get_weights()
-        for i in range(len(weights)):
-            layer = weights[i]
-            # TODO: binned histograms is where the money is actually at
-            print(f"Layer: {i}, Max: {np.max(layer)}, Min: {np.min(layer)}")
 
     # loads the weights of the model from file.
     # pass name to class initialization to use load

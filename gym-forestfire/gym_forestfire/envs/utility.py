@@ -9,6 +9,7 @@ from .constants import (
     AGENT_LOC,
     FIRE_LOC,
     METADATA,
+    VERBOSE,
     HEIGHT,
     WIDTH,
     dirt,
@@ -63,10 +64,13 @@ class Agent:
         self.x, self.y = position
         self.W = W
         self.W.env[self.x, self.y, layer['agent_pos']] = 1
+        self.dead = False
+        if FITNESS_MEASURE != "Toy":
+            self.dig()
 
     def is_dead(self):
         # dead if the cell at position is burning
-        return self.W.is_burning((self.x, self.y))
+        return self.dead or self.W.is_burning((self.x, self.y))
 
     def dig(self):
         # change the color
@@ -79,10 +83,13 @@ class Agent:
     def move(self, direction):
         self.W.env[self.x, self.y, layer['agent_pos']] = 0
         (nx, ny) = self._direction_to_coords(direction)
-        if self.W.inbounds(nx, ny) and not self.W.is_burning((nx, ny)):
+        if self.W.inbounds(nx, ny):
             (self.x, self.y) = (nx, ny)
             self.W.env[self.x, self.y, layer['agent_pos']] = 1
-        self.dig()
+            if self.W.is_burning((nx, ny)):
+                self.dead = True
+        if FITNESS_MEASURE != "Toy":
+            self.dig()
 
     def _direction_to_coords(self, direction):
         if direction in ["N", 0]:
@@ -265,9 +272,10 @@ class World:
                 else:
                     reward = (path1.shape[0] + path2.shape[0]) / 2
 
-                #print(f"Path1 length: {path1.shape[0]}, Path2 length: {path2.shape[0]}")
-                #print(f"Reward: {reward} - {self.default_reward} = " + \
-                #      f"{reward - self.default_reward}")
+                if VERBOSE:
+                    print(f"Path1 length: {path1.shape[0]}, Path2 length: {path2.shape[0]}")
+                    print(f"Reward: {reward} - {self.default_reward} = " + \
+                          f"{reward - self.default_reward}")
 
             reward -= self.default_reward
             self.saved_reward = reward
@@ -279,7 +287,7 @@ class World:
             if not self.agents:
                 reward = (-1) * METADATA['death_penalty']
             else:
-                start = np.array([self.agents[0].y, self.agents[0].x])
+                start = np.array([self.agents[0].x, self.agents[0].y])
                 end = np.array([WIDTH - 1, HEIGHT - 1])
                 grid = self.env[:, :, layer['fire_mobility']].astype(np.float32)
                 path = pyastar.astar_path(grid, start, end, allow_diagonal=False)
@@ -290,7 +298,8 @@ class World:
                     reward = METADATA['contained_bonus']
                     self.RUNNING = False
 
-            print("Reward: ", reward)
+            if VERBOSE:
+                print("Reward: ", reward)
             self.saved_reward = reward
 
 
@@ -299,9 +308,12 @@ class World:
         return reward
 
     def get_state(self):
-        return np.dstack((self.env[:, :, layer['agent_pos']],
-                          self.env[:, :, layer['fire_pos']],
-                          self.env[:, :, layer['fire_mobility']]))
+        if FITNESS_MEASURE == "Toy":
+            return self.env[:, :, layer['gray']]
+        else:
+            return np.dstack((self.env[:, :, layer['agent_pos']],
+                              self.env[:, :, layer['fire_pos']],
+                              self.env[:, :, layer['fire_mobility']]))
 
     # pass a cell (x, y) to print information on it
     def inspect(self, cell):
