@@ -14,6 +14,7 @@ from .constants import (
     AGENT_SPEED,
     METADATA,
     VERBOSE,
+    LOGGING,
     HEIGHT,
     WIDTH,
 )
@@ -27,9 +28,12 @@ class ForestFire(gym.Env):
 
     def __init__(self):
         self.W = World()
+        self.layer = layer
         self.get_name = get_name
+        self.LOGGING = LOGGING
         self.METADATA = METADATA
         self.small_network = SMALL_NETWORK
+
         self.action_space = spaces.Discrete(NUM_ACTIONS)
         self.observation_space = spaces.Box(low=0,
                                             high=255,
@@ -62,7 +66,7 @@ class ForestFire(gym.Env):
 
     def reset(self):
         self.W.reset()
-        return self.W.env[:, :, layer['gray']]
+        return self.W.get_state()
 
     def render(self):
         print(" ", end="")
@@ -97,6 +101,7 @@ class ForestFire(gym.Env):
             # if burnt out, remove cell and update color
             if self.W.env[x, y, layer['fuel']] <= 0:
                 self.W.env[x, y, layer['gray']] = grass['gray_burnt']
+                self.W.env[x, y, layer['fire_pos']] = 0
                 burnt_out_cells.add(cell)
             else:
                 # else get neighbours of cell
@@ -111,6 +116,7 @@ class ForestFire(gym.Env):
                         if self.W.is_burning(n_cell):
                             nx, ny = n_cell
                             self.W.env[nx, ny, layer['gray']] = grass['gray_burning']
+                            self.W.env[nx, ny, layer['fire_pos']] = 1
                             ignited_cells.add(n_cell)
 
         self.W.burning_cells = self.W.burning_cells - burnt_out_cells

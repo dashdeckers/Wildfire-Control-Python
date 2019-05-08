@@ -1,7 +1,7 @@
 from colour import Color
 
 # Map Dimensions
-WIDTH = 10
+WIDTH = 15
 HEIGHT = 10
 # (fire_x, fire_y)
 FIRE_LOC = (5, 5)
@@ -9,14 +9,16 @@ FIRE_LOC = (5, 5)
 AGENT_LOC = (4, 4)
 # "Random" or [wind_speed, (wind_x, wind_y)]
 WIND_PARAMS = [1, (1, 1)]
-# 6 actions to allow "do nothing" action, 5 to not allow it
-NUM_ACTIONS = 5
+# 6 actions to allow "do nothing" action, 5 to not allow it. 4 to disable dig
+NUM_ACTIONS = 4
 # "Ignitions_Percentage", "A-Star" or "Toy"
 FITNESS_MEASURE = "A-Star"
 # number of steps agent can do before the environment updates
 AGENT_SPEED_ITER = AGENT_SPEED = 2
 # use small (only 1 hidden dense layer) network (otherwise original architecture)
 SMALL_NETWORK = True
+# whether to collect logging information for tensorboard
+LOGGING = False
 # print information on fitness etc
 VERBOSE = False
 
@@ -66,6 +68,8 @@ layer = {
     "fuel" : 3,
     "threshold"     : 4,
     "fire_mobility" : 5,
+    "agent_pos" : 6,
+    "fire_pos"  : 7,
 }
 
 # convert grayscale to ascii for rendering

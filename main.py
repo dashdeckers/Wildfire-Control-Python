@@ -33,5 +33,5 @@ DQN = DQN_Learner(forestfire)
 import numpy as np
 m = DQN.model
 s = DQN.sim.reset()
-s = np.reshape(s, [1, 1] + list(s.shape))
+s = np.reshape(s, [1] + list(s.shape))
 p = m.predict(s)

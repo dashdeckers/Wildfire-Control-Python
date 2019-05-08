@@ -43,6 +43,7 @@ def run_human(sim, DQN=None):
         print("WASD to move, Space to dig,")
         print("'n' to wait, 'q' to quit.")
         print("'i' to inspect a single cell,")
+        print("'l' to show a layer of the map,")
         print("'p' to print general info,")
         print("'m' to print all metadata info.\n")
         char = getch()
@@ -63,6 +64,12 @@ def run_human(sim, DQN=None):
             x = int(input("X coordinate: "))
             y = int(input("Y coordinate: "))
             sim.W.inspect((x, y))
+        elif char == 'l':
+            inp = input("Which layer? (string input) ")
+            if inp in sim.layer:
+                sim.W.show_layer(inp)
+            else:
+                sim.W.show_layer()
         elif char == 'p':
             print("General Info")
             sim.W.print_info()

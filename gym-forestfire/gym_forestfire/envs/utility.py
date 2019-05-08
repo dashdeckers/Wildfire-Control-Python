@@ -24,6 +24,7 @@ from .constants import (
 # fuel (how much longer it can burn)
 # threshold (the temperature it can have before igniting)
 # fire_mobility (can fire spread over these cells? for the A* algorithm)
+# agent and fire positions (extra inputs to the DQN)
 def create_map():
     gray = np.empty((WIDTH, HEIGHT))
     gray.fill(grass['gray'])
@@ -41,7 +42,12 @@ def create_map():
 
     f_mobility = np.ones((WIDTH, HEIGHT))
 
-    return np.dstack((gray, temp, heat, fuel, threshold, f_mobility))
+    agent_pos = np.zeros((WIDTH, HEIGHT))
+
+    fire_pos = np.zeros((WIDTH, HEIGHT))
+
+    return np.dstack((gray, temp, heat, fuel, threshold, 
+                      f_mobility, agent_pos, fire_pos))
 
 def reset_map(env):
     env[:, :, layer['gray']].fill(grass['gray'])
@@ -49,11 +55,14 @@ def reset_map(env):
     env[:, :, layer['heat']].fill(grass['heat'])
     env[:, :, layer['fuel']].fill(grass['fuel'])
     env[:, :, layer['fire_mobility']].fill(1)
+    env[:, :, layer['agent_pos']].fill(0)
+    env[:, :, layer['fire_pos']].fill(0)
 
 class Agent:
     def __init__(self, W, position):
         self.x, self.y = position
         self.W = W
+        self.W.env[self.x, self.y, layer['agent_pos']] = 1
 
     def is_dead(self):
         # dead if the cell at position is burning
@@ -68,9 +77,12 @@ class Agent:
         self.W.env[self.x, self.y, layer['fire_mobility']] = np.inf
 
     def move(self, direction):
+        self.W.env[self.x, self.y, layer['agent_pos']] = 0
         (nx, ny) = self._direction_to_coords(direction)
-        if self.W.inbounds(nx, ny):
+        if self.W.inbounds(nx, ny) and not self.W.is_burning((nx, ny)):
             (self.x, self.y) = (nx, ny)
+            self.W.env[self.x, self.y, layer['agent_pos']] = 1
+        self.dig()
 
     def _direction_to_coords(self, direction):
         if direction in ["N", 0]:
@@ -135,6 +147,8 @@ class World:
         self.env[x, y, layer['temp']] = self.env[x, y, layer['threshold']] + 1
         # update the color
         self.env[x, y, layer['gray']] = grass['gray_burning']
+        # update the fire_pos layer
+        self.env[x, y, layer['fire_pos']] = 1
         self.burning_cells.add(cell)
 
     def is_burning(self, cell):
@@ -285,7 +299,9 @@ class World:
         return reward
 
     def get_state(self):
-        return self.env[:, :, layer['gray']]
+        return np.dstack((self.env[:, :, layer['agent_pos']],
+                          self.env[:, :, layer['fire_pos']],
+                          self.env[:, :, layer['fire_mobility']]))
 
     # pass a cell (x, y) to print information on it
     def inspect(self, cell):
@@ -315,3 +331,12 @@ class World:
         pp = pprint.PrettyPrinter()
         pp.pprint(METADATA)
         print("")
+
+    def show_layer(self, layer_num=None):
+        if layer_num is None:
+            import pprint
+            pp = pprint.PrettyPrinter()
+            pp.pprint(layer)
+            print("")
+        else:
+            print(self.env[:, :, layer[layer_num]])

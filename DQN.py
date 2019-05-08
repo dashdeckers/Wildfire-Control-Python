@@ -32,6 +32,7 @@ class DQN_Learner:
         self.sim = sim
         # the constants
         self.METADATA = sim.METADATA
+        self.LOGGING = sim.LOGGING
         # output dimensions / action size
         self.action_size = self.sim.action_space.n
         # list of rewards over episodes
@@ -76,7 +77,7 @@ class DQN_Learner:
     dense layer: 6 units (output layer, 6 possible actions)
     '''
     def _make_model(self, small_network=False):
-        input_shape = (1, 10, 10)
+        input_shape = (self.sim.W.WIDTH, self.sim.W.HEIGHT, 3)
         layers_original = [
             Conv2D(filters=32,
                    kernel_size=(8, 8),
@@ -104,7 +105,7 @@ class DQN_Learner:
         layers_small = [
             Flatten(input_shape=input_shape),
             Dense(units=52,
-                  activation='relu'),
+                  activation='sigmoid'),
             Dense(units=self.action_size,
                   activation='linear')
         ]
@@ -112,10 +113,15 @@ class DQN_Learner:
             model = Sequential(layers_small)
         else:
             model = Sequential(layers_original)
-        model.compile(loss='mse',
-                      optimizer=Adam(lr=self.alpha,
-                                    clipvalue=1),
-                      metrics=['mse'])
+        if self.LOGGING:
+            model.compile(loss='mse',
+                          optimizer=Adam(lr=self.alpha,
+                                        clipvalue=1),
+                          metrics=['mse'])
+        else:
+            model.compile(loss='mse',
+                          optimizer=Adam(lr=self.alpha,
+                                        clipvalue=1))
         model.summary()
         return model
 
@@ -140,7 +146,7 @@ class DQN_Learner:
         if state == 'Current':
             state = self.sim.W.get_state()
 
-        state = np.reshape(state, [1, 1] + list(state.shape))
+        state = np.reshape(state, [1] + list(state.shape))
         QVals = self.model.predict(state)[0]
         maxval, maxidx = (-1000, -1)
 
@@ -184,11 +190,12 @@ class DQN_Learner:
             TD_error = abs(predicted[0][action] - target)
             predicted[0][action] = target
             logs = self.model.train_on_batch(state, predicted)
-            self.tensorboard.on_epoch_end(self.iteration,
-                                          self._named_logs(self.model, logs),
-                                          TD_error=TD_error,
-                                          reward=reward)
-            self.iteration += 1
+            if self.LOGGING:
+                self.tensorboard.on_epoch_end(self.iteration,
+                                              self._named_logs(self.model, logs),
+                                              TD_error=TD_error,
+                                              reward=reward)
+                self.iteration += 1
 
     # the DQN algorithm. some of the algorithm is moved to the replay method
     # TODO: preinitialize, then always add a 4-stack of frames to memory.
@@ -197,15 +204,16 @@ class DQN_Learner:
         # Run DQN.learn(), then in a separate terminal run
         # "tensorboard --logdir ./logs" and then open 
         # "localhost:6006" in your browser to open TensorBoard
-        self.tensorboard = Custom_TensorBoard(
-            log_dir="./logs/{}".format(self.sim.get_name()),
-            histogram_freq=0,
-            batch_size=1,
-            write_graph=True,
-            write_grads=True
-        )
-        self.tensorboard.set_model(self.model)
-        self.iteration = 0
+        if self.LOGGING:
+            self.tensorboard = Custom_TensorBoard(
+                log_dir="./logs/{}".format(self.sim.get_name()),
+                histogram_freq=0,
+                batch_size=1,
+                write_graph=True,
+                write_grads=True
+            )
+            self.tensorboard.set_model(self.model)
+            self.iteration = 0
 
         batch_size = self.METADATA['batch_size']
 
@@ -218,14 +226,14 @@ class DQN_Learner:
             state = self.sim.reset()
             # model expects an array of samples, even if it is only one.
             # so state[0] should be the actual state, thats why the reshapes
-            state = np.reshape(state, [1, 1] + list(state.shape))
+            state = np.reshape(state, [1] + list(state.shape))
 
             while not done:
                 # select action following e-greedy policy
                 action = self.choose_action(state)
                 # execute action and observe result
                 sprime, reward, done, _ = self.sim.step(action)
-                sprime = np.reshape(sprime, [1, 1] + list(sprime.shape))
+                sprime = np.reshape(sprime, [1] + list(sprime.shape))
                 # keep track of total reward
                 total_reward += reward
 
@@ -255,7 +263,8 @@ class DQN_Learner:
             print(f"Epsilon: {self.eps}")
             print(f"Time taken: {time.time() - t0}\n")
             self.rewards.append(total_reward)
-        self.tensorboard.on_train_end(None)
+        if self.LOGGING:
+            self.tensorboard.on_train_end(None)
 
     # play human first to collect valuable data for replay memory
     def run_human(self):
@@ -282,7 +291,7 @@ class DQN_Learner:
         state = self.sim.reset()
         while not done:
             self.sim.render()
-            state = np.reshape(state, [1, 1] + list(state.shape))
+            state = np.reshape(state, [1] + list(state.shape))
             action = self.choose_action(state, eps=eps)
             state, _, done, _ = self.sim.step(action)
             time.sleep(0.1)
