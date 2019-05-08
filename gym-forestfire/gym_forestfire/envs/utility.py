@@ -279,7 +279,7 @@ class World:
             if not self.agents:
                 reward = (-1) * METADATA['death_penalty']
             else:
-                start = np.array([self.agents[0].y, self.agents[0].x])
+                start = np.array([self.agents[0].x, self.agents[0].y])
                 end = np.array([WIDTH - 1, HEIGHT - 1])
                 grid = self.env[:, :, layer['fire_mobility']].astype(np.float32)
                 path = pyastar.astar_path(grid, start, end, allow_diagonal=False)
@@ -290,7 +290,7 @@ class World:
                     reward = METADATA['contained_bonus']
                     self.RUNNING = False
 
-            print("Reward: ", reward)
+            # print("Reward: ", reward)
             self.saved_reward = reward
 
 
