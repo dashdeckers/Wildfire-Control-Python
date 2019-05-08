@@ -47,7 +47,7 @@ class ForestFire(gym.Env):
             self.W.agents[0].move(action)
         # dont let the agent dig in the toy problem
         if action in ["D", 4] and not FITNESS_MEASURE == "Toy":
-            self.W.agents[0].dig()
+            self.W.agents[0].toggle_digging()
         # if the action is not handled, the agent does nothing
 
         # update environment only every AGENT_SPEED steps

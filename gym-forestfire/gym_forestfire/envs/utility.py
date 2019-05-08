@@ -65,6 +65,7 @@ class Agent:
         self.W = W
         self.W.env[self.x, self.y, layer['agent_pos']] = 1
         self.dead = False
+        self.digging = True
         if FITNESS_MEASURE != "Toy":
             self.dig()
 
@@ -80,6 +81,10 @@ class Agent:
         # set the fire mobility to inf for the A* algorithm
         self.W.env[self.x, self.y, layer['fire_mobility']] = np.inf
 
+    def toggle_digging(self):
+        self.dig()
+        self.digging = not self.digging
+
     def move(self, direction):
         self.W.env[self.x, self.y, layer['agent_pos']] = 0
         (nx, ny) = self._direction_to_coords(direction)
@@ -88,7 +93,7 @@ class Agent:
             self.W.env[self.x, self.y, layer['agent_pos']] = 1
             if self.W.is_burning((nx, ny)):
                 self.dead = True
-        if FITNESS_MEASURE != "Toy":
+        if self.digging and FITNESS_MEASURE != "Toy":
             self.dig()
 
     def _direction_to_coords(self, direction):

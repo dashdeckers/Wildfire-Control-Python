@@ -12,7 +12,7 @@ WIND_PARAMS = [1, (1, 1)]
 # 6 actions to allow "do nothing" action, 5 to not allow it. 4 to disable dig
 NUM_ACTIONS = 4
 # "Ignitions_Percentage", "A-Star" or "Toy"
-FITNESS_MEASURE = "Toy"
+FITNESS_MEASURE = "A-Star"
 # number of steps agent can do before the environment updates
 AGENT_SPEED_ITER = AGENT_SPEED = 2
 # use small (only 1 hidden dense layer) network (otherwise original architecture)
