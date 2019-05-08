@@ -254,6 +254,7 @@ class DQN_Learner:
     def run_human(self):
         import pickle
         from Misc import run_human
+        self.load_memory()
         # collect data until memory is full
         status = "Running"
         while len(self.memory) < self.METADATA['memory_size'] and status != "Cancelled":
@@ -267,7 +268,8 @@ class DQN_Learner:
     def load_memory(self):
         import pickle
         with open('human_data.dat', 'rb') as infile:
-            self.memory = pickle.load(infile)
+            self.memory.extend(pickle.load(infile))
+            print("Memory Size: ", len(self.memory))
 
     # show the predicted Q-Values for each action in state
     # TODO: think about how to best track these over time

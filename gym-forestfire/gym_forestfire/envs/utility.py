@@ -300,8 +300,8 @@ class World:
 
             if VERBOSE:
                 print("Reward: ", reward)
-            self.saved_reward = reward
 
+            self.saved_reward = reward
 
         else:
             raise Exception(f"{FITNESS_MEASURE} is not a valid fitness measure")
