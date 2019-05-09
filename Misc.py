@@ -59,6 +59,7 @@ def run_human(sim, DQN=None):
             # current state is now next state
             state = sprime
             total_reward += reward
+            sim.METADATA['total_reward'] = total_reward
         elif char == 'i':
             print("Inspect a cell")
             x = int(input("X coordinate: "))

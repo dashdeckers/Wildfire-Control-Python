@@ -14,9 +14,9 @@ NUM_ACTIONS = 4
 # "Ignitions_Percentage", "A-Star" or "Toy"
 FITNESS_MEASURE = "A-Star"
 # number of steps agent can do before the environment updates
-AGENT_SPEED_ITER = AGENT_SPEED = 2
+AGENT_SPEED_ITER = AGENT_SPEED = 1
 # whether the agent can commit suicide (move into fire)
-AGENT_SUICIDE = False
+AGENT_SUICIDE = True
 # use small (only 1 hidden dense layer) network (otherwise original architecture)
 SMALL_NETWORK = True
 # whether to collect logging information for tensorboard
@@ -83,17 +83,19 @@ color2ascii = {
 }
 
 METADATA = {
-# for reward measures
-    "death_penalty"   : 100,
-    "contained_bonus" : 100,
-    "dug_cells"       : 0,
-    "burning_cells"   : 0,
-    "iteration"       : 0,
-    "max_iteration"   : 200,
+# for reward stuff
+    "death_penalty"   : 1000 * AGENT_SPEED,
+    "contained_bonus" : 1000 * AGENT_SPEED,
+    "total_reward"    : 0,
+    "path_to_border"  : None,
 
 # book-keeping
+    "max_iteration" : 200,
+    "iteration"     : 0,
     "new_ignitions" : 0,
     "burnt_cells"   : 0,
+    "dug_cells"     : 0,
+    "burning_cells" : 0,
 
 # DQN parameters
     "memory_size"    : 20000,

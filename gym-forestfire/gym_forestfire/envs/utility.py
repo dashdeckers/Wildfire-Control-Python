@@ -2,6 +2,7 @@ import math
 import random as r
 import numpy as np
 import pyastar
+from collections import deque
 from .constants import (
     FITNESS_MEASURE,
     AGENT_SUICIDE,
@@ -92,13 +93,21 @@ class Agent:
     def move(self, direction):
         self.W.env[self.x, self.y, layer['agent_pos']] = 0
         (nx, ny) = self._direction_to_coords(direction)
-        if self.W.inbounds(nx, ny) and (not self.W.is_burning((nx, ny)) or AGENT_SUICIDE):
-            (self.x, self.y) = (nx, ny)
-            self.W.env[self.x, self.y, layer['agent_pos']] = 1
-            if self.W.is_burning((nx, ny)):
-                self.dead = True
-        if self.digging and FITNESS_MEASURE != "Toy":
-            self.dig()
+        # if the new position is inbounds
+        if self.W.inbounds(nx, ny):
+            # if the new position is not burning (or if agent can commit suicide)
+            if not self.W.is_burning((nx, ny)) or AGENT_SUICIDE:
+                # go to new position
+                (self.x, self.y) = (nx, ny)
+                self.W.env[self.x, self.y, layer['agent_pos']] = 1
+                # if that cell was burning, the agent dies
+                if self.W.is_burning((nx, ny)):
+                    self.dead = True
+            # if the agent is in digging mode, dig at the new position (provided
+            # the new position is not burning and the fitness measure allows it)
+            if self.digging and not self.W.is_burning((nx, ny)) \
+                            and not FITNESS_MEASURE == "Toy":
+                self.dig()
 
     def _direction_to_coords(self, direction):
         if direction in ["N", 0]:
@@ -133,6 +142,15 @@ class World:
         ]
 
         METADATA['iteration'] = 0
+
+        # add all the points along the border to a deque object
+        self.border_points = deque()
+        for x in range(WIDTH):
+            self.border_points.append([x, 0])
+            self.border_points.append([x, HEIGHT - 1])
+        for y in range(HEIGHT):
+            self.border_points.append([0, y])
+            self.border_points.append([HEIGHT - 1, y])
 
     def reset(self):
         if WIND_PARAMS == "Random":
@@ -246,33 +264,50 @@ class World:
                 reward += METADATA['contained_bonus'] * (1 - perc_burnt)
 
         elif FITNESS_MEASURE == "A-Star":
-            # if terminal (case 1: no corners are reachable from fire origin):
-            #   reward = number of healthy cells
-            # if terminal (case 2: agent is dead):
-            #   reward = death penalty
-            # else:
-            #   reward = (-1) * number of burning cells
+            '''
+            if the fire is contained (no path to any border point):
+                give a large reward
+            if the agent has died:
+                give a large penalty
+                stop simulation
+            if the fire has died out (no burning cells left):
+                give a large reward * percent of the map untouched
+                stop simulation
+            otherwise:
+                give a penalty (-1) for each burning cell
+            '''
+            if len(self.border_points):
+                grid = self.env[:, :, layer['fire_mobility']].astype(np.float32)
+                start = np.array([FIRE_LOC[0], FIRE_LOC[1]])
+                end = self.border_points.pop()
+                path = pyastar.astar_path(grid, start, end, allow_diagonal=False)
 
-            start = np.array([FIRE_LOC[0], FIRE_LOC[1]])
-            end1 = np.array([0, 0])
-            end2 = np.array([WIDTH - 1, HEIGHT - 1])
-            grid = self.env[:, :, layer['fire_mobility']].astype(np.float32)
+                # if that route was blocked, try other routes
+                while path.shape[0] == 0:
+                    # if there are no more routes to try (all paths to the border are blocked)
+                    if len(self.border_points) == 0:
+                        # the fire is contained! give a big reward
+                        return METADATA['contained_bonus']
+                    # try other routes
+                    end = self.border_points.pop()
+                    path = pyastar.astar_path(grid, start, end, allow_diagonal=False)
 
-            path1 = pyastar.astar_path(grid, start, end1, allow_diagonal=False)
-            path2 = pyastar.astar_path(grid, start, end2, allow_diagonal=False)
+                # always put back the last working end point_point for the route
+                self.border_points.append(end)
+                METADATA['path_to_border'] = path
 
-            if not (path1.shape[0] or path2.shape[0]):
-                reward = (WIDTH * HEIGHT) - \
-                         (METADATA['burning_cells'] + METADATA['dug_cells'])
-                self.RUNNING = False
-            elif not self.agents:
-                reward = (-1) * METADATA['death_penalty']
-            else:
-                reward = (-1) * METADATA['burning_cells']
+            # if agent is dead, give a big penalty
+            if not self.agents:
+                return (-1) * METADATA['death_penalty']
 
-            if VERBOSE:
-                print(f"Path1 length: {path1.shape[0]}, Path2 length: {path2.shape[0]}")
-                print(f"Reward: {reward}")
+            # if the fire has burnt out, give a reward based on surviving cells
+            if not self.burning_cells:
+                num_damaged_cells = METADATA['burning_cells'] + METADATA['dug_cells']
+                perc_damaged = num_damaged_cells / (WIDTH * HEIGHT)
+                return METADATA['contained_bonus'] * (1 - perc_damaged)
+
+            # otherwise (normally), give a penalty based on the number of burning cells
+            return (-1) * METADATA['burning_cells']
 
         elif FITNESS_MEASURE == "Toy":
             # simple gradient reward: the closer to the far corner the higher the reward
@@ -326,8 +361,11 @@ class World:
 
     # print various info about the world
     def print_info(self):
+        num_damaged_cells = METADATA['burning_cells'] + METADATA['dug_cells']
         print("[Percent Burnt] ", METADATA['burnt_cells'] / (WIDTH * HEIGHT))
-        print("[Reward] ", self.get_reward(), "\n")
+        print("[Percent Damaged] ", num_damaged_cells / (WIDTH * HEIGHT))
+        print("[Total Reward] ", METADATA['total_reward'])
+        print("[Current Reward] ", self.get_reward(), "\n")
 
     # print all metadata info
     def print_metadata(self):
@@ -343,4 +381,4 @@ class World:
             pp.pprint(layer)
             print("")
         else:
-            print(self.env[:, :, layer[layer_num]])
+            print(self.env[:, :, layer[layer_num]].T)
