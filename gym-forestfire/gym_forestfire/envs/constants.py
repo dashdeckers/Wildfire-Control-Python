@@ -15,6 +15,8 @@ NUM_ACTIONS = 4
 FITNESS_MEASURE = "A-Star"
 # number of steps agent can do before the environment updates
 AGENT_SPEED_ITER = AGENT_SPEED = 2
+# whether the agent can commit suicide (move into fire)
+AGENT_SUICIDE = False
 # use small (only 1 hidden dense layer) network (otherwise original architecture)
 SMALL_NETWORK = True
 # whether to collect logging information for tensorboard
@@ -84,6 +86,8 @@ METADATA = {
 # for reward measures
     "death_penalty"   : 100,
     "contained_bonus" : 100,
+    "dug_cells"       : 0,
+    "burning_cells"   : 0,
     "iteration"       : 0,
     "max_iteration"   : 200,
 

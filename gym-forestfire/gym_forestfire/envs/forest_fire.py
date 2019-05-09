@@ -125,6 +125,7 @@ class ForestFire(gym.Env):
 
         METADATA['new_ignitions'] += len(ignited_cells)
         METADATA['burnt_cells'] += len(burnt_out_cells)
+        METADATA['burning_cells'] = len(self.W.burning_cells)
 
         # in the toy problem, the simulation is not terminated when the fire dies out
         if not self.W.agents or (not self.W.burning_cells and not FITNESS_MEASURE == "Toy"):

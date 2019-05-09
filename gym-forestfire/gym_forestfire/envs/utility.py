@@ -4,6 +4,7 @@ import numpy as np
 import pyastar
 from .constants import (
     FITNESS_MEASURE,
+    AGENT_SUICIDE,
     color2ascii,
     WIND_PARAMS,
     AGENT_LOC,
@@ -79,7 +80,10 @@ class Agent:
         # set the heat to -1 (= identifying property of non-burnables)
         self.W.env[self.x, self.y, layer['heat']] = dirt['heat']
         # set the fire mobility to inf for the A* algorithm
-        self.W.env[self.x, self.y, layer['fire_mobility']] = np.inf
+        # and increase the dug cell count (but only if a change occurs)
+        if self.W.env[self.x, self.y, layer['fire_mobility']] != np.inf:
+            self.W.env[self.x, self.y, layer['fire_mobility']] = np.inf
+            METADATA['dug_cells'] += 1
 
     def toggle_digging(self):
         self.dig()
@@ -88,7 +92,7 @@ class Agent:
     def move(self, direction):
         self.W.env[self.x, self.y, layer['agent_pos']] = 0
         (nx, ny) = self._direction_to_coords(direction)
-        if self.W.inbounds(nx, ny):
+        if self.W.inbounds(nx, ny) and (not self.W.is_burning((nx, ny)) or AGENT_SUICIDE):
             (self.x, self.y) = (nx, ny)
             self.W.env[self.x, self.y, layer['agent_pos']] = 1
             if self.W.is_burning((nx, ny)):
@@ -111,11 +115,6 @@ class World:
         self.WIDTH = WIDTH
         self.HEIGHT = HEIGHT
         self.RUNNING = True
-        # value to subtract from calculated reward when using A* measure
-        self.default_reward = 0
-        # so we dont have to recompute reward sometimes, and to not have to give 
-        # the same reward sometimes even with no change
-        self.saved_reward = 0
 
         self.env = create_map()
         if WIND_PARAMS == "Random":
@@ -162,6 +161,7 @@ class World:
         # update the fire_pos layer
         self.env[x, y, layer['fire_pos']] = 1
         self.burning_cells.add(cell)
+        METADATA['burning_cells'] = len(self.burning_cells)
 
     def is_burning(self, cell):
         x, y = cell
@@ -244,14 +244,15 @@ class World:
             if not self.burning_cells:
                 perc_burnt = METADATA['burnt_cells'] / (WIDTH * HEIGHT)
                 reward += METADATA['contained_bonus'] * (1 - perc_burnt)
-            self.saved_reward = reward
 
         elif FITNESS_MEASURE == "A-Star":
-            # get average distance between "center of fire" and two corner points.
-            # "center of fire" is the starting point of the fire, but should be a
-            # point on the frontier of the fire somehow
-            # subtract the starting reward each time so that we start with 0 reward
-            # when the fire has been contained, give +1000 * (1 - perc_burnt)
+            # if terminal (case 1: no corners are reachable from fire origin):
+            #   reward = number of healthy cells
+            # if terminal (case 2: agent is dead):
+            #   reward = death penalty
+            # else:
+            #   reward = (-1) * number of burning cells
+
             start = np.array([FIRE_LOC[0], FIRE_LOC[1]])
             end1 = np.array([0, 0])
             end2 = np.array([WIDTH - 1, HEIGHT - 1])
@@ -260,30 +261,18 @@ class World:
             path1 = pyastar.astar_path(grid, start, end1, allow_diagonal=False)
             path2 = pyastar.astar_path(grid, start, end2, allow_diagonal=False)
 
-            if not self.default_reward:
-                self.default_reward = (path1.shape[0] + path2.shape[0]) / 2
-
-            if not self.burning_cells or (path1.shape[0] == 0 and path2.shape[0] == 0):
-                perc_burnt = METADATA['burnt_cells'] / (WIDTH * HEIGHT)
-                reward += METADATA['contained_bonus'] * (1 - perc_burnt)
+            if not (path1.shape[0] or path2.shape[0]):
+                reward = (WIDTH * HEIGHT) - \
+                         (METADATA['burning_cells'] + METADATA['dug_cells'])
                 self.RUNNING = False
             elif not self.agents:
-                reward -= METADATA['death_penalty']
+                reward = (-1) * METADATA['death_penalty']
             else:
-                # if only one path is blocked, it was most likely due to digging the cell
-                # exactly in the corner, in that case just take the other value
-                if path1.shape[0] == 0 or path2.shape[0] == 0:
-                    reward = path1.shape[0] if path1.shape[0] != 0 else path2.shape[0]
-                else:
-                    reward = (path1.shape[0] + path2.shape[0]) / 2
+                reward = (-1) * METADATA['burning_cells']
 
-                if VERBOSE:
-                    print(f"Path1 length: {path1.shape[0]}, Path2 length: {path2.shape[0]}")
-                    print(f"Reward: {reward} - {self.default_reward} = " + \
-                          f"{reward - self.default_reward}")
-
-            reward -= self.default_reward
-            self.saved_reward = reward
+            if VERBOSE:
+                print(f"Path1 length: {path1.shape[0]}, Path2 length: {path2.shape[0]}")
+                print(f"Reward: {reward}")
 
         elif FITNESS_MEASURE == "Toy":
             # simple gradient reward: the closer to the far corner the higher the reward
@@ -305,8 +294,6 @@ class World:
 
             if VERBOSE:
                 print("Reward: ", reward)
-
-            self.saved_reward = reward
 
         else:
             raise Exception(f"{FITNESS_MEASURE} is not a valid fitness measure")
@@ -340,7 +327,7 @@ class World:
     # print various info about the world
     def print_info(self):
         print("[Percent Burnt] ", METADATA['burnt_cells'] / (WIDTH * HEIGHT))
-        print("[Reward] ", self.saved_reward, "\n")
+        print("[Reward] ", self.get_reward(), "\n")
 
     # print all metadata info
     def print_metadata(self):
