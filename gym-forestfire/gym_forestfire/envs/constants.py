@@ -84,8 +84,8 @@ color2ascii = {
 
 METADATA = {
 # for reward stuff
-    "death_penalty"   : 1000 * AGENT_SPEED,
-    "contained_bonus" : 1000 * AGENT_SPEED,
+    "death_penalty"   : 10 * AGENT_SPEED,
+    "contained_bonus" : 10 * AGENT_SPEED,
     "total_reward"    : 0,
     "path_to_border"  : None,
 
@@ -103,7 +103,7 @@ METADATA = {
     "min_eps"        : 0.01,
     "eps_decay_rate" : 0.005,
     "gamma"          : 0.99,
-    "alpha"          : 0.001,
+    "alpha"          : 0.001, # 0.001
     "target_update"  : 1000,
-    "batch_size"     : 32,
+    "batch_size"     : 1,     # 32
 }

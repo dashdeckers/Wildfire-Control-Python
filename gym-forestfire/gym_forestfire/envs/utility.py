@@ -126,6 +126,7 @@ class World:
         self.RUNNING = True
 
         self.env = create_map()
+        self.DEPTH = self.get_state().shape[2]
         if WIND_PARAMS == "Random":
             self.wind_speed = r.randint(0, 3)
             self.wind_vector = (r.randint(-1, 1), r.randint(-1, 1))
@@ -307,7 +308,7 @@ class World:
                 return METADATA['contained_bonus'] * (1 - perc_damaged)
 
             # otherwise (normally), give a penalty based on the number of burning cells
-            return (-1) * METADATA['burning_cells']
+            return (-1)# * METADATA['burning_cells']
 
         elif FITNESS_MEASURE == "Toy":
             # simple gradient reward: the closer to the far corner the higher the reward
