@@ -19,9 +19,10 @@ class DQN:
 
         # Information to save to file
         self.logs = {
-            'rewards'     : list(),
-            'best_reward' : -10000,
-            'TD_errors'   : list(),
+            'rewards'      : list(),
+            'best_reward'  : -10000,
+            'worst_reward' : +10000,
+            'TD_errors'    : list(),
         }
 
         # DQN Parameters
@@ -90,6 +91,11 @@ class DQN:
             # If the last episode was somewhat successful, render its final state
             if total_reward >= 0.8 * self.logs['best_reward']:
                 self.logs['best_reward'] = total_reward
+                self.sim.render()
+
+            # I also want to know how the really unsuccessful runs ended
+            if total_reward <= 0.9 * self.logs['worst_reward']:
+                self.logs['worst_reward'] = total_reward
                 self.sim.render()
 
             # Print some information about the episode
@@ -252,7 +258,21 @@ class DQN:
     # Plot the cumulative rewards over time
     def show_rewards(self):
         plt.plot(self.logs['rewards'])
+        plt.title("Cumulative reward over time")
         plt.ylabel("Reward Values")
+        plt.xlabel("Episodes")
+        plt.show()
+
+    # Plot the TD errors over time
+    def show_td_error(self):
+        # Each TD error entry in logs is a list of TD errors of length 
+        # batch_size for each loop iteration in replay()
+        tderrors = list()
+        for group in self.logs['TD_errors']:
+            tderrors.append(sum(group) / len(group))
+        plt.plot(tderrors)
+        plt.title("TD errors over time")
+        plt.ylabel("TD Errors")
         plt.xlabel("Episodes")
         plt.show()
 
