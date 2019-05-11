@@ -336,12 +336,13 @@ class World:
         return reward
 
     def get_state(self):
-        if FITNESS_MEASURE == "Toy":
-            return self.env[:, :, layer['gray']]
-        else:
-            return np.dstack((self.env[:, :, layer['agent_pos']],
-                              self.env[:, :, layer['fire_pos']],
-                              self.env[:, :, layer['fire_mobility']]))
+        # The firemobility layer needs inf values to be converted to numeric value
+        fire_mobility = np.array(self.env[:, :, layer['fire_mobility']], copy=True)
+        fire_mobility[fire_mobility == np.inf] = 100
+
+        return np.dstack((self.env[:, :, layer['agent_pos']],
+                          self.env[:, :, layer['fire_pos']],
+                          fire_mobility))
 
     # pass a cell (x, y) to print information on it
     def inspect(self, cell):

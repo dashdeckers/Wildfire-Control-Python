@@ -1,296 +1,242 @@
 from keras.models import Sequential
-from keras.layers import Dense, Conv2D, Flatten
+from keras.layers import Dense, Flatten
 from keras.optimizers import Adam
-from keras.utils import plot_model
 
 import matplotlib.pyplot as plt
 import numpy as np
-import random, time, keras
-import tensorflow as tf
+import random, time, keras, json
 from collections import deque
-from Misc import Custom_TensorBoard
 
-"""
-This pretty much (apart from the TODO's) implements the DQN algorithm.
-
-I want to have a list of parameters and hyper-parameters here and a
-description of the effect they have, as well as the values they are set
-to and why.
-
-Error Clipping:
-https://stackoverflow.com/questions/36462962/loss-clipping-in-tensor-flow-on-deepminds-dqn
-AND
-https://stackoverflow.com/questions/47840527/using-tensorflow-huber-loss-in-keras
-"""
-
-class DQN_Learner:
-    def __init__(self, sim, name=None):
-        if not sim.spec.id == "gym-forestfire-v0":
-            print("DQN currently only supports ForestFire...")
-            return
-        # the environment / simulation
+class DQN:
+    def __init__(self, sim):
+        # Constants and such
         self.sim = sim
-        # the constants
         self.METADATA = sim.METADATA
-        self.LOGGING = sim.LOGGING
-        # output dimensions / action size
         self.action_size = self.sim.action_space.n
-        # list of rewards over episodes
-        self.rewards = list()
-        # to print the map if we get a record score
-        self.best_reward = -10000
-        # exploration rate, decays over time
+
+        # DQN memory
+        self.memory = deque(maxlen=self.METADATA['memory_size'])
+
+        # Information to save to file
+        self.logs = {
+            'rewards'     : list(),
+            'best_reward' : -10000,
+            'TD_errors'   : list(),
+        }
+
+        # DQN Parameters
         self.max_eps = self.METADATA['max_eps']
         self.min_eps = self.METADATA['min_eps']
         self.eps_decay_rate = self.METADATA['eps_decay_rate']
         self.eps = self.max_eps
-        # delayed reward factor / discount rate
         self.gamma = self.METADATA['gamma']
-        # learning rate
         self.alpha = self.METADATA['alpha']
-        # number of iterations before updating the target network
-        self.target_update_cnt = self.METADATA['target_update']
-        # the neural network
-        self.model = self._make_model(self.sim.small_network)
-        # load a model from file if a name is given
-        if name:
-            self._load(name)
-        # the target neural network
+        self.target_update_freq = self.METADATA['target_update']
+
+        # Network and target network
+        self.model = self.make_network()
         self.target = keras.models.clone_model(self.model)
         self.target.set_weights(self.model.get_weights())
-        # memory stack for experience replay (do run_human() to pre-initialize it)
-        self.memory = deque(maxlen=self.METADATA['memory_size'])
 
     '''
-    Create the neural net:
-
-    layers_original is the replicated architecture from original DQN paper:
-    input layer: WIDTH x HEIGHT x 5
-    conv layer: 32 filters of 8x8 with stride 4 + ReLu
-    conv layer: 64 filters of 4x4 with stride 2 + ReLu
-    conv layer: 64 filters of 3x3 with stride 1 + ReLu
-    dense layer: 512 units + ReLu
-    dense layer: 6 units (output layer, 6 possible actions)
-
-    layers_small is a smaller network with:
-    dense layer: 52 units + ReLu
-    dense layer: 6 units (output layer, 6 possible actions)
+    Main methods related to learning
     '''
-    def _make_model(self, small_network=False):
-        if self.sim.FITNESS_MEASURE == "Toy":
-            input_shape = (self.sim.W.WIDTH, self.sim.W.HEIGHT)
-        else:
-            input_shape = (self.sim.W.WIDTH, self.sim.W.HEIGHT, 3)
-        layers_original = [
-            Conv2D(filters=32,
-                   kernel_size=(8, 8),
-                   strides=4,
-                   padding='same',
-                   activation='relu',
-                   data_format='channels_first',
-                   input_shape=input_shape),
-            Conv2D(filters=64,
-                   kernel_size=(4, 4),
-                   strides=2,
-                   padding='same',
-                   activation='relu'),
-            Conv2D(filters=64,
-                   kernel_size=(3, 3),
-                   strides=1,
-                   padding='same',
-                   activation='relu'),
-            Flatten(),
-            Dense(units=512,
-                  activation='relu'),
-            Dense(units=self.action_size,
-                  activation='linear')
-        ]
-        layers_small = [
-            Flatten(input_shape=input_shape),
-            Dense(units=52,
-                  activation='sigmoid'),
-            Dense(units=self.action_size,
-                  activation='linear')
-        ]
-        if small_network:
-            model = Sequential(layers_small)
-        else:
-            model = Sequential(layers_original)
-        if self.LOGGING:
-            model.compile(loss='mse',
-                          optimizer=Adam(lr=self.alpha,
-                                        clipvalue=1),
-                          metrics=['mse'])
-        else:
-            model.compile(loss='mse',
-                          optimizer=Adam(lr=self.alpha,
-                                        clipvalue=1))
-        model.summary()
-        return model
 
-    # add a memory
-    def _remember(self, state, action, reward, sprime, done):
-        self.memory.append((state, action, reward, sprime, done))
+    # The learning algorithm
+    def learn(self, n_episodes=1000):
 
-    # choose action with e-greedy policy with current or given eps value
+        # Initialize counter to update the target network in intervals        
+        target_update_counter = self.target_update_freq
+
+        # Start the main learning loop
+        for episode in range(n_episodes):
+
+            # Initialze the done flag, the reward accumulator, and the time
+            done = False
+            total_reward = 0
+            t0 = time.time()
+
+            # Initialize the state, and reshape because Keras expects the
+            # first dimension to be the batch size
+            state = self.sim.reset()
+            state = np.reshape(state, [1] + list(state.shape))
+
+            # Start the simulation episode
+            while not done:
+                # Execute an action following the e-greedy policy
+                action = self.choose_action(state)
+                sprime, reward, done, _ = self.sim.step(action)
+                sprime = np.reshape(sprime, [1] + list(sprime.shape))
+
+                # Store the observed experience in memory
+                self.remember(state, action, reward, sprime, done)
+
+                # If we have collected enough experiences, learn from memory
+                if len(self.memory) > self.METADATA['batch_size']:
+                    self.replay()
+
+                # Every set number of iterations, update the target network
+                target_update_counter -= 1
+                if target_update_counter == 0:
+                    target_update_counter = self.target_update_freq
+                    self.target.set_weights(self.model.get_weights())
+
+                # Set the state S to be the next state S', for the next iteration
+                state = sprime
+
+                # Add up the rewards to find the total accumulated reward
+                total_reward += reward
+
+            # If the last episode was somewhat successful, render its final state
+            if total_reward >= 0.8 * self.logs['best_reward']:
+                self.logs['best_reward'] = total_reward
+                self.sim.render()
+
+            # Print some information about the episode
+            print(f"Episode {episode + 1}: Total Reward --> {total_reward}")
+            print(f"Epsilon: {self.eps}")
+            print(f"Time taken: {time.time() - t0}\n")
+
+            # Decay the epsilon value for the next episode
+            self.decay_epsilon(episode)
+
+            # Collect data on the total accumulated rewards over time
+            self.logs['rewards'].append(total_reward)
+
+    # Fit the model with a random sample taken from the memory
+    def replay(self):
+        batch = random.sample(self.memory, self.METADATA['batch_size'])
+        states_batch = list()
+        predicted_batch = list()
+        td_errors = list()
+
+        for state, action, reward, sprime, done in batch:
+            # Get the prediction for the state S
+            prediction = self.target.predict(state)[0]
+
+            # Save the current Q-value estimate to calculate TD error
+            old_predicted_qval = prediction[action]
+
+            # If S was a terminal state, the cumulative reward from that
+            # state forward is simply the reward recieved for that state
+            if done:
+                prediction[action] = reward
+            # Otherwise, estimate the cumulative reward from that state
+            # forward by using the maximum Q-value of the state S' as a
+            # proxy (=bootstrapping)
+            else:
+                maxQ = np.amax(self.target.predict(sprime)[0])
+                prediction[action] = reward + self.gamma * maxQ
+
+            # The TD error is the difference between the old predicted
+            # Q-value for the state S and action A and the new prediction
+            td_errors.append(abs(old_predicted_qval - prediction[action]))
+
+            # Store the states and their updated predictions for this batch
+            states_batch.append(state[0])
+            predicted_batch.append(prediction)
+
+        # Convert the batch into numpy arrays for Keras and fit the model
+        states = np.array(states_batch)
+        predictions = np.array(predicted_batch)
+        self.model.fit(states, predictions, epochs=1, verbose=0)
+
+        # Collect the data on TD errors
+        self.logs['TD_errors'].append(td_errors)
+
+    # Choose an action A based on state S following the e-greedy policy
     def choose_action(self, state, eps=None):
-        # epsilon is either fixed, or passed as argument
+        # Epsilon is either taken from current value, or passed as argument
         eps_threshold = self.eps if eps is None else eps
 
+        # Either choose action with highest Q-value or a random action
         if random.uniform(0, 1) > eps_threshold:
             return np.argmax(self.model.predict(state)[0])
         else:
             return self.sim.action_space.sample()
 
-    # decay epsilon (slower rate of decay for higher episode_num)
-    # TODO: configure this to anneal to min_eps in exactly X episodes
-    def _decay_epsilon(self, episode_num):
-        self.eps = self.min_eps + \
-            (self.max_eps - self.min_eps) * \
-            np.exp(-self.eps_decay_rate * episode_num)
+    # Decay the epsilon value in a rate proportional to the episode number
+    def decay_epsilon(self, episode_num=None):
+        self.eps = self.min_eps \
+                    + (self.max_eps - self.min_eps) \
+                    * np.exp(-self.eps_decay_rate * episode_num)
 
-    # sample randomly from memory
-    # TODO: with 4-stacked memory, each element will be a list and i think
-    # they take the cumulative reward for those stacks to fit with and predict
-    # from the last state (??? thats already frame skipping ???)
-    def _replay(self, batch_size):
-        # take a random sample of size batch_size from memory
-        minibatch = random.sample(self.memory, batch_size)
-        # for each memory in the sample
-        for state, action, reward, sprime, done in minibatch:
-            # the target value is the estimated q-value the current state
-            # should have, based on the q-values of the next state.
-            # it is the reward if the current state is a terminal state
-            target = reward
-            # otherwise, it is calculated via the predicted value from the
-            # target network on sprime, the discounting factor, and the reward
-            if not done:
-                # target = reward + discount_factor * max_q_value(next_state)
-                target = reward + self.gamma * \
-                        np.amax(self.target.predict(sprime)[0])
-            # so the predicted value for the current state and action taken
-            # should be more like the target value
-            predicted = self.model.predict(state)
-            TD_error = abs(predicted[0][action] - target)
-            predicted[0][action] = target
-            logs = self.model.train_on_batch(state, predicted)
-            if self.LOGGING:
-                self.tensorboard.on_epoch_end(self.iteration,
-                                              self._named_logs(self.model, logs),
-                                              TD_error=TD_error,
-                                              reward=reward)
-                self.iteration += 1
+    # Store an experience in memory
+    def remember(self, state, action, reward, sprime, done):
+        self.memory.append((state, action, reward, sprime, done))
 
-    # the DQN algorithm. some of the algorithm is moved to the replay method
-    # TODO: preinitialize, then always add a 4-stack of frames to memory.
-    # This will have consequences for replay() as well
-    def learn(self, n_episodes=1000):
-        # Run DQN.learn(), then in a separate terminal run
-        # "tensorboard --logdir ./logs" and then open 
-        # "localhost:6006" in your browser to open TensorBoard
-        if self.LOGGING:
-            self.tensorboard = Custom_TensorBoard(
-                log_dir="./logs/{}".format(self.sim.get_name()),
-                histogram_freq=0,
-                batch_size=1,
-                write_graph=True,
-                write_grads=True
-            )
-            self.tensorboard.set_model(self.model)
-            self.iteration = 0
+    # Create the neural network
+    def make_network(self):
+        input_shape = (self.sim.W.WIDTH, self.sim.W.HEIGHT, self.sim.W.DEPTH)
+        layers = [
+            Flatten(input_shape=input_shape),
+            # One hidden layer with 50 neurons and a sigmoid activation function
+            Dense(units=50,
+                  activation='sigmoid'),
+            # Output layer has a linear activation function
+            Dense(units=self.action_size,
+                  activation='linear'),
+        ]
+        '''
+        TODO: Consider using an initializer for the layers:
+        bias_initializer='random_uniform',
+        kernel_initializer='random_uniform'),
+        '''
+        model = Sequential(layers)
+        # Compile model with mean squared error loss metric
+        model.compile(loss='mse',
+                      # And an Adam optimizer with gradient clipping
+                      optimizer=Adam(lr=self.alpha,
+                                     clipvalue=1))
+        model.summary()
+        return model
 
-        batch_size = self.METADATA['batch_size']
+    '''
+    Miscellaneous, plotting and helper methods:
+    '''
 
-        target_update_counter = self.target_update_cnt
-        for episode in range(n_episodes):
-            t0 = time.time()
-            total_reward = 0
-            done = False
-            # initialize state
-            state = self.sim.reset()
-            # model expects an array of samples, even if it is only one.
-            # so state[0] should be the actual state, thats why the reshapes
-            state = np.reshape(state, [1] + list(state.shape))
-
-            while not done:
-                # select action following e-greedy policy
-                action = self.choose_action(state)
-                # execute action and observe result
-                sprime, reward, done, _ = self.sim.step(action)
-                sprime = np.reshape(sprime, [1] + list(sprime.shape))
-                # keep track of total reward
-                total_reward += reward
-
-                # store experience in replay memory
-                self._remember(state, action, reward, sprime, done)
-                # experience replay: learn from sampled memories
-                if len(self.memory) > batch_size:
-                    self._replay(batch_size)
-                    # decay the exploration rate
-                    self._decay_epsilon(episode)
-
-                # every C iterations, update the target network
-                target_update_counter -= 1
-                if target_update_counter == 0:
-                    target_update_counter = self.target_update_cnt
-                    self.target.set_weights(self.model.get_weights())
-
-                # set state to be the next state, for the next iteration
-                state = sprime
-
-            # render the last state if we reach a highscore
-            if total_reward >= 0.8 * self.best_reward:
-                self.best_reward = total_reward
-                self.sim.render()
-
-            print(f"Episode {episode + 1}: Total Reward --> {total_reward}")
-            print(f"Epsilon: {self.eps}")
-            print(f"Time taken: {time.time() - t0}\n")
-            self.rewards.append(total_reward)
-        if self.LOGGING:
-            self.tensorboard.on_train_end(None)
-
-    # play human first to collect valuable data for replay memory
+    # Start a series of human runs to collect valuable data for replay memory
     def run_human(self):
         import pickle
         from Misc import run_human
+        # First try loading an existing memory file
         self.load_memory()
-        # collect data until memory is full
+        # Then collect data until the memory buffer is full or the user cancels
         status = "Running"
         while len(self.memory) < self.METADATA['memory_size'] and status != "Cancelled":
             status = run_human(self.sim, self)
             print("Memory Size: ", len(self.memory))
-        # save collected data to file
+        # Finally, save the memory to file (overwrite the existing one)
         with open('human_data.dat', 'wb') as outfile:
             pickle.dump(self.memory, outfile)
 
-    # load memory from pickle file
+    # Load an existing memory file
     def load_memory(self):
         import pickle
-        with open('human_data.dat', 'rb') as infile:
-            self.memory.extend(pickle.load(infile))
-            print("Memory Size: ", len(self.memory))
+        try:
+            with open('human_data.dat', 'rb') as infile:
+                self.memory.extend(pickle.load(infile))
+                print("Memory Size: ", len(self.memory))
+        except FileNotFoundError:
+            print("No existing memory file found, creating a new one...")
 
-    # show the predicted Q-Values for each action in state
-    # TODO: think about how to best track these over time
+    # Show the Q-values for each action in the current state, and show the highest one
     def show_best_action(self, state='Current'):
-        key_map = {0:'N', 1:'S', 2:'E', 3:'W', 4:'D', 5:' '}
         if state == 'Current':
             state = self.sim.W.get_state()
             state = np.reshape(state, [1] + list(state.shape))
 
+        # Predict the Q-values via the network
         QVals = self.model.predict(state)[0]
-        maxval, maxidx = (-1000, -1)
 
-        # TODO: Q-values over time, print at every run_human iteration
+        # Print the Q-values and their maximum
+        key_map = {0:'N', 1:'S', 2:'E', 3:'W', 4:'D', 5:' '}
         print("| ", end="")
         for idx, val in enumerate(QVals):
-            if val > maxval:
-                (maxidx, maxval) = (idx, val)
             print(key_map[idx], ":", round(val, 2), " | ", end="")
-        print(f" Best: {key_map[maxidx]}")
+        print(f" Best: {key_map[np.argmax(QVals)]}")
 
-    # play the simulation by choosing optimal actions
+    # Play the simulation by following the optimal policy
     def play_optimal(self, eps=0):
         done = False
         state = self.sim.reset()
@@ -303,42 +249,50 @@ class DQN_Learner:
             time.sleep(0.1)
         self.sim.render()
 
-    # plot the rewards against the episodes
+    # Plot the cumulative rewards over time
     def show_rewards(self):
-        plt.plot(self.rewards)
+        plt.plot(self.logs['rewards'])
         plt.ylabel("Reward Values")
         plt.xlabel("Episodes")
         plt.show()
 
-    # prints the average reward per k episodes
+    # Prints or plots the average cumulative reward per k episodes
     def average_reward_per_k_episodes(self, k, plot=False):
-        n_episodes = len(self.rewards)
-        rewards_per_k = np.split(np.array(self.rewards), n_episodes/k)
-        # TODO: fix this
+        # Calculate the average cumulative reward
+        n_episodes = len(self.logs['rewards'])
+        rewards_per_k = np.split(np.array(self.logs['rewards']), n_episodes/k)        
+        avg_reward_per_k = list()
+        for group in rewards_per_k:
+            avg_reward_per_k.append(sum(group) / k)
+
+        # Plot or print the result
         if plot:
-            plt.plot(rewards_per_k)
+            plt.plot(avg_reward_per_k)
             plt.title(f"Average reward per {k} episodes")
             plt.show()
         else:
             count = k
             print(f"Average reward per {k} episodes:")
-            for r in rewards_per_k:
-                print(count, ":", str(sum(r/k)))
+            for reward in avg_reward_per_k:
+                print(count, ":", reward)
                 count += k
 
-    # loads the weights of the model from file.
-    # pass name to class initialization to use load
-    def _load(self, name):
+    '''
+    TODO:
+    Improve data collection by moving more (all?) constants to METADATA,
+    then writing both METADATA and logs (in a nicer format?) to file
+    '''
+
+    # Writes the logs to a file with an appropriate name
+    def write_logs(self):
+        name = self.sim.get_name()
+        with open(name, 'w') as file:
+            file.write(json.dumps(str(self.logs)))
+
+    # Loads the weights of the model from file.
+    def load_model(self, name):
         self.model.load_weights(name)
 
-    # saves the weights of the model to file
-    def save(self, name):
+    # Saves the weights of the model to file
+    def save_model(self, name):
         self.model.save_weights(name)
-
-    # helper function to feed tensorboard the dict it wants
-    def _named_logs(self, model, logs):
-        result = {}
-        for l in zip(model.metrics_names, logs):
-            result[l[0]] = l[1]
-        return result
-

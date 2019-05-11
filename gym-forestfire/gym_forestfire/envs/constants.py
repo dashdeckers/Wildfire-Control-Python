@@ -12,7 +12,7 @@ WIND_PARAMS = [1, (1, 1)]
 # 6 actions to allow "do nothing" action, 5 to not allow it. 4 to disable dig
 NUM_ACTIONS = 4
 # "Ignitions_Percentage", "A-Star" or "Toy"
-FITNESS_MEASURE = "A-Star"
+FITNESS_MEASURE = "Toy"
 # number of steps agent can do before the environment updates
 AGENT_SPEED_ITER = AGENT_SPEED = 1
 # whether the agent can commit suicide (move into fire)
@@ -28,7 +28,7 @@ VERBOSE = False
 def get_name():
     import time
     NAME = (
-#        f"""Size:{(WIDTH, HEIGHT)}-"""
+        f"""Size:{(WIDTH, HEIGHT)}-"""
         f"""Reward:{FITNESS_MEASURE}-"""
         f"""A.Speed:{AGENT_SPEED}"""
         f"""Network:{"S" if SMALL_NETWORK else "L"}"""
@@ -84,8 +84,8 @@ color2ascii = {
 
 METADATA = {
 # for reward stuff
-    "death_penalty"   : 10 * AGENT_SPEED,
-    "contained_bonus" : 10 * AGENT_SPEED,
+    "death_penalty"   : 100 * AGENT_SPEED,
+    "contained_bonus" : 100 * AGENT_SPEED,
     "total_reward"    : 0,
     "path_to_border"  : None,
 
@@ -103,7 +103,7 @@ METADATA = {
     "min_eps"        : 0.01,
     "eps_decay_rate" : 0.005,
     "gamma"          : 0.99,
-    "alpha"          : 0.001, # 0.001
+    "alpha"          : 0.005,  # 0.001
     "target_update"  : 1000,
-    "batch_size"     : 1,     # 32
+    "batch_size"     : 10,     # 32
 }
