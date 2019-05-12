@@ -35,7 +35,7 @@ def run_human(sim, DQN=None):
         if char == 'q':
             return "Cancelled"
         elif DQN is not None and len(DQN.sim.W.border_points) == 0:
-            sim.reset()
+            done = True
         elif char in key_map:
             action = key_map[char]
             # Do action, observe environment
