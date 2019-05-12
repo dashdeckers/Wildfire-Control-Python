@@ -1,6 +1,6 @@
 import gym, gym_forestfire
 from DQN import DQN
-from Misc import run_random, run_human, time_simulation_run
+from misc import run_human, time_simulation_run
 
 # Suppress the many unnecessary TensorFlow warnings
 import os

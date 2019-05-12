@@ -23,8 +23,8 @@ class DQN:
             'all_rewards'   : list(),
             'infos'         : list(),
             'best_reward'   : -10000,
-            'worst_reward'  : +10000,
             'TD_errors'     : list(),
+            'maps'          : dict(),
         }
 
         # DQN Parameters
@@ -94,13 +94,10 @@ class DQN:
 
             # If the last episode was somewhat successful, render its final state
             if total_reward >= 0.8 * self.logs['best_reward']:
-                self.logs['best_reward'] = total_reward
-                self.sim.render()
-
-            # I also want to know how the really unsuccessful runs ended
-            if total_reward <= 0.9 * self.logs['worst_reward']:
-                self.logs['worst_reward'] = total_reward
-                self.sim.render()
+                map_string = self.sim.render()
+                self.logs['maps'][episode] = map_string
+                if total_reward > self.logs['best_reward']:
+                    self.logs['best_reward'] = total_reward
 
             # Print some information about the episode
             print(f"Episode {episode + 1}: Total Reward --> {total_reward}")

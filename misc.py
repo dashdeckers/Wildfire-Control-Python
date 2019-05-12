@@ -1,24 +1,8 @@
 import time
-from keras import backend as K
-from keras.callbacks import TensorBoard
 
-# custom tensorboard class which also records TD_error, reward and learning rate
-class Custom_TensorBoard(TensorBoard):
-    def __init__(self, log_dir, histogram_freq=0, batch_size=1,
-                 write_graph=True, write_grads=True):
-        super().__init__(log_dir=log_dir, histogram_freq=histogram_freq,
-                         batch_size=batch_size, write_graph=write_graph,
-                         write_grads=write_grads)
-
-    def on_epoch_end(self, epoch, logs, TD_error, reward):
-        logs.update({'lr': K.eval(self.model.optimizer.lr)})
-        logs.update({'td_error': TD_error})
-        logs.update({'reward': reward})
-        super().on_epoch_end(epoch, logs)
-
-# to be able to use getch() to get a character and not wait for enter
+# Makes a function getch() which gets a char from user without waiting for enter
 try:
-    # Win32
+    # Windows
     from msvcrt import getch
 except ImportError:
     # UNIX
@@ -32,7 +16,7 @@ except ImportError:
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
-# acts based on keyboard input
+# Runs the simulation based on keyboard input / human control
 def run_human(sim, DQN=None):
     key_map = {'w':'N', 's':'S', 'd':'E', 'a':'W', ' ':'D', 'n':' '}
     done = False
@@ -42,6 +26,7 @@ def run_human(sim, DQN=None):
     while not done:
         print("WASD to move, Space to dig,")
         print("'n' to wait, 'q' to quit.")
+        print("'v' to show Q-values,")
         print("'i' to inspect a single cell,")
         print("'l' to show a layer of the map,")
         print("'p' to print general info,")
@@ -51,15 +36,19 @@ def run_human(sim, DQN=None):
             return "Cancelled"
         elif char in key_map:
             action = key_map[char]
-            # do action, observe environment
+            # Do action, observe environment
             sprime, reward, done, _ = sim.step(action)
-            # store experience in memory
+            # Store experience in memory
             if DQN is not None:
-                DQN._remember(state, action, reward, sprime, done)
-            # current state is now next state
+                DQN.remember(state, action, reward, sprime, done)
+            # Current state is now next state
             state = sprime
             total_reward += reward
-            sim.METADATA['total_reward'] = total_reward
+        elif char == 'v':
+            if DQN is not None:
+                DQN.show_best_action()
+            else:
+                print("Only works if you pass a DQN object to this function")
         elif char == 'i':
             print("Inspect a cell")
             x = int(input("X coordinate: "))
@@ -81,7 +70,7 @@ def run_human(sim, DQN=None):
         sim.render()
     print(f"Total Reward: {total_reward}")
 
-# acts randomly
+# Run simulation with random actions
 def run_random(sim):
     done = False
     sim.reset()
@@ -91,7 +80,7 @@ def run_random(sim):
         sim.render()
         time.sleep(0.1)
 
-# times the simulation
+# Time the simulation speed
 def time_simulation_run(num_runs=100):
     import timeit
     setup = """

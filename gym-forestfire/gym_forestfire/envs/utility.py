@@ -11,7 +11,6 @@ from .constants import (
     AGENT_LOC,
     FIRE_LOC,
     METADATA,
-    VERBOSE,
     HEIGHT,
     WIDTH,
     dirt,
@@ -21,17 +20,17 @@ from .constants import (
 )
 
 '''
-the entire environment consists of a WIDTHxHEIGH matrix with a
+The entire environment consists of a WIDTH x HEIGH matrix with a
 depth layer for each important attribute of a cell:
 
-- grayscale color (this layer is the input to the DQN)
-- temperature (how much heat it has gotten from burning neighbours)
-- heat (how much heat the cell can give off)
-- fuel (how much longer it can burn)
-- threshold (the temperature it can have before igniting)
-- fire_mobility (can fire spread over these cells? for the A* algorithm)
-- agent position (extra inputs to the DQN)
-- cell type
+- Grayscale color
+- Temperature (how much heat it has gotten from burning neighbours)
+- Heat (how much potential heat the cell can give off when burning)
+- Fuel (for how many iterations it can burn)
+- Threshold (the temperature it can maximally have before igniting)
+- Fire mobility (whether the fire can spread over these cells)
+- Agent position
+- Cell type
 '''
 def create_map():
     gray = np.empty((WIDTH, HEIGHT))
@@ -57,6 +56,7 @@ def create_map():
     return np.dstack((type_map, gray, temp, heat, fuel, 
                       threshold, agent_pos, f_mobility))
 
+# Reset the layers of the map that have changed to default values
 def reset_map(env):
     env[:, :, layer['gray']].fill(grass['gray'])
     env[:, :, layer['temp']].fill(0)
@@ -66,6 +66,7 @@ def reset_map(env):
     env[:, :, layer['agent_pos']].fill(0)
     env[:, :, layer['type']].fill(0)
 
+# Agents can move, die and dig a cell to turn it into a road
 class Agent:
     def __init__(self, W, position):
         self.x, self.y = position
@@ -75,43 +76,48 @@ class Agent:
         self.digging = True
         self.dig()
 
+    # Agent is dead if the cell at current position is burning
     def is_dead(self):
-        # dead if the cell at position is burning
         return self.dead or self.W.is_burning((self.x, self.y))
 
+    # Turn the cell at agent position into a road cell
     def dig(self):
-        # ignore dig command if we are in the toy example
+        # Ignore dig command if we are in the toy example
         if not FITNESS_MEASURE == 'Toy':
+            # Ignore dig command if the cell is already a road cell
             if not types[self.W.env[self.x, self.y, layer['type']]] == 'road':
+                # Change the type
                 self.W.env[self.x, self.y, layer['type']] = types['road']
-                # change the color
+                # Change the color
                 self.W.env[self.x, self.y, layer['gray']] = dirt['gray']
-                # set the heat to -1 (= identifying property of non-burnables)
-                self.W.env[self.x, self.y, layer['heat']] = dirt['heat']
-                # set the fire mobility to inf for the A* algorithm
+                # Set the fire mobility to inf
                 self.W.env[self.x, self.y, layer['fire_mobility']] = np.inf
 
+    # Toggle whether the agent digs after every move or not
     def toggle_digging(self):
         self.dig()
         self.digging = not self.digging
 
+    # Move the agent to a new position
     def move(self, direction):
         self.W.env[self.x, self.y, layer['agent_pos']] = 0
+        # Get the new position
         (nx, ny) = self._direction_to_coords(direction)
-        # if the new position is inbounds
+        # If the new position is inbounds
         if self.W.inbounds(nx, ny):
-            # if the new position is not burning (or if agent can commit suicide)
+            # If the new position is not burning (or if agent can commit suicide)
             if not self.W.is_burning((nx, ny)) or AGENT_SUICIDE:
-                # go to new position
+                # Go to new position
                 (self.x, self.y) = (nx, ny)
                 self.W.env[self.x, self.y, layer['agent_pos']] = 1
-                # if that cell was burning, the agent dies
+                # If that cell was burning, the agent dies
                 if self.W.is_burning((nx, ny)):
                     self.dead = True
-            # if the agent is in digging mode, and the new position isnt burning, dig
+            # If the agent is in digging mode, and the new position isn't burning, dig
             if self.digging and not self.W.is_burning((nx, ny)):
                 self.dig()
 
+    # Convert (N, S, E, W) or (0, 1, 2, 3) into coordinates
     def _direction_to_coords(self, direction):
         if direction in ["N", 0]:
             return (self.x, self.y - 1)
@@ -122,15 +128,19 @@ class Agent:
         if direction in ["W", 3]:
             return (self.x - 1, self.y)
 
+# The world contains the map and everything else
 class World:
     def __init__(self):
+        # Create the map
+        self.env = create_map()
+        # Set dimensions
         self.WIDTH = WIDTH
         self.HEIGHT = HEIGHT
+        self.DEPTH = self.get_state().shape[2]
+        # Simulation is running
         self.RUNNING = True
 
-        self.env = create_map()
-        self.DEPTH = self.get_state().shape[2]
-
+        # The wind speed and direction
         if WIND_PARAMS == "Random":
             self.wind_speed = r.randint(0, 3)
             self.wind_vector = (r.randint(-1, 1), r.randint(-1, 1))
@@ -138,17 +148,19 @@ class World:
             self.wind_speed = WIND_PARAMS[0]
             self.wind_vector = WIND_PARAMS[1]
 
-        # a cell is a tuple (x, y)
+        # Keep track of burning cells. A cell is represented by a tuple (x, y)
         self.burning_cells = set()
         self.set_fire_to(FIRE_LOC)
 
+        # Create the agent(s)
         self.agents = [
             Agent(self, AGENT_LOC),
         ]
 
+        # Keep track of how many iterations have passed
         METADATA['iteration'] = 0
 
-        # add all the points along the border to a deque object
+        # Keep track of all the points along the border (For the A* algorithm)
         self.border_points = deque()
         for x in range(WIDTH):
             self.border_points.append([x, 0])
@@ -157,6 +169,7 @@ class World:
             self.border_points.append([0, y])
             self.border_points.append([HEIGHT - 1, y])
 
+    # Reset any changed parameters to their default values
     def reset(self):
         if WIND_PARAMS == "Random":
             self.wind_speed = r.randint(0, 3)
@@ -181,48 +194,52 @@ class World:
             self.border_points.append([0, y])
             self.border_points.append([HEIGHT - 1, y])
 
+    # Determine whether a coordinate is within bounds of the map
     def inbounds(self, x, y):
         return 0 <= x < self.WIDTH and 0 <= y < self.HEIGHT
 
+    # Set a cell to be burning
     def set_fire_to(self, cell):
         x, y = cell
-        # set the temperature to be higher than the ignition threshold, if needed
+        # Set the temperature to be higher than the ignition threshold, if needed
         if self.env[x, y, layer['temp']] < self.env[x, y, layer['threshold']]:
             self.env[x, y, layer['temp']] = self.env[x, y, layer['threshold']] + 1
-        # update the color
+        # Change the color
         self.env[x, y, layer['gray']] = grass['gray_burning']
-       # update the type
+        # Change the type
         self.env[x, y, layer['type']] = types['fire']
-        # update burning cells
+        # Update burning cells
         self.burning_cells.add(cell)
 
+    # Determine whether the cell is on fire
     def is_burning(self, cell):
         x, y = cell
         return types[self.env[x, y, layer['type']]] == 'fire'
 
+    # Determine whether the cell can catch fire
     def is_burnable(self, cell):
         x, y = cell
         return types[self.env[x, y, layer['type']]] not in ['fire', 'burnt', 'road']
 
-    # returns the distance and angle (relative to the wind) between two cells
+    # Returns the distance and angle (relative to the wind direction) between two cells
     def get_distance_and_angle(self, cell, other_cell, distance_metric):
         x, y = cell
         ox, oy = other_cell
-        cx, cy = ox - x, oy - y # vector between cell and other_cell
+        cx, cy = ox - x, oy - y # Vector between cell and other_cell
         wx, wy = self.wind_vector
 
-        # manhattan distance: abs(x1 - x2) + abs(y1 - y2)
+        # Manhattan distance: abs(x1 - x2) + abs(y1 - y2)
         if distance_metric == "manhattan":
             distance = abs(x - ox) + abs(y - oy)
-        # euclidean distance: sqrt( (x1 - x2)^2 + (y1 - y2)^2 )
+        # Euclidean distance: sqrt( (x1 - x2)^2 + (y1 - y2)^2 )
         elif distance_metric == "euclidean":
             distance = ((x - ox)**2 + (y - oy)**2)**(0.5)
-        # angle between (wind_w, windy) and the vector between cell and other cell
+        # Angle between (wind_w, windy) and the vector between cell and other cell
         angle = abs(math.atan2(wx*cy - wy*cx, wx*cx + wy*cy))
 
         return distance, angle
 
-    # applies heat from one burning cell to any other cell
+    # Applies heat from a burning cell to another cell (can ignite the other cell)
     def apply_heat_from_to(self, cell, other_cell):
         x, y = cell
         ox, oy = other_cell
@@ -234,18 +251,19 @@ class World:
         env_factor = (self.wind_speed * angle + distance)**(-1)
         calculated_heat = self.env[x, y, layer['heat']] * env_factor
 
+        # Heat up the cell with the calculated heat
         self.env[ox, oy, layer['temp']] += calculated_heat
 
-        # if the cell just ignited, set the new type
+        # If the cell heat exceeds the threshold, set fire to it
         if self.env[ox, oy, layer['temp']] > self.env[ox, oy, layer['threshold']]:
             self.set_fire_to(other_cell)
 
-    # reduce the fuel of a cell, return true if successful and false if burnt out
+    # Reduce the fuel of a cell, return true if successful and false if burnt out
     def reduce_fuel(self, cell):
         x, y = cell
-        # reduce fuel of burning cell
+        # Reduce fuel of burning cell
         self.env[x, y, layer['fuel']] -= 1
-        # if burnt out, remove cell from burning cells and update color and type
+        # If burnt out, remove cell from burning cells and update color and type
         if self.env[x, y, layer['fuel']] <= 0:
             self.env[x, y, layer['gray']] = grass['gray_burnt']
             self.env[x, y, layer['type']] = types['burnt']
@@ -253,8 +271,8 @@ class World:
             return False
         return True
 
-    # returns every cell that can be reached by taking grass["radius"] manhattan 
-    # distance steps from the origin
+    # Returns every cell that can be reached by taking grass["radius"] manhattan
+    # distance steps from the origin and is burnable
     def get_neighbours(self, cell):
         cx, cy = cell
         neighbours = list()
@@ -262,7 +280,7 @@ class World:
             for y in range(grass['radius'] + 1 - x):
                 if (x, y) == (0, 0):
                     continue
-                # get the cell in each quadrant
+                # Get the cell in each quadrant
                 cells = [(cx + x, cy + y),
                          (cx - x, cy + y),
                          (cx + x, cy - y),
@@ -272,9 +290,12 @@ class World:
                         neighbours.append(cell)
         return neighbours
 
+    # Return the reward for the current state based on the fitness measure
     def get_reward(self):
         if FITNESS_MEASURE == "A-Star":
             '''
+            Algorithm:
+
             if the fire is contained (no path to any border point):
                 give a large reward
             if the agent has died:
@@ -284,7 +305,7 @@ class World:
                 give a large reward * percent of the map untouched
                 stop simulation
             otherwise:
-                give a penalty (-1) for each burning cell
+                give a small penalty
             '''
             if len(self.border_points):
                 grid = self.env[:, :, layer['fire_mobility']].astype(np.float32)
@@ -292,62 +313,79 @@ class World:
                 end = self.border_points.pop()
                 path = pyastar.astar_path(grid, start, end, allow_diagonal=False)
 
-                # if that route was blocked, try other routes
+                # If that route was blocked, try other routes
                 while path.shape[0] == 0:
-                    # if there are no more routes to try (all paths to the border are blocked)
+                    # If there are no more routes (all paths to border are blocked)
                     if len(self.border_points) == 0:
-                        # the fire is contained! give a big reward
+                        # The fire is contained! Give a big reward
                         return METADATA['contained_bonus']
-                    # try other routes
+                    # Otherwise, try other routes
                     end = self.border_points.pop()
                     path = pyastar.astar_path(grid, start, end, allow_diagonal=False)
 
-                # always put back the last working end point_point for the route
+                # Always put back the last working(!) end point for the route
                 self.border_points.append(end)
                 METADATA['path_to_border'] = path
 
-            # if agent is dead, give a big penalty
+            # If the agent is dead, give a big penalty
             if not self.agents:
                 return (-1) * METADATA['death_penalty']
 
-            # if the fire has burnt out, give a reward based on surviving cells
+            # If the fire has burnt out, give a reward based on surviving cells
             if not self.burning_cells:
-                num_healthy_cells = np.count_nonzero(self.env[:, :, layer['type']]==0)
+                num_healthy_cells = np.count_nonzero(self.env[:, :, layer['type']] == 0)
                 perc_healthy = num_healthy_cells / (WIDTH * HEIGHT)
                 return METADATA['contained_bonus'] * perc_healthy
 
-            # otherwise (normally), give a penalty based on the number of burning cells
-            return (-0.5)# * METADATA['burning_cells']
+            # Otherwise (normally), give a small penalty
+            return (-0.5)
 
         elif FITNESS_MEASURE == "Toy":
-            # simple gradient reward: the closer to the far corner the higher the reward
-            # when it reaches the far corner, the agent wins and gets a big reward.
-            # otherwise the reward is always the negative A* distance
+            '''
+            Algorithm:
+
+            if the agent has died:
+                give a large penalty
+            if the agent has reached the goal (= bottom right corner):
+                give a large reward
+            Otherwise:
+                give a negative reward proportional to the agents distance from the goal
+            '''
+
+            # If the agent is dead, give a big penalty
             if not self.agents:
                 return (-1) * METADATA['death_penalty']
 
+            # Calculate path to goal
             start = np.array([self.agents[0].x, self.agents[0].y])
             end = np.array([WIDTH - 1, HEIGHT - 1])
             grid = self.env[:, :, layer['fire_mobility']].astype(np.float32)
             path = pyastar.astar_path(grid, start, end, allow_diagonal=False)
 
-            reward = (-1) * path.shape[0]
-
+            # If the agent is at the goal, give a large reward and stop the simulation
             if path.shape[0] == 0:
-                reward = METADATA['contained_bonus']
                 self.RUNNING = False
+                return METADATA['contained_bonus']
 
-            return reward
+            # Otherwise, give a small penalty based on the distance to the goal
+            return (-1) * path.shape[0]
 
         else:
             raise Exception(f"{FITNESS_MEASURE} is not a valid fitness measure")
 
+    # Return the state of the simulation
     def get_state(self):
+        '''
+        The state consists of three layers with each containing only boolean entries
+        - The agents position
+        - The fire positions
+        - The road positions
+        '''
         return np.dstack((self.env[:, :, layer['agent_pos']],
                           self.env[:, :, layer['type']] == types['fire'],
                           self.env[:, :, layer['fire_mobility']] != np.inf))
 
-    # pass a cell (x, y) to print information on it
+    # Print information about a cell (x, y)
     def inspect(self, cell):
         x, y = cell
         cell_info = self.env[x, y, :]
@@ -363,8 +401,7 @@ class World:
             agent_at_loc = False
         print("[Cell contains an Agent] ", agent_at_loc, "\n")
 
-
-    # print various info about the world
+    # Print various info about the world
     def print_info(self):
         type_map = self.env[:, :, layer['type']]
         num_burnt = np.count_nonzero(type_map == types['burnt'])
@@ -381,7 +418,7 @@ class World:
         print("[Total Reward] ", METADATA['total_reward'])
         print("[Current Reward] ", self.get_reward(), "\n")
 
-    # returns a dict of information about the current state
+    # Returns a dict of information about the current state
     def get_info(self):
         type_map = self.env[:, :, layer['type']]
         num_burnt = np.count_nonzero(type_map == types['burnt'])
@@ -401,13 +438,14 @@ class World:
             "perc_damaged" : perc_damaged,
         }
 
-    # print all metadata info
+    # Print all the METADATA contents
     def print_metadata(self):
         import pprint
         pp = pprint.PrettyPrinter()
         pp.pprint(METADATA)
         print("")
 
+    # Print a specific layer of the map
     def show_layer(self, layer_num=None):
         if layer_num is None:
             import pprint
