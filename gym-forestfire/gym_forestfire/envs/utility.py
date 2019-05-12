@@ -303,12 +303,12 @@ class World:
 
             # if the fire has burnt out, give a reward based on surviving cells
             if not self.burning_cells:
-                num_damaged_cells = METADATA['burning_cells'] + METADATA['dug_cells']
+                num_damaged_cells = METADATA['burnt_cells'] + METADATA['dug_cells']
                 perc_damaged = num_damaged_cells / (WIDTH * HEIGHT)
                 return METADATA['contained_bonus'] * (1 - perc_damaged)
 
             # otherwise (normally), give a penalty based on the number of burning cells
-            return (-1)# * METADATA['burning_cells']
+            return (-0.5)# * METADATA['burning_cells']
 
         elif FITNESS_MEASURE == "Toy":
             # simple gradient reward: the closer to the far corner the higher the reward

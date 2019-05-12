@@ -19,10 +19,14 @@ class DQN:
 
         # Information to save to file
         self.logs = {
-            'rewards'      : list(),
-            'best_reward'  : -10000,
-            'worst_reward' : +10000,
-            'TD_errors'    : list(),
+            'total_rewards' : list(),
+            'all_rewards'   : list(),
+            'best_reward'   : -10000,
+            'worst_reward'  : +10000,
+            'TD_errors'     : list(),
+            'burnt_cells'   : list(),
+            'dug_cells'     : list(),
+            'burning_cells' : list(),
         }
 
         # DQN Parameters
@@ -52,10 +56,11 @@ class DQN:
         # Start the main learning loop
         for episode in range(n_episodes):
 
-            # Initialze the done flag, the reward accumulator, and the time
+            # Initialze the done flag, the reward accumulator, time, rewards etc
             done = False
             total_reward = 0
             t0 = time.time()
+            rewards = list()
 
             # Initialize the state, and reshape because Keras expects the
             # first dimension to be the batch size
@@ -85,8 +90,9 @@ class DQN:
                 # Set the state S to be the next state S', for the next iteration
                 state = sprime
 
-                # Add up the rewards to find the total accumulated reward
+                # Keep track of the rewards and the total accumulated reward
                 total_reward += reward
+                rewards.append(reward)
 
             # If the last episode was somewhat successful, render its final state
             if total_reward >= 0.8 * self.logs['best_reward']:
@@ -107,7 +113,11 @@ class DQN:
             self.decay_epsilon(episode)
 
             # Collect data on the total accumulated rewards over time
-            self.logs['rewards'].append(total_reward)
+            self.logs['total_rewards'].append(total_reward)
+            self.logs['all_rewards'].append(rewards)
+            self.logs['burnt_cells'].append(self.METADATA['burnt_cells'])
+            self.logs['dug_cells'].append(self.METADATA['dug_cells'])
+            self.logs['burning_cells'].append(self.METADATA['burning_cells'])
 
     # Fit the model with a random sample taken from the memory
     def replay(self):
@@ -201,6 +211,11 @@ class DQN:
     Miscellaneous, plotting and helper methods:
     '''
 
+    def show_all(self):
+        self.play_optimal()
+        self.show_rewards()
+        self.show_td_error()
+
     # Start a series of human runs to collect valuable data for replay memory
     def run_human(self):
         import pickle
@@ -257,7 +272,7 @@ class DQN:
 
     # Plot the cumulative rewards over time
     def show_rewards(self):
-        plt.plot(self.logs['rewards'])
+        plt.plot(self.logs['total_rewards'])
         plt.title("Cumulative reward over time")
         plt.ylabel("Reward Values")
         plt.xlabel("Episodes")
@@ -279,8 +294,8 @@ class DQN:
     # Prints or plots the average cumulative reward per k episodes
     def average_reward_per_k_episodes(self, k, plot=False):
         # Calculate the average cumulative reward
-        n_episodes = len(self.logs['rewards'])
-        rewards_per_k = np.split(np.array(self.logs['rewards']), n_episodes/k)        
+        n_episodes = len(self.logs['total_rewards'])
+        rewards_per_k = np.split(np.array(self.logs['total_rewards']), n_episodes/k)
         avg_reward_per_k = list()
         for group in rewards_per_k:
             avg_reward_per_k.append(sum(group) / k)

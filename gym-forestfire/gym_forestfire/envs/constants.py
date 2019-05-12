@@ -102,8 +102,8 @@ METADATA = {
     "max_eps"        : 1.0,
     "min_eps"        : 0.01,
     "eps_decay_rate" : 0.005,
-    "gamma"          : 0.99,
-    "alpha"          : 0.0001,  # 0.001
+    "gamma"          : 0.999,
+    "alpha"          : 0.005, # 0.001
     "target_update"  : 20,
-    "batch_size"     : 32,     # 32
+    "batch_size"     : 32, # 32
 }
