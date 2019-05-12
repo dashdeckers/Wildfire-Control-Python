@@ -305,7 +305,7 @@ class World:
             otherwise:
                 give a small penalty
             '''
-            if len(self.border_points):
+            if len(self.border_points) and len(self.burning_cells):
 
                 # Make a copy of the burning cells set, and pop one out
                 burning = set(self.burning_cells)

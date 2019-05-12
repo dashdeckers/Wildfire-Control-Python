@@ -213,7 +213,8 @@ class DQN:
     def run_human(self):
         import pickle
         from misc import run_human
-        # First try loading an existing memory file
+        # First try loading an existing memory file, and wipe any internal memory
+        self.memory = deque()
         self.load_memory()
         # Then collect data until the memory buffer is full or the user cancels
         status = "Running"
