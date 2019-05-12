@@ -212,7 +212,7 @@ class DQN:
     # Start a series of human runs to collect valuable data for replay memory
     def run_human(self):
         import pickle
-        from Misc import run_human
+        from misc import run_human
         # First try loading an existing memory file
         self.load_memory()
         # Then collect data until the memory buffer is full or the user cancels
