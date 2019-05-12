@@ -25,6 +25,7 @@ class DQN:
             'best_reward'   : -10000,
             'TD_errors'     : list(),
             'maps'          : dict(),
+            'epsilons'      : list(),
         }
 
         # DQN Parameters
@@ -100,11 +101,12 @@ class DQN:
                     self.logs['best_reward'] = total_reward
 
             # Print some information about the episode
-            print(f"Episode {episode + 1}: Total Reward --> {total_reward}")
-            print(f"Epsilon: {self.eps}")
-            print(f"Time taken: {time.time() - t0}\n")
+            print(f"[Episode {episode + 1}]\tTime: {round(time.time() - t0, 3)}")
+            print(f"\t\tReward: {total_reward}")
+            print(f"\t\tEpsilon: {round(self.eps, 3)}\n")
 
-            # Decay the epsilon value for the next episode
+            # Log and decay the epsilon value for the next episode
+            self.logs['epsilons'].append(self.eps)
             self.decay_epsilon(episode)
 
             # Collect data on the total accumulated rewards over time
@@ -169,6 +171,17 @@ class DQN:
         self.eps = self.min_eps \
                     + (self.max_eps - self.min_eps) \
                     * np.exp(-self.eps_decay_rate * episode_num)
+
+    # gives an impression on how the epsilon decays over time
+    def show_decay(self):
+        amount_of_values = 5    # prints epsilon at x points
+        n_episodes = len(self.logs['epsilons'])
+        k = int(n_episodes / amount_of_values)
+        print(f"Epsilon starts at", round(self.logs['epsilons'][0], 3), \
+                    "and ends at", round(self.logs['epsilons'][n_episodes-1], 3))
+        for i, eps in enumerate(self.logs['epsilons']):
+            if not i%k:
+                print(f"\tEpisode {i+1}: ", round(eps, 3))
 
     # Store an experience in memory
     def remember(self, state, action, reward, sprime, done):
