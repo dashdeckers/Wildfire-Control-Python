@@ -34,8 +34,6 @@ def run_human(sim, DQN=None):
         char = getch()
         if char == 'q':
             return "Cancelled"
-        elif DQN is not None and len(DQN.sim.W.border_points) == 0:
-            return "Cancelled"
         elif char in key_map:
             action = key_map[char]
             # Do action, observe environment
@@ -46,6 +44,7 @@ def run_human(sim, DQN=None):
             # Current state is now next state
             state = sprime
             total_reward += reward
+            sim.METADATA['total_reward'] = total_reward
         elif char == 'v':
             if DQN is not None:
                 DQN.show_best_action()

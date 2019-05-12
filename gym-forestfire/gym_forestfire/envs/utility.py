@@ -162,12 +162,7 @@ class World:
 
         # Keep track of all the points along the border (For the A* algorithm)
         self.border_points = deque()
-        for x in range(WIDTH):
-            self.border_points.append([x, 0])
-            self.border_points.append([x, HEIGHT - 1])
-        for y in range(HEIGHT):
-            self.border_points.append([0, y])
-            self.border_points.append([HEIGHT - 1, y])
+        self.reset_border_points()
 
     # Reset any changed parameters to their default values
     def reset(self):
@@ -185,7 +180,10 @@ class World:
         ]
 
         METADATA['iteration'] = 0
+        self.reset_border_points()
 
+    # Reset the queue containing the border points of the map
+    def reset_border_points(self):
         self.border_points = deque()
         for x in range(WIDTH):
             self.border_points.append([x, 0])
@@ -308,18 +306,30 @@ class World:
                 give a small penalty
             '''
             if len(self.border_points):
+
+                # Make a copy of the burning cells set, and pop one out
+                burning = set(self.burning_cells)
+                b_cell = burning.pop()
+
+                # Try finding a route from that burning cell to a border point
                 grid = self.env[:, :, layer['fire_mobility']].astype(np.float32)
-                start = np.array([FIRE_LOC[0], FIRE_LOC[1]])
+                start = np.array([b_cell[0], b_cell[1]])
                 end = self.border_points.pop()
                 path = pyastar.astar_path(grid, start, end, allow_diagonal=False)
 
-                # If that route was blocked, try other routes
+                # If that route is blocked, try other routes (other border points)
                 while path.shape[0] == 0:
-                    # If there are no more routes (all paths to border are blocked)
+                    # If there are no more routes from that burning cell to any border
                     if len(self.border_points) == 0:
-                        # The fire is contained! Give a big reward
-                        return METADATA['contained_bonus']
-                    # Otherwise, try other routes
+                        # If there are no more routes from any burning cell to any border
+                        if len(burning) == 0:
+                            # The fire is contained! Give a big reward
+                            return METADATA['contained_bonus']
+                        # No more border points: try a different burning cell
+                        self.reset_border_points()
+                        b_cell = burning.pop()
+                        start = np.array([b_cell[0], b_cell[1]])
+                    # Still border points, try a route to a different border point
                     end = self.border_points.pop()
                     path = pyastar.astar_path(grid, start, end, allow_diagonal=False)
 
