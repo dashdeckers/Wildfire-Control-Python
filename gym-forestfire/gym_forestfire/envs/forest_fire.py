@@ -90,42 +90,17 @@ class ForestFire(gym.Env):
         self.W.agents = [a for a in self.W.agents if not a.is_dead()]
 
         METADATA['iteration'] += 1
-        METADATA['new_ignitions'] = 0
 
-        burnt_out_cells = set()
-        ignited_cells = set()
-
-        for cell in self.W.burning_cells:
-            x, y = cell
-            # reduce fuel of burning cell
-            self.W.env[x, y, layer['fuel']] -= 1
-            # if burnt out, remove cell and update color
-            if self.W.env[x, y, layer['fuel']] <= 0:
-                self.W.env[x, y, layer['gray']] = grass['gray_burnt']
-                self.W.env[x, y, layer['fire_pos']] = 0
-                burnt_out_cells.add(cell)
-            else:
-                # else get neighbours of cell
-                neighbours = self.W.get_neighbours(cell)
-                for n_cell in neighbours:
+        burning = list(self.W.burning_cells)
+        for cell in burning:
+            # reduce fuel. if not burnt out, continue
+            if self.W.reduce_fuel(cell):
+                # for each neighbour of the burning cell
+                for n_cell in self.W.get_neighbours(cell):
                     # if neighbour is burnable
                     if self.W.is_burnable(n_cell):
-                        # apply heat to it from burning cell
+                        # apply heat to it from burning cell, ignite if needed
                         self.W.apply_heat_from_to(cell, n_cell)
-                        # if neighbour is now burning, 
-                        # add it to burning cells and update color
-                        if self.W.is_burning(n_cell):
-                            nx, ny = n_cell
-                            self.W.env[nx, ny, layer['gray']] = grass['gray_burning']
-                            self.W.env[nx, ny, layer['fire_pos']] = 1
-                            ignited_cells.add(n_cell)
-
-        self.W.burning_cells = self.W.burning_cells - burnt_out_cells
-        self.W.burning_cells.update(ignited_cells)
-
-        METADATA['new_ignitions'] += len(ignited_cells)
-        METADATA['burnt_cells'] += len(burnt_out_cells)
-        METADATA['burning_cells'] = len(self.W.burning_cells)
 
         # in the toy problem, the simulation is not terminated when the fire dies out
         if not self.W.agents or (not self.W.burning_cells and not FITNESS_MEASURE == "Toy"):

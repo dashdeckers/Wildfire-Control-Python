@@ -64,14 +64,27 @@ dirt = {
 
 # which (depth) layer of the map corresponds to which attribute
 layer = {
-    "gray" : 0,
-    "temp" : 1,
-    "heat" : 2,
-    "fuel" : 3,
-    "threshold"     : 4,
-    "fire_mobility" : 5,
+    "type" : 0,
+    "gray" : 1,
+    "temp" : 2,
+    "heat" : 3,
+    "fuel" : 4,
+    "threshold" : 5,
     "agent_pos" : 6,
-    "fire_pos"  : 7,
+    "fire_mobility" : 7,
+}
+
+# which type corresponds to which value
+types = {
+    0 : "grass",
+    1 : "fire",
+    2 : "burnt",
+    3 : "road",
+
+    "grass" : 0,
+    "fire"  : 1,
+    "burnt" : 2,
+    "road"  : 3,
 }
 
 # convert grayscale to ascii for rendering
@@ -92,10 +105,6 @@ METADATA = {
 # book-keeping
     "max_iteration" : 200,
     "iteration"     : 0,
-    "new_ignitions" : 0,
-    "burnt_cells"   : 0,
-    "dug_cells"     : 0,
-    "burning_cells" : 0,
 
 # DQN parameters
     "memory_size"    : 20000,

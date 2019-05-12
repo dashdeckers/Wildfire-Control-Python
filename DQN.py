@@ -21,12 +21,10 @@ class DQN:
         self.logs = {
             'total_rewards' : list(),
             'all_rewards'   : list(),
+            'infos'         : list(),
             'best_reward'   : -10000,
             'worst_reward'  : +10000,
             'TD_errors'     : list(),
-            'burnt_cells'   : list(),
-            'dug_cells'     : list(),
-            'burning_cells' : list(),
         }
 
         # DQN Parameters
@@ -115,9 +113,7 @@ class DQN:
             # Collect data on the total accumulated rewards over time
             self.logs['total_rewards'].append(total_reward)
             self.logs['all_rewards'].append(rewards)
-            self.logs['burnt_cells'].append(self.METADATA['burnt_cells'])
-            self.logs['dug_cells'].append(self.METADATA['dug_cells'])
-            self.logs['burning_cells'].append(self.METADATA['burning_cells'])
+            self.logs['infos'].append(self.sim.W.get_info())
 
     # Fit the model with a random sample taken from the memory
     def replay(self):
