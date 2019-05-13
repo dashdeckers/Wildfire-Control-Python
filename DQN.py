@@ -13,6 +13,7 @@ class DQN:
         self.sim = sim
         self.METADATA = sim.METADATA
         self.action_size = self.sim.action_space.n
+        self.DEBUG = sim.DEBUG
 
         # DQN memory
         self.memory = deque(maxlen=self.METADATA['memory_size'])
@@ -26,7 +27,8 @@ class DQN:
             'TD_errors'     : list(),
             'maps'          : dict(),
             'epsilons'      : list(),
-            'survivals'     : 0,
+            'deaths'        : 0,
+            'init_memories' : 0,
         }
 
         # DQN Parameters
@@ -55,6 +57,10 @@ class DQN:
 
         # Start the main learning loop
         for episode in range(n_episodes):
+
+            # Every 100 epsiodes, see how the agent is behaving
+            if episode % 100 == 0:
+                self.play_optimal(self.eps)
 
             # Initialze the done flag, the reward accumulator, time, rewards etc
             done = False
@@ -97,12 +103,13 @@ class DQN:
             # If the last episode was somewhat successful, render its final state
             if total_reward >= 0.8 * self.logs['best_reward'] or total_reward > 300:
                 map_string = self.sim.render()
-                self.logs['maps'][episode] = map_string
+                if DEBUG > 0:
+                    self.logs['maps'][episode] = map_string
                 if total_reward > self.logs['best_reward']:
                     self.logs['best_reward'] = total_reward
 
             if len(self.sim.W.agents) == 0:
-                self.logs['survivals'] += 1
+                self.logs['deaths'] += 1
 
             # Print some information about the episode
             print(f"[Episode {episode + 1}]\tTime: {round(time.time() - t0, 3)}")
@@ -111,13 +118,13 @@ class DQN:
             print(f"\t\tReward: {total_reward}\n")
 
             # Log and decay the epsilon value for the next episode
-            self.logs['epsilons'].append(self.eps)
+            if DEBUG > 0: self.logs['epsilons'].append(self.eps)
             self.decay_epsilon(episode)
 
             # Collect data on the total accumulated rewards over time
-            self.logs['total_rewards'].append(total_reward)
-            self.logs['all_rewards'].append(rewards)
-            self.logs['infos'].append(self.sim.W.get_info())
+            if DEBUG > 0: self.logs['total_rewards'].append(total_reward)
+            if DEBUG > 1: self.logs['all_rewards'].append(rewards)
+            if DEBUG > 0: self.logs['infos'].append(self.sim.W.get_info())
 
     # Fit the model with a random sample taken from the memory
     def replay(self):
@@ -158,7 +165,7 @@ class DQN:
         self.model.fit(states, predictions, epochs=1, verbose=0)
 
         # Collect the data on TD errors
-        self.logs['TD_errors'].append(td_errors)
+        if DEBUG > 0: self.logs['TD_errors'].append(td_errors)
 
     # Choose an action A based on state S following the e-greedy policy
     def choose_action(self, state, eps=None):
@@ -232,6 +239,8 @@ class DQN:
         # Finally, save the memory to file (overwrite the existing one)
         with open('human_data.dat', 'wb') as outfile:
             pickle.dump(self.memory, outfile)
+        # Collect logging info
+        if DEBUG > 0: self.logs['init_memories'] = len(self.memory)
 
     '''
     Automatically fills memories as follows:
@@ -264,6 +273,8 @@ class DQN:
             action = np.random.choice(np.array([0, 1, 2, 3]))
             # Store experience in memory
             self.remember(state, action, reward, sprime, done)
+        # Collect logging info
+        if DEBUG > 0: self.logs['init_memories'] = len(self.memory)
 
     # Load an existing memory file
     def load_memory(self):

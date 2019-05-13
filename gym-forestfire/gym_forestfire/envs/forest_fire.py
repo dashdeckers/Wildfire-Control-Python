@@ -14,6 +14,7 @@ from .constants import (
     METADATA,
     HEIGHT,
     WIDTH,
+    DEBUG,
 )
 from .utility import (
     World,
@@ -25,6 +26,7 @@ class ForestFire(gym.Env):
 
     def __init__(self):
         self.W = World()
+        self.DEBUG = DEBUG
         self.layer = layer
         self.get_name = get_name
         self.METADATA = METADATA
