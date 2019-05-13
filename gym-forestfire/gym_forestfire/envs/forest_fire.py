@@ -69,7 +69,7 @@ class ForestFire(gym.Env):
             print(x % 10, end="")
         print("")
 
-        return_map = ""
+        return_map = "\n"
         for y in range(HEIGHT):
             # Print index markers along the left side
             print(y % 10, end="")

@@ -1,3 +1,4 @@
+import numpy as np
 import time
 
 # Makes a function getch() which gets a char from user without waiting for enter
@@ -18,10 +19,11 @@ except ImportError:
 
 # Runs the simulation based on keyboard input / human control
 def run_human(sim, DQN=None):
-    key_map = {'w':'N', 's':'S', 'd':'E', 'a':'W', ' ':'D', 'n':' '}
+    key_map = {'w':0, 's':1, 'd':2, 'a':3, ' ':4, 'n':5}
     done = False
     total_reward = 0
     state = sim.reset()
+    state = np.reshape(state, [1] + list(state.shape))
     sim.render()
     while not done:
         print("WASD to move, Space to dig,")
@@ -40,6 +42,7 @@ def run_human(sim, DQN=None):
             action = key_map[char]
             # Do action, observe environment
             sprime, reward, done, _ = sim.step(action)
+            sprime = np.reshape(sprime, [1] + list(sprime.shape))
             # Store experience in memory
             if DQN is not None:
                 DQN.remember(state, action, reward, sprime, done)

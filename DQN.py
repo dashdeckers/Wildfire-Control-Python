@@ -172,17 +172,6 @@ class DQN:
                     + (self.max_eps - self.min_eps) \
                     * np.exp(-self.eps_decay_rate * episode_num)
 
-    # gives an impression on how the epsilon decays over time
-    def show_decay(self):
-        amount_of_values = 5    # prints epsilon at x points
-        n_episodes = len(self.logs['epsilons'])
-        k = int(n_episodes / amount_of_values)
-        print(f"Epsilon starts at", round(self.logs['epsilons'][0], 3), \
-                    "and ends at", round(self.logs['epsilons'][n_episodes-1], 3))
-        for i, eps in enumerate(self.logs['epsilons']):
-            if not i%k:
-                print(f"\tEpisode {i+1}: ", round(eps, 3))
-
     # Store an experience in memory
     def remember(self, state, action, reward, sprime, done):
         self.memory.append((state, action, reward, sprime, done))
@@ -221,6 +210,7 @@ class DQN:
         self.play_optimal()
         self.show_rewards()
         self.show_td_error()
+        self.show_decay()
 
     # Start a series of human runs to collect valuable data for replay memory
     def run_human(self):
@@ -247,6 +237,18 @@ class DQN:
                 print("Memory Size: ", len(self.memory))
         except FileNotFoundError:
             print("No existing memory file found, creating a new one...")
+
+    # Gives an impression on how the epsilon decays over time
+    def show_decay(self, amount_of_values=5):
+        n_episodes = len(self.logs['epsilons'])
+        k = int(n_episodes / amount_of_values)
+
+        print(f"Epsilon starts at", round(self.logs['epsilons'][0], 3), \
+                    "and ends at", round(self.logs['epsilons'][n_episodes-1], 3))
+
+        for i, eps in enumerate(self.logs['epsilons']):
+            if i % k == 0:
+                print(f"\tEpisode {i+1}: ", round(eps, 3))
 
     # Show the Q-values for each action in the current state, and show the highest one
     def show_best_action(self, state='Current'):
