@@ -36,6 +36,7 @@ class ForestFire(gym.Env):
                                             shape=(WIDTH, HEIGHT),
                                             dtype=int)
 
+    # Execute an action in the environment
     def step(self, action):
         # Handle basic movement actions
         if action in ["N", "S", "E", "W"] or action in range(4):
@@ -58,10 +59,12 @@ class ForestFire(gym.Env):
                 not self.W.RUNNING,
                 {}]
 
-    def reset(self):
-        self.W.reset()
+    # Reset the simulation to its initial state
+    def reset(self, circle=None):
+        self.W.reset(circle)
         return self.W.get_state()
 
+    # Print an ascii rendering of the simulation
     def render(self):
         # Print index markers along the top
         print(" ", end="")
@@ -89,6 +92,7 @@ class ForestFire(gym.Env):
         # Return a string representation of the map incase we want to save it
         return return_map
 
+    # Updates the simulations internal state
     def update(self):
         METADATA['iteration'] += 1
 

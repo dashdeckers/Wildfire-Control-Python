@@ -66,6 +66,11 @@ class DQN:
             state = self.sim.reset()
             state = np.reshape(state, [1] + list(state.shape))
 
+            # HACK to allow agent to dig because we don't allow it to initially
+            # because of the way collect_memories() works, and also don't allow
+            # it to toggle between them (NUM_ACTIONS == 4)
+            self.sim.W.agents[0].toggle_digging()
+
             # Start the simulation episode
             while not done:
                 # Execute an action following the e-greedy policy
@@ -103,6 +108,7 @@ class DQN:
             # Print some information about the episode
             print(f"[Episode {episode + 1}]\tTime: {round(time.time() - t0, 3)}")
             print(f"\t\tEpsilon: {round(self.eps, 3)}")
+            print(f"\t\tAgent dead: {len(self.sim.W.agents) == 0}")
             print(f"\t\tReward: {total_reward}\n")
 
             # Log and decay the epsilon value for the next episode
@@ -227,6 +233,38 @@ class DQN:
         # Finally, save the memory to file (overwrite the existing one)
         with open('human_data.dat', 'wb') as outfile:
             pickle.dump(self.memory, outfile)
+
+    '''
+    Automatically fills memories as follows:
+
+    Create a map with a dirt/road circle around the fire of varying radius via the
+    mid point circle drawing algorithm and store that state along with the large
+    containment reward that comes with it in memory
+    '''
+    def collect_memories(self, num_of_memories=1000):
+        # Wipe internal memory
+        self.memory = deque()
+        # Get the possible values for circle radius
+        width, height = self.sim.W.WIDTH, self.sim.W.HEIGHT
+        smallest_dimension = width if width > height else height
+        possible_radiuses = np.array(range(1, int(smallest_dimension / 2)))
+        midpoint = (self.sim.W.FIRE_LOC[0], self.sim.W.FIRE_LOC[1])
+        # Collect the memories
+        for i in range(num_of_memories):
+            # Generate a random circle
+            circle = [np.random.choice(possible_radiuses), midpoint]
+            # Get the state S from a the circle
+            state = self.sim.reset(circle)
+            state = np.reshape(state, [1] + list(state.shape))
+            # Get the reward and next state S' from closing the circle
+            sprime, reward, done, _ = self.sim.step("D")
+            sprime = np.reshape(sprime, [1] + list(sprime.shape))
+            # Make sure we actually got the containment bonus
+            assert reward == 1000
+            # We pretend a movement action resulted in this reward
+            action = np.random.choice(np.array([0, 1, 2, 3]))
+            # Store experience in memory
+            self.remember(state, action, reward, sprime, done)
 
     # Load an existing memory file
     def load_memory(self):

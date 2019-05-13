@@ -20,6 +20,56 @@ from .constants import (
 )
 
 '''
+The mid-point circle drawing algorithm returns the points on a discrete 2D map
+that should be filled to form a circle of radius r around the point (midx, midy)
+'''
+def circlePoints(midx, midy, r):
+    coords = list()
+    x = r
+    y = 0
+
+    coords.append((x + midx, y + midy))
+
+    # When radius is zero there is only a single point
+    if (r > 0):
+        coords.append((-x + midx, -y + midy))
+        coords.append(( y + midx, -x + midy))
+        coords.append((-y + midx,  x + midy))
+
+    # Initialising the value of P
+    P = 1 - r
+    while (x > y):
+        y += 1
+
+        # Mid-points inside or on the perimeter
+        if (P <= 0):
+            P = P + 2 * y + 1
+        # Mid-points outside the perimeter
+        else:
+            x -= 1
+            P = P + 2 * y - 2 * x + 1
+
+        # All the perimeter points have already been printed
+        if (x < y):
+            break
+
+        # Get the point and its reflection in the other octants
+        coords.append(( x + midx,  y + midy))
+        coords.append((-x + midx,  y + midy))
+        coords.append(( x + midx, -y + midy))
+        coords.append((-x + midx, -y + midy))
+
+        # If the generated points on the line x = y then
+        # the perimeter points have already been printed
+        if (x != y):
+            coords.append(( y + midx,  x + midy))
+            coords.append((-y + midx,  x + midy))
+            coords.append(( y + midx, -x + midy))
+            coords.append((-y + midx, -x + midy))
+
+    return coords
+
+'''
 The entire environment consists of a WIDTH x HEIGH matrix with a
 depth layer for each important attribute of a cell:
 
@@ -33,31 +83,32 @@ depth layer for each important attribute of a cell:
 - Cell type
 '''
 def create_map():
-    gray = np.empty((WIDTH, HEIGHT))
-    gray.fill(grass['gray'])
-
+    gray = np.full((WIDTH, HEIGHT), grass['gray'])
     temp = np.zeros((WIDTH, HEIGHT))
-
-    heat = np.empty((WIDTH, HEIGHT))
-    heat.fill(grass['heat'])
-
-    fuel = np.empty((WIDTH, HEIGHT))
-    fuel.fill(grass['fuel'])
-
-    threshold = np.empty((WIDTH, HEIGHT))
-    threshold.fill(grass['threshold'])
-
+    heat = np.full((WIDTH, HEIGHT), grass['heat'])
+    fuel = np.full((WIDTH, HEIGHT), grass['fuel'])
+    threshold = np.full((WIDTH, HEIGHT), grass['threshold'])
     f_mobility = np.ones((WIDTH, HEIGHT))
-
     agent_pos = np.zeros((WIDTH, HEIGHT))
-
     type_map = np.zeros((WIDTH, HEIGHT))
-
     return np.dstack((type_map, gray, temp, heat, fuel, 
                       threshold, agent_pos, f_mobility))
 
-# Reset the layers of the map that have changed to default values
-def reset_map(env):
+'''
+Reset the layers of the map that have changed to default values
+This function is also called after initialization
+
+If you want to preinitialize the map with a circular route according
+to the midpoint circle drawing algorithm, then provide the mid point
+and radius in the following format:
+
+circle = [radius, (midx, midy)]
+
+This leaves one point of the circle open, and puts the agent at that
+location so that we can record the agent closing the circle and getting
+the reward
+'''
+def reset_map(env, circle=None):
     env[:, :, layer['gray']].fill(grass['gray'])
     env[:, :, layer['temp']].fill(0)
     env[:, :, layer['heat']].fill(grass['heat'])
@@ -66,14 +117,39 @@ def reset_map(env):
     env[:, :, layer['agent_pos']].fill(0)
     env[:, :, layer['type']].fill(0)
 
+    if circle is not None:
+        r = circle[0]
+        x, y = circle[1]
+        points = circlePoints(x, y, r)
+
+        # Don't dig at the last point yet, but put the agent there
+        agentx, agenty = points.pop()
+
+        # Dig at all the other points
+        for point in points:
+            x, y = point
+            env[x, y, layer['type']] = types['road']
+            env[x, y, layer['gray']] = dirt['gray']
+            env[x, y, layer['fire_mobility']] = np.inf
+
+        # Put the agent at the opening in the circle
+        env[agentx, agenty, layer['agent_pos']] = 1
+
 # Agents can move, die and dig a cell to turn it into a road
 class Agent:
     def __init__(self, W, position):
-        self.x, self.y = position
         self.W = W
-        self.W.env[self.x, self.y, layer['agent_pos']] = 1
+        # If we have already set a position for the agent on the map, use that instead
+        if self.W.env[:, :, layer['agent_pos']].any():
+            xarray, yarray = np.where(self.W.env[:, :, layer['agent_pos']] == 1)
+            assert len(xarray) == 1 and len(yarray) == 1
+            self.x, self.y = xarray[0], yarray[0]
+        else:
+            self.x, self.y = position
+            self.W.env[self.x, self.y, layer['agent_pos']] = 1
+
         self.dead = False
-        self.digging = True
+        self.digging = False
         self.dig()
 
     # Agent is dead if the cell at current position is burning
@@ -82,8 +158,8 @@ class Agent:
 
     # Turn the cell at agent position into a road cell
     def dig(self):
-        # Ignore dig command if we are in the toy example
-        if not FITNESS_MEASURE == 'Toy':
+        # Ignore dig command if we are in the toy example or not in dig mode
+        if self.digging and not FITNESS_MEASURE == 'Toy':
             # Ignore dig command if the cell is already a road cell
             if not types[self.W.env[self.x, self.y, layer['type']]] == 'road':
                 # Change the type
@@ -95,8 +171,8 @@ class Agent:
 
     # Toggle whether the agent digs after every move or not
     def toggle_digging(self):
-        self.dig()
         self.digging = not self.digging
+        self.dig()
 
     # Move the agent to a new position
     def move(self, direction):
@@ -139,6 +215,8 @@ class World:
         self.DEPTH = self.get_state().shape[2]
         # Simulation is running
         self.RUNNING = True
+        # Save fire location
+        self.FIRE_LOC = FIRE_LOC
 
         # The wind speed and direction
         if WIND_PARAMS == "Random":
@@ -166,13 +244,13 @@ class World:
         self.fire_at_border = False
 
     # Reset any changed parameters to their default values
-    def reset(self):
+    def reset(self, circle=None):
         if WIND_PARAMS == "Random":
             self.wind_speed = r.randint(0, 3)
             self.wind_vector = (r.randint(-1, 1), r.randint(-1, 1))
 
         self.RUNNING = True
-        reset_map(self.env)
+        reset_map(self.env, circle)
         self.burning_cells = set()
         self.set_fire_to(FIRE_LOC)
 
@@ -313,7 +391,7 @@ class World:
 
             # Don't check paths if fire has reached border or if fire contained or 
             # the fire has burnt out
-            if not self.fire_at_border and len(self.border_points)\
+            if not self.fire_at_border and len(self.border_points) \
                                        and len(self.burning_cells):
 
                 # Make a copy of the burning cells set, and pop one out
