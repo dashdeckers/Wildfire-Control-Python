@@ -122,8 +122,10 @@ def reset_map(env, circle=None):
         x, y = circle[1]
         points = circlePoints(x, y, r)
 
-        # Don't dig at the last point yet, but put the agent there
-        agentx, agenty = points.pop()
+        # Don't dig at a random point yet, but put the agent there
+        random_idx = np.random.choice(np.array(range(len(points))))
+        agentx, agenty = points[random_idx]
+        del points[random_idx]
 
         # Dig at all the other points
         for point in points:
@@ -137,7 +139,7 @@ def reset_map(env, circle=None):
 
 # Agents can move, die and dig a cell to turn it into a road
 class Agent:
-    def __init__(self, W, position):
+    def __init__(self, W, position, allow_digging=True):
         self.W = W
         # If we have already set a position for the agent on the map, use that instead
         if self.W.env[:, :, layer['agent_pos']].any():
@@ -149,7 +151,7 @@ class Agent:
             self.W.env[self.x, self.y, layer['agent_pos']] = 1
 
         self.dead = False
-        self.digging = False
+        self.digging = allow_digging
         self.dig()
 
     # Agent is dead if the cell at current position is burning
@@ -254,8 +256,14 @@ class World:
         self.burning_cells = set()
         self.set_fire_to(FIRE_LOC)
 
+        # If we are collecting memories, we don't want the agent to immediately
+        # dig where it is standing, otherwise the transition can't be captured
+        allow_digging = True
+        if circle is not None:
+            allow_digging = False
+
         self.agents = [
-            Agent(self, AGENT_LOC)
+            Agent(self, AGENT_LOC, allow_digging)
         ]
 
         METADATA['iteration'] = 0

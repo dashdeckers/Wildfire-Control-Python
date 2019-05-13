@@ -26,6 +26,7 @@ class DQN:
             'TD_errors'     : list(),
             'maps'          : dict(),
             'epsilons'      : list(),
+            'survivals'     : 0,
         }
 
         # DQN Parameters
@@ -66,11 +67,6 @@ class DQN:
             state = self.sim.reset()
             state = np.reshape(state, [1] + list(state.shape))
 
-            # HACK to allow agent to dig because we don't allow it to initially
-            # because of the way collect_memories() works, and also don't allow
-            # it to toggle between them (NUM_ACTIONS == 4)
-            self.sim.W.agents[0].toggle_digging()
-
             # Start the simulation episode
             while not done:
                 # Execute an action following the e-greedy policy
@@ -104,6 +100,9 @@ class DQN:
                 self.logs['maps'][episode] = map_string
                 if total_reward > self.logs['best_reward']:
                     self.logs['best_reward'] = total_reward
+
+            if len(self.sim.W.agents) == 0:
+                self.logs['survivals'] += 1
 
             # Print some information about the episode
             print(f"[Episode {episode + 1}]\tTime: {round(time.time() - t0, 3)}")
