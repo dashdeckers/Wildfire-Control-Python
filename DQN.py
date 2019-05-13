@@ -94,7 +94,7 @@ class DQN:
                 rewards.append(reward)
 
             # If the last episode was somewhat successful, render its final state
-            if total_reward >= 0.8 * self.logs['best_reward']:
+            if total_reward >= 0.8 * self.logs['best_reward'] or total_reward > 300:
                 map_string = self.sim.render()
                 self.logs['maps'][episode] = map_string
                 if total_reward > self.logs['best_reward']:
@@ -102,8 +102,8 @@ class DQN:
 
             # Print some information about the episode
             print(f"[Episode {episode + 1}]\tTime: {round(time.time() - t0, 3)}")
-            print(f"\t\tReward: {total_reward}")
-            print(f"\t\tEpsilon: {round(self.eps, 3)}\n")
+            print(f"\t\tEpsilon: {round(self.eps, 3)}")
+            print(f"\t\tReward: {total_reward}\n")
 
             # Log and decay the epsilon value for the next episode
             self.logs['epsilons'].append(self.eps)

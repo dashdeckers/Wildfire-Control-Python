@@ -163,6 +163,7 @@ class World:
         # Keep track of all the points along the border (For the A* algorithm)
         self.border_points = deque()
         self.reset_border_points()
+        self.fire_at_border = False
 
     # Reset any changed parameters to their default values
     def reset(self):
@@ -181,6 +182,7 @@ class World:
 
         METADATA['iteration'] = 0
         self.reset_border_points()
+        self.fire_at_border = False
 
     # Reset the queue containing the border points of the map
     def reset_border_points(self):
@@ -208,6 +210,9 @@ class World:
         self.env[x, y, layer['type']] = types['fire']
         # Update burning cells
         self.burning_cells.add(cell)
+        # If this is a point at the border, the fire can never be contained
+        if (x == 0) or (x == WIDTH-1) or (y == 0) or (y == HEIGHT-1):
+            self.fire_at_border = True
 
     # Determine whether the cell is on fire
     def is_burning(self, cell):
@@ -299,13 +304,17 @@ class World:
             if the agent has died:
                 give a large penalty
                 stop simulation
-            if the fire has died out (no burning cells left):
+            if the fire has burnt out (no burning cells left):
                 give a large reward * percent of the map untouched
                 stop simulation
             otherwise:
                 give a small penalty
             '''
-            if len(self.border_points) and len(self.burning_cells):
+
+            # Don't check paths if fire has reached border or if fire contained or 
+            # the fire has burnt out
+            if not self.fire_at_border and len(self.border_points)\
+                                       and len(self.burning_cells):
 
                 # Make a copy of the burning cells set, and pop one out
                 burning = set(self.burning_cells)
@@ -329,7 +338,7 @@ class World:
                         self.reset_border_points()
                         b_cell = burning.pop()
                         start = np.array([b_cell[0], b_cell[1]])
-                    # Still border points, try a route to a different border point
+                    # Still border points left, try a route to a different border point
                     end = self.border_points.pop()
                     path = pyastar.astar_path(grid, start, end, allow_diagonal=False)
 
