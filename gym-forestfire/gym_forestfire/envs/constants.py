@@ -18,7 +18,7 @@ AGENT_SPEED_ITER = AGENT_SPEED = 1
 # Allow or prohibit the agent to commit suicide (move into fire): Boolean
 AGENT_SUICIDE = True
 # Allow collection of logging info etc: 0 = off, 1 = some, 2 = all
-DEBUG = 0
+DEBUG = 1
 
 # Generate a unique name for each run, based on constants and the current time
 def get_name():

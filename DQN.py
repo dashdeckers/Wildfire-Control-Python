@@ -103,7 +103,7 @@ class DQN:
             # If the last episode was somewhat successful, render its final state
             if total_reward >= 0.8 * self.logs['best_reward'] or total_reward > 300:
                 map_string = self.sim.render()
-                if DEBUG > 0:
+                if self.DEBUG > 0:
                     self.logs['maps'][episode] = map_string
                 if total_reward > self.logs['best_reward']:
                     self.logs['best_reward'] = total_reward
@@ -118,13 +118,13 @@ class DQN:
             print(f"\t\tReward: {total_reward}\n")
 
             # Log and decay the epsilon value for the next episode
-            if DEBUG > 0: self.logs['epsilons'].append(self.eps)
+            if self.DEBUG > 0: self.logs['epsilons'].append(self.eps)
             self.decay_epsilon(episode)
 
             # Collect data on the total accumulated rewards over time
-            if DEBUG > 0: self.logs['total_rewards'].append(total_reward)
-            if DEBUG > 1: self.logs['all_rewards'].append(rewards)
-            if DEBUG > 0: self.logs['infos'].append(self.sim.W.get_info())
+            if self.DEBUG > 0: self.logs['total_rewards'].append(total_reward)
+            if self.DEBUG > 1: self.logs['all_rewards'].append(rewards)
+            if self.DEBUG > 0: self.logs['infos'].append(self.sim.W.get_info())
 
     # Fit the model with a random sample taken from the memory
     def replay(self):
@@ -165,7 +165,7 @@ class DQN:
         self.model.fit(states, predictions, epochs=1, verbose=0)
 
         # Collect the data on TD errors
-        if DEBUG > 0: self.logs['TD_errors'].append(td_errors)
+        if self.DEBUG > 0: self.logs['TD_errors'].append(td_errors)
 
     # Choose an action A based on state S following the e-greedy policy
     def choose_action(self, state, eps=None):
@@ -240,7 +240,7 @@ class DQN:
         with open('human_data.dat', 'wb') as outfile:
             pickle.dump(self.memory, outfile)
         # Collect logging info
-        if DEBUG > 0: self.logs['init_memories'] = len(self.memory)
+        if self.DEBUG > 0: self.logs['init_memories'] = len(self.memory)
 
     '''
     Automatically fills memories as follows:
@@ -274,7 +274,7 @@ class DQN:
             # Store experience in memory
             self.remember(state, action, reward, sprime, done)
         # Collect logging info
-        if DEBUG > 0: self.logs['init_memories'] = len(self.memory)
+        if self.DEBUG > 0: self.logs['init_memories'] = len(self.memory)
 
     # Load an existing memory file
     def load_memory(self):
