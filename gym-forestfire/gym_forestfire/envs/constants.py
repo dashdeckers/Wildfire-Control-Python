@@ -1,35 +1,63 @@
 from colour import Color
 
-# Map Dimensions
-WIDTH = 10
-HEIGHT = 10
-# Starting point for the fire: (fire_x, fire_y)
-FIRE_LOC = (5, 5)
-# Starting point for the agent: (agent_x, agent_y)
-AGENT_LOC = (4, 4)
-# Wind speed and direction: "Random" or [wind_speed, (wind_x, wind_y)]
-WIND_PARAMS = [1, (1, 1)]
-# Number of allowed actions: 6 to allow "wait", 5 disable it, 4 to also disable dig
-NUM_ACTIONS = 4
-# Reward / Fitness measure to use: "A-Star" or "Toy"
-FITNESS_MEASURE = "A-Star"
-# Number of steps agent can execute before the environment updates
-AGENT_SPEED_ITER = AGENT_SPEED = 1
-# Allow or prohibit the agent to commit suicide (move into fire): Boolean
-AGENT_SUICIDE = True
-# Allow collection of logging info etc: 0 = off, 1 = some, 2 = all
-DEBUG = 0
+# Environment / Simulation constants
+ENV_CONS = {
+    # Map Dimensions
+    "width" : 10,
+    "height": 10,
+
+    # Starting point for the fire and the agent: (x, y)
+    "f_loc" : (5, 5),
+    "a_loc" : (4, 4),
+
+    # Wind speed and direction: "Random" or [wind_speed, (wind_x, wind_y)]
+    "wind"  : [1, (1, 1)],
+
+    # Number of allowed actions: 6 to allow "wait", 5 disable it, 4 to also disable dig
+    "n_actions" : 4,
+
+    # Reward measure to use: "A-Star" or "Toy"
+    "reward" : "A-Star",
+
+    # Number of steps agent can execute before the environment updates: Both equal
+    "a_speed"       : 1,
+    "a_speed_iter"  : 1,
+
+    # Allow or prohibit the agent to commit suicide (move into fire): Boolean
+    "a_suicide" : True,
+
+    # Allow collection of logging info etc: 0 = off, 1 = some, 2 = all
+    "debug" : 0,
+}
+
+# Metadata and DQN parameters
+METADATA = {
+    # For the reward measures
+    "death_penalty"   : 1000 * ENV_CONS['a_speed'],
+    "contained_bonus" : 1000 * ENV_CONS['a_speed'],
+
+    # General book-keeping
+    "max_iteration" : 200,
+    "iteration"     : 0,
+    "constants"     : ENV_CONS,
+
+    # DQN parameters
+    "memory_size"    : 20000,
+    "max_eps"        : 1.0,
+    "min_eps"        : 0.01,
+    "eps_decay_rate" : 0.0005, # 0.005
+    "gamma"          : 0.999, # 0.99
+    "alpha"          : 0.002, # 0.001
+    "target_update"  : 20,
+    "batch_size"     : 32, # 32
+}
+
 
 # Generate a unique name for each run, based on constants and the current time
 def get_name():
     import time
     NAME = (
-        f"""Size:{(WIDTH, HEIGHT)}-"""
-        f"""Reward:{FITNESS_MEASURE}-"""
-        f"""A.Speed:{AGENT_SPEED}-"""
-        f"""NumActions:{NUM_ACTIONS}-"""
-        f"""A.Suicide:{AGENT_SUICIDE}-"""
-        f"""Time:{time.asctime( time.localtime(time.time()) ).split()[3]}"""
+        f"""Time:{"-".join(time.asctime( time.localtime(time.time()) ).split()[1:4])}"""
     )
     return NAME
 
@@ -89,26 +117,4 @@ color2ascii = {
     grayscale(Color("Red"))   : '@',
     grayscale(Color("Black")) : '#',
     grayscale(Color("Brown")) : '0',
-}
-
-METADATA = {
-# For the reward measures
-    "death_penalty"   : 1000 * AGENT_SPEED,
-    "contained_bonus" : 1000 * AGENT_SPEED,
-    "total_reward"    : 0,
-    "path_to_border"  : None,
-
-# General book-keeping
-    "max_iteration" : 200,
-    "iteration"     : 0,
-
-# DQN parameters
-    "memory_size"    : 20000,
-    "max_eps"        : 1.0,
-    "min_eps"        : 0.01,
-    "eps_decay_rate" : 0.0005, # 0.005
-    "gamma"          : 0.999, # 0.99
-    "alpha"          : 0.002, # 0.001
-    "target_update"  : 20,
-    "batch_size"     : 32, # 32
 }

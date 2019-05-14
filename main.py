@@ -16,13 +16,4 @@ DQN = DQN(forestfire)
 
 # Run
 DQN.learn(1)
-DQN.write_logs()
-
-'''
-# Just a sanity check, for testing
-import numpy as np
-m = DQN.model
-s = DQN.sim.reset()
-s = np.reshape(s, [1] + list(s.shape))
-p = m.predict(s)
-'''
+DQN.write_data()

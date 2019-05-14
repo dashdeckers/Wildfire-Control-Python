@@ -7,14 +7,8 @@ from .constants import (
     layer,
     get_name,
     color2ascii,
-    AGENT_SPEED_ITER,
-    FITNESS_MEASURE,
-    NUM_ACTIONS,
-    AGENT_SPEED,
+    ENV_CONS,
     METADATA,
-    HEIGHT,
-    WIDTH,
-    DEBUG,
 )
 from .utility import (
     World,
@@ -26,16 +20,18 @@ class ForestFire(gym.Env):
 
     def __init__(self):
         self.W = World()
-        self.DEBUG = DEBUG
+        self.DEBUG = ENV_CONS['debug']
         self.layer = layer
         self.get_name = get_name
         self.METADATA = METADATA
-        self.FITNESS_MEASURE = FITNESS_MEASURE
+        self.reward = ENV_CONS['reward']
+        self.width = ENV_CONS['width']
+        self.height = ENV_CONS['height']
 
-        self.action_space = spaces.Discrete(NUM_ACTIONS)
+        self.action_space = spaces.Discrete(ENV_CONS['n_actions'])
         self.observation_space = spaces.Box(low=0,
                                             high=1,
-                                            shape=(WIDTH, HEIGHT),
+                                            shape=(self.width, self.height),
                                             dtype=int)
 
     # Execute an action in the environment
@@ -49,11 +45,10 @@ class ForestFire(gym.Env):
         # If the action is not handled, the agent does nothing
 
         # Update environment only every AGENT_SPEED steps
-        global AGENT_SPEED_ITER
-        AGENT_SPEED_ITER -= 1
-        if AGENT_SPEED_ITER == 0:
+        ENV_CONS['a_speed_iter'] -= 1
+        if ENV_CONS['a_speed_iter'] == 0:
             self.update()
-            AGENT_SPEED_ITER = AGENT_SPEED
+            ENV_CONS['a_speed_iter'] = ENV_CONS['a_speed']
 
         # Return the state, reward and whether the simulation is done
         return [self.W.get_state(),
@@ -70,15 +65,15 @@ class ForestFire(gym.Env):
     def render(self):
         # Print index markers along the top
         print(" ", end="")
-        for x in range(WIDTH):
+        for x in range(self.width):
             print(x % 10, end="")
         print("")
 
         return_map = "\n"
-        for y in range(HEIGHT):
+        for y in range(self.height):
             # Print index markers along the left side
             print(y % 10, end="")
-            for x in range(WIDTH):
+            for x in range(self.width):
                 # If the agent is at this location, print A
                 if self.W.agents and (self.W.agents[0].x, self.W.agents[0].y) == (x, y):
                     return_map += 'A'
@@ -117,9 +112,9 @@ class ForestFire(gym.Env):
                         self.W.apply_heat_from_to(cell, n_cell)
 
         # In the toy reward, the simulation is not terminated when the fire dies out
-        if not self.W.agents or (not self.W.burning_cells and not FITNESS_MEASURE == "Toy"):
+        if not self.W.agents or (not self.W.burning_cells and not self.reward == "Toy"):
             self.W.RUNNING = False
 
         # But it is terminated when a certain number of iterations have passed
-        if FITNESS_MEASURE == "Toy" and METADATA['iteration'] == METADATA['max_iteration']:
+        if self.reward == "Toy" and METADATA['iteration'] == METADATA['max_iteration']:
             self.W.RUNNING = False

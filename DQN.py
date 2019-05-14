@@ -20,15 +20,16 @@ class DQN:
 
         # Information to save to file
         self.logs = {
+            'best_reward'   : -10000,
             'total_rewards' : list(),
             'all_rewards'   : list(),
             'infos'         : list(),
-            'best_reward'   : -10000,
             'TD_errors'     : list(),
             'maps'          : list(),
             'epsilons'      : list(),
             'deaths'        : 0,
             'init_memories' : 0,
+            'total_time'    : 0,
         }
 
         # DQN Parameters
@@ -51,11 +52,8 @@ class DQN:
 
     # The learning algorithm
     def learn(self, n_episodes=1000):
-
-        '''
-        TODO:
-        TOtal time taken for entire learning run
-        '''
+        # Time the entire run
+        start_time = time.time()
 
         # Initialize counter to update the target network in intervals        
         target_update_counter = self.target_update_freq
@@ -108,11 +106,13 @@ class DQN:
             # If the last episode was somewhat successful, render its final state
             if total_reward >= 0.9 * self.logs['best_reward'] or total_reward > 300:
                 map_string = self.sim.render()
-                if self.DEBUG > 0:
-                    self.logs['maps'].append([episode, map_string])
                 if total_reward > self.logs['best_reward']:
                     self.logs['best_reward'] = total_reward
+                # Save the final state of the map
+                if self.DEBUG > 0:
+                    self.logs['maps'].append([episode, map_string])
 
+            # Keep track of how often the agent is dying
             if self.DEBUG > 0 and len(self.sim.W.agents) == 0:
                 self.logs['deaths'] += 1
 
@@ -131,12 +131,19 @@ class DQN:
             if self.DEBUG > 1: self.logs['all_rewards'].append(rewards)
             if self.DEBUG > 1: self.logs['infos'].append(self.sim.W.get_info())
 
+        # Save the total time taken for this run
+        if self.DEBUG > 0:
+            self.logs['total_time'] = round(time.time() - start_time, 3)
+            self.logs['n_episodes'] = n_episodes
+
     # Fit the model with a random sample taken from the memory
     def replay(self):
-        batch = random.sample(self.memory, self.METADATA['batch_size'])
         states_batch = list()
         predicted_batch = list()
         td_errors = list()
+
+        # Sample a random batch of memories from memory
+        batch = random.sample(self.memory, self.METADATA['batch_size'])
 
         for state, action, reward, sprime, done in batch:
             # Get the prediction for the state S
@@ -220,32 +227,37 @@ class DQN:
         return model
 
     '''
-    Miscellaneous, plotting and helper methods:
+    Miscellaneous, helper methods:
     '''
 
-    def show_all(self):
-        self.play_optimal()
-        self.show_rewards()
-        self.show_td_error()
-        self.show_decay()
+    # Play the simulation by following the optimal policy
+    def play_optimal(self, eps=0):
+        done = False
+        state = self.sim.reset()
+        while not done:
+            self.sim.render()
+            state = np.reshape(state, [1] + list(state.shape))
+            self.show_best_action(state)
+            action = self.choose_action(state, eps=eps)
+            state, _, done, _ = self.sim.step(action)
+            time.sleep(0.1)
+        self.sim.render()
 
-    # Start a series of human runs to collect valuable data for replay memory
-    def run_human(self):
-        import pickle
-        from misc import run_human
-        # First try loading an existing memory file, and wipe any internal memory
-        self.memory = deque()
-        self.load_memory()
-        # Then collect data until the memory buffer is full or the user cancels
-        status = "Running"
-        while len(self.memory) < self.METADATA['memory_size'] and status != "Cancelled":
-            status = run_human(self.sim, self)
-            print("Memory Size: ", len(self.memory))
-        # Finally, save the memory to file (overwrite the existing one)
-        with open('human_data.dat', 'wb') as outfile:
-            pickle.dump(self.memory, outfile)
-        # Collect logging info
-        if self.DEBUG > 0: self.logs['init_memories'] = len(self.memory)
+    # Show the Q-values for each action in the current state, and show the highest one
+    def show_best_action(self, state='Current'):
+        if state == 'Current':
+            state = self.sim.W.get_state()
+            state = np.reshape(state, [1] + list(state.shape))
+
+        # Predict the Q-values via the network
+        QVals = self.model.predict(state)[0]
+
+        # Print the Q-values and their maximum
+        key_map = {0:'N', 1:'S', 2:'E', 3:'W', 4:'D', 5:' '}
+        print("| ", end="")
+        for idx, val in enumerate(QVals):
+            print(key_map[idx], ":", round(val, 2), " | ", end="")
+        print(f" Best: {key_map[np.argmax(QVals)]}")
 
     '''
     Automatically fills memories as follows:
@@ -281,129 +293,13 @@ class DQN:
         # Collect logging info
         if self.DEBUG > 0: self.logs['init_memories'] = len(self.memory)
 
-    # Load an existing memory file
-    def load_memory(self):
-        import pickle
-        try:
-            with open('human_data.dat', 'rb') as infile:
-                self.memory.extend(pickle.load(infile))
-                print("Memory Size: ", len(self.memory))
-        except FileNotFoundError:
-            print("No existing memory file found, creating a new one...")
-
-    # Gives an impression on how the epsilon decays over time
-    def show_decay(self, amount_of_values=5):
-        n_episodes = len(self.logs['epsilons'])
-        k = int(n_episodes / amount_of_values)
-
-        print(f"Epsilon starts at", round(self.logs['epsilons'][0], 3), \
-                    "and ends at", round(self.logs['epsilons'][n_episodes-1], 3))
-
-        for i, eps in enumerate(self.logs['epsilons']):
-            if i % k == 0:
-                print(f"\tEpisode {i+1}: ", round(eps, 3))
-
-    # Show the Q-values for each action in the current state, and show the highest one
-    def show_best_action(self, state='Current'):
-        if state == 'Current':
-            state = self.sim.W.get_state()
-            state = np.reshape(state, [1] + list(state.shape))
-
-        # Predict the Q-values via the network
-        QVals = self.model.predict(state)[0]
-
-        # Print the Q-values and their maximum
-        key_map = {0:'N', 1:'S', 2:'E', 3:'W', 4:'D', 5:' '}
-        print("| ", end="")
-        for idx, val in enumerate(QVals):
-            print(key_map[idx], ":", round(val, 2), " | ", end="")
-        print(f" Best: {key_map[np.argmax(QVals)]}")
-
-    # Play the simulation by following the optimal policy
-    def play_optimal(self, eps=0):
-        done = False
-        state = self.sim.reset()
-        while not done:
-            self.sim.render()
-            state = np.reshape(state, [1] + list(state.shape))
-            self.show_best_action(state)
-            action = self.choose_action(state, eps=eps)
-            state, _, done, _ = self.sim.step(action)
-            time.sleep(0.1)
-        self.sim.render()
-
-    # Plot the cumulative rewards over time
-    def show_rewards(self):
-        plt.plot(self.logs['total_rewards'])
-        plt.title("Cumulative reward over time")
-        plt.ylabel("Reward Values")
-        plt.xlabel("Episodes")
-        plt.show()
-
-    # Plot the TD errors over time
-    def show_td_error(self):
-        # Each TD error entry in logs is a list of TD errors of length 
-        # batch_size for each loop iteration in replay()
-        tderrors = list()
-        for group in self.logs['TD_errors']:
-            tderrors.append(sum(group) / len(group))
-        plt.plot(tderrors)
-        plt.title("TD errors over time")
-        plt.ylabel("TD Errors")
-        plt.xlabel("Episodes")
-        plt.show()
-
-    # Prints or plots the average cumulative reward per k episodes
-    def average_reward_per_k_episodes(self, k, plot=False):
-        # Calculate the average cumulative reward
-        n_episodes = len(self.logs['total_rewards'])
-        rewards_per_k = np.split(np.array(self.logs['total_rewards']), n_episodes/k)
-        avg_reward_per_k = list()
-        for group in rewards_per_k:
-            avg_reward_per_k.append(sum(group) / k)
-
-        # Plot or print the result
-        if plot:
-            plt.plot(avg_reward_per_k)
-            plt.title(f"Average reward per {k} episodes")
-            plt.show()
-        else:
-            count = k
-            print(f"Average reward per {k} episodes:")
-            for reward in avg_reward_per_k:
-                print(count, ":", reward)
-                count += k
-
-    '''
-    TODO:
-    Improve data collection by moving more (all?) constants to METADATA,
-    then writing both METADATA and logs (in a nicer format?) to file
-
-    Plot functions should be in a separate file, where normalization can
-    be done first
-    '''
-
-    # Writes the logs to a file with an appropriate name
-    def write_logs(self):
+    # Writes the logs and the metadata to a file with an appropriate name
+    def write_data(self):
+        self.logs['metadata'] = self.METADATA
         name = self.sim.get_name()
         name = "Logs/" + name
         with open(name, 'w') as file:
-            file.write(json.dumps(str(self.logs)))
-
-    '''
-    TODO:
-    This should be the only "plotting" etc method in DQN. Finish this
-    and then make a new file to migrate plotting functions to.
-    '''
-    def analyze_logs(self):
-        import pprint
-        pp1 = pprint.PrettyPrinter(depth=1)
-        pp2 = pprint.PrettyPrinter(depth=2)
-        done = False
-        while not done:
-            print("'q' to quit")
-            print("'o' to show overview of logs")
-            print("'r' to ")
+            json.dump(self.logs, file)
 
     # Loads the weights of the model from file.
     def load_model(self, name):

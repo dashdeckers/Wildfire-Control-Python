@@ -49,7 +49,6 @@ def run_human(sim, DQN=None):
             # Current state is now next state
             state = sprime
             total_reward += reward
-            sim.METADATA['total_reward'] = total_reward
         elif char == 'v':
             if DQN is not None:
                 DQN.show_best_action()
@@ -68,7 +67,7 @@ def run_human(sim, DQN=None):
                 sim.W.show_layer()
         elif char == 'p':
             print("General Info")
-            sim.W.print_info()
+            sim.W.print_info(total_reward)
         elif char == 'm':
             sim.W.print_metadata()
         else:

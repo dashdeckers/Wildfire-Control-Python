@@ -4,20 +4,23 @@ import numpy as np
 import pyastar
 from collections import deque
 from .constants import (
-    FITNESS_MEASURE,
-    AGENT_SUICIDE,
     color2ascii,
-    WIND_PARAMS,
-    AGENT_LOC,
-    FIRE_LOC,
     METADATA,
-    HEIGHT,
-    WIDTH,
+    ENV_CONS,
     dirt,
     grass,
     layer,
     types,
 )
+
+WIDTH = ENV_CONS['width']
+HEIGHT = ENV_CONS['height']
+FITNESS_MEASURE = ENV_CONS['reward']
+AGENT_SUICIDE = ENV_CONS['a_suicide']
+WIND_PARAMS = ENV_CONS['wind']
+AGENT_LOC = ENV_CONS['a_loc']
+FIRE_LOC = ENV_CONS['f_loc']
+
 
 '''
 The mid-point circle drawing algorithm returns the points on a discrete 2D map
@@ -430,7 +433,6 @@ class World:
 
                 # Always put back the last working(!) end point for the route
                 self.border_points.append(end)
-                METADATA['path_to_border'] = path
 
             # If the agent is dead, give a big penalty
             if not self.agents:
@@ -507,7 +509,7 @@ class World:
         print("[Cell contains an Agent] ", agent_at_loc, "\n")
 
     # Print various info about the world
-    def print_info(self):
+    def print_info(self, total_reward):
         type_map = self.env[:, :, layer['type']]
         num_burnt = np.count_nonzero(type_map == types['burnt'])
         num_burning = np.count_nonzero(type_map == types['fire'])
@@ -520,7 +522,7 @@ class World:
         print("[# of Damaged Cells] ", num_dug + num_burnt + num_burning)
         print("[Percent Burnt] ", num_burnt / (WIDTH * HEIGHT))
         print("[Percent Damaged] ", (num_burnt+num_dug+num_burning) / (WIDTH * HEIGHT))
-        print("[Total Reward] ", METADATA['total_reward'])
+        print("[Total Reward] ", total_reward)
         print("[Current Reward] ", self.get_reward(), "\n")
 
     # Returns a dict of information about the current state
