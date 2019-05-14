@@ -25,7 +25,7 @@ class DQN:
             'infos'         : list(),
             'best_reward'   : -10000,
             'TD_errors'     : list(),
-            'maps'          : dict(),
+            'maps'          : list(),
             'epsilons'      : list(),
             'deaths'        : 0,
             'init_memories' : 0,
@@ -101,14 +101,14 @@ class DQN:
                 rewards.append(reward)
 
             # If the last episode was somewhat successful, render its final state
-            if total_reward >= 0.8 * self.logs['best_reward'] or total_reward > 300:
+            if total_reward >= 0.9 * self.logs['best_reward'] or total_reward > 300:
                 map_string = self.sim.render()
                 if self.DEBUG > 0:
-                    self.logs['maps'][episode] = map_string
+                    self.logs['maps'].append([episode, map_string])
                 if total_reward > self.logs['best_reward']:
                     self.logs['best_reward'] = total_reward
 
-            if len(self.sim.W.agents) == 0:
+            if self.DEBUG > 0 and len(self.sim.W.agents) == 0:
                 self.logs['deaths'] += 1
 
             # Print some information about the episode
@@ -118,13 +118,13 @@ class DQN:
             print(f"\t\tReward: {total_reward}\n")
 
             # Log and decay the epsilon value for the next episode
-            if self.DEBUG > 0: self.logs['epsilons'].append(self.eps)
+            if self.DEBUG > 1: self.logs['epsilons'].append(self.eps)
             self.decay_epsilon(episode)
 
             # Collect data on the total accumulated rewards over time
             if self.DEBUG > 0: self.logs['total_rewards'].append(total_reward)
             if self.DEBUG > 1: self.logs['all_rewards'].append(rewards)
-            if self.DEBUG > 0: self.logs['infos'].append(self.sim.W.get_info())
+            if self.DEBUG > 1: self.logs['infos'].append(self.sim.W.get_info())
 
     # Fit the model with a random sample taken from the memory
     def replay(self):
@@ -165,7 +165,7 @@ class DQN:
         self.model.fit(states, predictions, epochs=1, verbose=0)
 
         # Collect the data on TD errors
-        if self.DEBUG > 0: self.logs['TD_errors'].append(td_errors)
+        if self.DEBUG > 1: self.logs['TD_errors'].append(td_errors)
 
     # Choose an action A based on state S following the e-greedy policy
     def choose_action(self, state, eps=None):
@@ -373,18 +373,34 @@ class DQN:
     TODO:
     Improve data collection by moving more (all?) constants to METADATA,
     then writing both METADATA and logs (in a nicer format?) to file
+
+    Plot functions should be in a separate file, where normalization can
+    be done first
     '''
 
     # Writes the logs to a file with an appropriate name
     def write_logs(self):
         name = self.sim.get_name()
+        name = "Logs/" + name
         with open(name, 'w') as file:
             file.write(json.dumps(str(self.logs)))
 
+    def analyze_logs(self):
+        import pprint
+        pp1 = pprint.PrettyPrinter(depth=1)
+        pp2 = pprint.PrettyPrinter(depth=2)
+        done = False
+        while not done:
+            print("'q' to quit")
+            print("'o' to show overview of logs")
+            print("'r' to ")
+
     # Loads the weights of the model from file.
     def load_model(self, name):
+        name = "Models/" + name
         self.model.load_weights(name)
 
     # Saves the weights of the model to file
     def save_model(self, name):
+        name = "Models/" + name
         self.model.save_weights(name)
