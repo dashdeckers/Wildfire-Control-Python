@@ -52,6 +52,11 @@ class DQN:
     # The learning algorithm
     def learn(self, n_episodes=1000):
 
+        '''
+        TODO:
+        TOtal time taken for entire learning run
+        '''
+
         # Initialize counter to update the target network in intervals        
         target_update_counter = self.target_update_freq
 
