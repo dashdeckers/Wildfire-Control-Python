@@ -59,7 +59,7 @@ class DQN:
         for episode in range(n_episodes):
 
             # Every 100 epsiodes, see how the agent is behaving
-            if episode % 100 == 0:
+            if self.DEBUG > 1 and episode % 100 == 0:
                 self.play_optimal(self.eps)
 
             # Initialze the done flag, the reward accumulator, time, rewards etc
@@ -385,6 +385,11 @@ class DQN:
         with open(name, 'w') as file:
             file.write(json.dumps(str(self.logs)))
 
+    '''
+    TODO:
+    This should be the only "plotting" etc method in DQN. Finish this
+    and then make a new file to migrate plotting functions to.
+    '''
     def analyze_logs(self):
         import pprint
         pp1 = pprint.PrettyPrinter(depth=1)
