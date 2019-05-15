@@ -27,7 +27,7 @@ ENV_CONS = {
     "a_suicide" : True,
 
     # Allow collection of logging info etc: 0 = off, 1 = some, 2 = all
-    "debug" : 0,
+    "debug" : 1,
 }
 
 # Metadata and DQN parameters

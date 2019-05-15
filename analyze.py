@@ -1,5 +1,6 @@
 import json, pprint
 
+pp  = pprint.PrettyPrinter()
 pp1 = pprint.PrettyPrinter(depth=1)
 pp2 = pprint.PrettyPrinter(depth=2)
 pp3 = pprint.PrettyPrinter(depth=3)
@@ -8,7 +9,7 @@ with open("Logs/Time:May-14-20:43:23", 'r') as file:
     logs = json.load(file)
 
 
-pp3.pprint(logs)
+pp.pprint(logs)
 
 
 def show_all(self):

@@ -62,7 +62,7 @@ class DQN:
         for episode in range(n_episodes):
 
             # Every 100 epsiodes, see how the agent is behaving
-            if self.DEBUG > 1 and episode % 100 == 0:
+            if self.DEBUG > 1 and episode % 100 == 0 and not episode == 0:
                 self.play_optimal(self.eps)
 
             # Initialze the done flag, the reward accumulator, time, rewards etc
@@ -165,7 +165,7 @@ class DQN:
 
             # The TD error is the difference between the old predicted
             # Q-value for the state S and action A and the new prediction
-            td_errors.append(abs(old_predicted_qval - prediction[action]))
+            td_errors.append(abs(float(old_predicted_qval - prediction[action])))
 
             # Store the states and their updated predictions for this batch
             states_batch.append(state[0])
