@@ -2,7 +2,6 @@ from keras.models import Sequential
 from keras.layers import Dense, Flatten
 from keras.optimizers import Adam
 
-import matplotlib.pyplot as plt
 import numpy as np
 import random, time, keras, json
 from collections import deque
