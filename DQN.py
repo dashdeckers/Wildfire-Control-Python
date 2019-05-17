@@ -233,15 +233,18 @@ class DQN:
     # Play the simulation by following the optimal policy
     def play_optimal(self, eps=0):
         done = False
+        total_reward = 0
         state = self.sim.reset()
         while not done:
             self.sim.render()
             state = np.reshape(state, [1] + list(state.shape))
             self.show_best_action(state)
             action = self.choose_action(state, eps=eps)
-            state, _, done, _ = self.sim.step(action)
+            state, reward, done, _ = self.sim.step(action)
+            total_reward += reward
             time.sleep(0.1)
         self.sim.render()
+        print(f"Total reward: {total_reward}")
 
     # Show the Q-values for each action in the current state, and show the highest one
     def show_best_action(self, state='Current'):
