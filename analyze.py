@@ -7,6 +7,9 @@ pp1 = pprint.PrettyPrinter(depth=1)
 pp2 = pprint.PrettyPrinter(depth=2)
 pp3 = pprint.PrettyPrinter(depth=3)
 
+logs_folder = "Logs/"
+plots_folder = "Plots/"
+
 '''
 TODO: Plots need to show the constants. Main() is nice, but real data presentation
 should probably be done interactively because we want to show differences between
@@ -81,107 +84,104 @@ Key:
 }
 '''
 
-def get_log_files():
-    all_logs = list()
-    logs_location = "Logs/"
-    for filename in os.listdir(logs_location):
-        with open(logs_location + filename, 'r') as file:
-            all_logs.append((filename, json.load(file)))
-    return all_logs
+# Make a list of filenames of everything in logs_folder
+def get_log_filenames():
+    all_filenames = list()
+    print(f"The following log files are available:")
+    for root, dirs, files in os.walk(logs_folder + "."):
+        for filename in files:
+            all_filenames.append(filename)
+    return all_filenames
 
-def show_all(logs):
-    show_rewards(logs)
-    show_td_error(logs)
-    show_decay(logs)
-    show_average_reward_per_k_episodes(logs)
+# Let user select a filename given all the filenames
+def select_file(all_filenames):
+    for idx, filename in enumerate(all_filenames):
+        print(f"\t[{idx}] {filename}")
+    selection = input("Select one: ")
+    print("")
+    return all_filenames[int(selection)]
 
-# Gives an impression on how the epsilon decays over time
-def show_decay(logs, amount_of_values=5):
-    n_episodes = len(logs['epsilons'])
-    if not n_episodes:
-        print("No data on epsilon decay...")
-        return
+# Load a file given its name
+def load_file(filename):
+    with open(logs_folder + filename) as file:
+        return (filename, json.load(file))
 
-    k = int(n_episodes / amount_of_values)
-
-    print(f"Epsilon starts at", round(logs['epsilons'][0], 3), \
-                 "and ends at", round(logs['epsilons'][n_episodes-1], 3))
-
-    for i, eps in enumerate(logs['epsilons']):
-        if i % k == 0:
-            print(f"\tEpisode {i+1}: ", round(eps, 3))
+# Generate a plot and save it given the data and metadata
+def save_plot(data, title, ylabel, xlabel, save_filename):
+        plt.clf()
+        plt.plot(data)
+        plt.title(title)
+        plt.ylabel(ylabel)
+        plt.xlabel(xlabel)
+        plt.savefig(save_filename)
+        print(f"Generated {save_filename}")
 
 # Plot the cumulative rewards over time
-def show_rewards(logs):
-    if not len(logs['total_rewards']):
-        print("No data on total rewards...")
-        return
-    plt.plot(logs['total_rewards'])
-    plt.title("Cumulative reward over time")
-    plt.ylabel("Reward Values")
-    plt.xlabel("Episodes")
-    plt.show()
+def generate_total_rewards(file):
+    if file[1]['total_rewards']:
+        total_rewards = file[1]['total_rewards']
+        save_filename = plots_folder + file[0] + '-(total_rewards).png'
+        save_plot(total_rewards, "Cumulative reward over time", \
+                "Total reward", "Episodes", save_filename)
+    else:
+        print(f"Warning: No data on total rewards...")
+
+# Plots the average cumulative reward per k episodes
+def generate_average_reward_per_k(file, k=None):
+    if file[1]['total_rewards']:
+        total_rewards = file[1]['total_rewards']
+        n_episodes = len(total_rewards)
+        # If k was not given, find a decent factor of n_episodes to use
+        if k is None:
+            k = 1
+            for i in range(3, int(n_episodes / 2)):
+                if n_episodes % i == 0:
+                    k = i
+                    break
+        # Calculate the average cumulative reward
+        rewards_per_k = np.split(np.array(total_rewards), n_episodes/k)
+        avg_reward_per_k = list()
+        for group in rewards_per_k:
+            avg_reward_per_k.append(sum(group) / k)
+        # Generate the plot
+        save_filename = plots_folder + file[0] + '-(average_rewards).png'
+        save_plot(avg_reward_per_k, f"Average reward over time (k = {k})", \
+                "Average reward", "Episodes", save_filename)
+    else:
+        print(f"Warning: No data on total rewards...")
+
+# Gives an impression on how the epsilon decays over time
+def generate_decay(file):
+    if file[1]['epsilons']:
+        epsilons = file[1]['epsilons']
+        save_filename = plots_folder + file[0] + '-(epsilons).png'
+        save_plot(epsilons, "Epsilons over time", \
+                "Epsilons", "Episodes", save_filename)
+    else:
+        print(f"Warning: No data on epsilon decay...")
 
 # Plot the TD errors over time
-def show_td_error(logs):
-    if not len(logs['TD_errors']):
-        print("No data on TD errors...")
-        return
-    # Each TD error entry in logs is a list of TD errors of length 
-    # batch_size for each loop iteration in replay()
-    tderrors = list()
-    for group in logs['TD_errors']:
-        tderrors.append(sum(group) / len(group))
-    plt.plot(tderrors)
-    plt.title("TD errors over time")
-    plt.ylabel("TD Errors")
-    plt.xlabel("Episodes")
-    plt.show()
-
-# Prints or plots the average cumulative reward per k episodes
-def show_average_reward_per_k_episodes(logs, k=None, plot=True):
-    n_episodes = len(logs['total_rewards'])
-    if not n_episodes:
-        print("No data on total rewards...")
-        return
-
-    # If k was not given, find a decent factor of n_episodes to use
-    if k is None:
-        k = 1
-        for i in range(3, int(n_episodes / 2)):
-            if n_episodes % i == 0:
-                k = i
-                break
-
-    # Calculate the average cumulative reward
-    rewards_per_k = np.split(np.array(logs['total_rewards']), n_episodes/k)
-    avg_reward_per_k = list()
-    for group in rewards_per_k:
-        avg_reward_per_k.append(sum(group) / k)
-
-    # Plot or print the result
-    if plot:
-        plt.plot(avg_reward_per_k)
-        plt.title(f"Average reward per {k} episodes")
-        plt.show()
+def generate_td_error(file):
+    if file[1]['TD_errors']:
+        TD_errors = file[1]['TD_errors']
+        save_filename = plots_folder + file[0] + '-(td_errors).png'
+        save_plot(TD_errors, "TD-errors over time", \
+                "TD_error", "Episodes", save_filename)
     else:
-        count = k
-        print(f"Average reward per {k} episodes:")
-        for reward in avg_reward_per_k:
-            print(count, ":", reward)
-            count += k
+        print(f"Warning: No data on TD-error...")
+
 
 def main():
-    all_logs = get_log_files()
+    # Lets the user view files and select one
+    all_filenames = get_log_filenames()
+    selected_filename = select_file(all_filenames)
+    file = load_file(selected_filename)
 
-    max_count = 3
-    for filename, logs in all_logs:
-        max_count -= 1
-        if max_count == 0:
-            break
-
-        print(f"\n------- Showing logfile from: {filename}")
-        show_all(logs)
+    # Defines the to-be generated plots using the selected logfile
+    generate_total_rewards(file)
+    generate_decay(file)
+    generate_td_error(file)
+    generate_average_reward_per_k(file, 100)
 
 if __name__ == "__main__":
     main()
