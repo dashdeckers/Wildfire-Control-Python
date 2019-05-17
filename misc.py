@@ -75,16 +75,6 @@ def run_human(sim, DQN=None):
         sim.render()
     print(f"Total Reward: {total_reward}")
 
-# Run simulation with random actions
-def run_random(sim):
-    done = False
-    sim.reset()
-    while not done:
-        action = sim.action_space.sample()
-        _, _, done, _ = sim.step(action)
-        sim.render()
-        time.sleep(0.1)
-
 # Time the simulation speed
 def time_simulation_run(num_runs=100):
     import timeit

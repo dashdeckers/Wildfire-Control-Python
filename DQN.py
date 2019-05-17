@@ -11,7 +11,7 @@ class DQN:
         # Constants and such
         self.sim = sim
         self.METADATA = sim.METADATA
-        self.action_size = self.sim.action_space.n
+        self.action_size = self.sim.n_actions
         self.DEBUG = sim.DEBUG
 
         # DQN memory
