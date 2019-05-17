@@ -166,34 +166,22 @@ class World:
         self.WIDTH = WIDTH
         self.HEIGHT = HEIGHT
         self.DEPTH = self.get_state().shape[2]
-        # Simulation is running
-        self.RUNNING = True
-
-        # The wind speed and direction
-        self.wind_speed = r.randint(0, 3)
-        self.wind_vector = (r.randint(-1, 1), r.randint(-1, 1))
-
-        # Keep track of burning cells. A cell is represented by a tuple (x, y)
-        self.burning_cells = set()
-        self.set_fire_to(get_fire_location(WIDTH, HEIGHT))
-
-        # Create the agent(s)
-        self.agents = [
-            Agent(self, get_agent_location(WIDTH, HEIGHT)),
-        ]
-
-        # Keep track of all the points along the border (For the A* algorithm)
-        self.border_points = deque()
-        self.reset_border_points()
-        self.fire_at_border = False
+        # Set the rest of the params
+        self.reset()
 
     # Reset any changed parameters to their default values
     def reset(self, circle=None):
-        self.wind_speed = r.randint(0, 3)
+        # Set wind parameters
+        self.wind_speed = np.random.choice([0, 0.7, 0.85])
         self.wind_vector = (r.randint(-1, 1), r.randint(-1, 1))
 
+        # Simulation is running
         self.RUNNING = True
+
+        # Reset the map
         reset_map(self.env, circle)
+
+        # Keep track of burning cells. A cell is represented by a tuple (x, y)
         self.burning_cells = set()
         self.set_fire_to(get_fire_location(WIDTH, HEIGHT))
 
@@ -203,10 +191,12 @@ class World:
         if circle is not None:
             allow_digging = False
 
+        # Create the agent(s)
         self.agents = [
             Agent(self, get_agent_location(WIDTH, HEIGHT), allow_digging)
         ]
 
+        # Keep track of all the points along the border (For the A* algorithm)
         self.reset_border_points()
         self.fire_at_border = False
 
