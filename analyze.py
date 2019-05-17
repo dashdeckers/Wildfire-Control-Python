@@ -107,7 +107,7 @@ def load_file(filename):
         return (filename, json.load(file))
 
 # Generate a plot and save it given the data and metadata
-def save_plot(data, title, ylabel, xlabel, save_filename):
+def make_plot(data, title, ylabel, xlabel, save_filename):
         plt.clf()
         plt.plot(data)
         plt.title(title)
@@ -117,17 +117,17 @@ def save_plot(data, title, ylabel, xlabel, save_filename):
         print(f"Generated {save_filename}")
 
 # Plot the cumulative rewards over time
-def generate_total_rewards(file):
+def plot_total_rewards(file):
     if file[1]['total_rewards']:
         total_rewards = file[1]['total_rewards']
         save_filename = plots_folder + file[0] + '-(total_rewards).png'
-        save_plot(total_rewards, "Cumulative reward over time", \
-                "Total reward", "Episodes", save_filename)
+        make_plot(total_rewards, "Cumulative reward over time", \
+                "Total reward", "Episode", save_filename)
     else:
         print(f"Warning: No data on total rewards...")
 
 # Plots the average cumulative reward per k episodes
-def generate_average_reward_per_k(file, k=None):
+def plot_average_reward_per_k(file, k=None):
     if file[1]['total_rewards']:
         total_rewards = file[1]['total_rewards']
         n_episodes = len(total_rewards)
@@ -145,28 +145,28 @@ def generate_average_reward_per_k(file, k=None):
             avg_reward_per_k.append(sum(group) / k)
         # Generate the plot
         save_filename = plots_folder + file[0] + '-(average_rewards).png'
-        save_plot(avg_reward_per_k, f"Average reward over time (k = {k})", \
-                "Average reward", "Episodes", save_filename)
+        make_plot(avg_reward_per_k, f"Average reward over time (k = {k})", \
+                "Average reward", "Episode/k", save_filename)
     else:
         print(f"Warning: No data on total rewards...")
 
 # Gives an impression on how the epsilon decays over time
-def generate_decay(file):
+def plot_decay(file):
     if file[1]['epsilons']:
         epsilons = file[1]['epsilons']
         save_filename = plots_folder + file[0] + '-(epsilons).png'
-        save_plot(epsilons, "Epsilons over time", \
-                "Epsilons", "Episodes", save_filename)
+        make_plot(epsilons, "Epsilon decay over time", \
+                "Epsilon", "Episode", save_filename)
     else:
         print(f"Warning: No data on epsilon decay...")
 
 # Plot the TD errors over time
-def generate_td_error(file):
+def plot_td_error(file):
     if file[1]['TD_errors']:
         TD_errors = file[1]['TD_errors']
         save_filename = plots_folder + file[0] + '-(td_errors).png'
-        save_plot(TD_errors, "TD-errors over time", \
-                "TD_error", "Episodes", save_filename)
+        make_plot(TD_errors, "TD-error over time", \
+                "TD-error", "Episode", save_filename)
     else:
         print(f"Warning: No data on TD-error...")
 
@@ -178,10 +178,10 @@ def main():
     file = load_file(selected_filename)
 
     # Defines the to-be generated plots using the selected logfile
-    generate_total_rewards(file)
-    generate_decay(file)
-    generate_td_error(file)
-    generate_average_reward_per_k(file, 100)
+    plot_total_rewards(file)
+    plot_decay(file)
+    plot_td_error(file)
+    plot_average_reward_per_k(file, 100)
 
 if __name__ == "__main__":
     main()
