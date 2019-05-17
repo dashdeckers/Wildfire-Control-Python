@@ -2,15 +2,18 @@ import gym
 from gym import spaces
 
 from .constants import (
+    METADATA,
+)
+
+from .utility import (
     grass,
     dirt,
     layer,
     get_name,
     color2ascii,
-    ENV_CONS,
-    METADATA,
 )
-from .utility import (
+
+from .environment import (
     World,
     Agent,
 )
@@ -20,15 +23,14 @@ class ForestFire(gym.Env):
 
     def __init__(self):
         self.W = World()
-        self.DEBUG = ENV_CONS['debug']
+        self.METADATA = METADATA
+        self.DEBUG = METADATA['debug']
         self.layer = layer
         self.get_name = get_name
-        self.METADATA = METADATA
-        self.reward = ENV_CONS['reward']
-        self.width = ENV_CONS['width']
-        self.height = ENV_CONS['height']
+        self.width = METADATA['width']
+        self.height = METADATA['height']
 
-        self.action_space = spaces.Discrete(ENV_CONS['n_actions'])
+        self.action_space = spaces.Discrete(METADATA['n_actions'])
         self.observation_space = spaces.Box(low=0,
                                             high=1,
                                             shape=(self.width, self.height),
@@ -45,10 +47,10 @@ class ForestFire(gym.Env):
         # If the action is not handled, the agent does nothing
 
         # Update environment only every AGENT_SPEED steps
-        ENV_CONS['a_speed_iter'] -= 1
-        if ENV_CONS['a_speed_iter'] == 0:
+        METADATA['a_speed_iter'] -= 1
+        if METADATA['a_speed_iter'] == 0:
             self.update()
-            ENV_CONS['a_speed_iter'] = ENV_CONS['a_speed']
+            METADATA['a_speed_iter'] = METADATA['a_speed']
 
         # Return the state, reward and whether the simulation is done
         return [self.W.get_state(),
@@ -91,8 +93,6 @@ class ForestFire(gym.Env):
 
     # Updates the simulations internal state
     def update(self):
-        METADATA['iteration'] += 1
-
         # Remove dead agents
         self.W.agents = [a for a in self.W.agents if not a.is_dead()]
 
@@ -111,10 +111,6 @@ class ForestFire(gym.Env):
                         # This function adds the n_cell to burning cells if it ignited
                         self.W.apply_heat_from_to(cell, n_cell)
 
-        # In the toy reward, the simulation is not terminated when the fire dies out
-        if not self.W.agents or (not self.W.burning_cells and not self.reward == "Toy"):
-            self.W.RUNNING = False
-
-        # But it is terminated when a certain number of iterations have passed
-        if self.reward == "Toy" and METADATA['iteration'] == METADATA['max_iteration']:
+        # Simulation is terminated when there are no more burning cells or agents
+        if not self.W.agents or not self.W.burning_cells:
             self.W.RUNNING = False

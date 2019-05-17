@@ -29,6 +29,7 @@ class DQN:
             'deaths'        : 0,
             'init_memories' : 0,
             'total_time'    : 0,
+            'n_episodes'    : 0,
         }
 
         # DQN Parameters
@@ -53,6 +54,9 @@ class DQN:
     def learn(self, n_episodes=1000):
         # Time the entire run
         start_time = time.time()
+
+        # Save the total number of episodes
+        self.logs['n_episodes'] = n_episodes
 
         # Initialize counter to update the target network in intervals        
         target_update_counter = self.target_update_freq
@@ -125,15 +129,12 @@ class DQN:
             if self.DEBUG > 1: self.logs['epsilons'].append(self.eps)
             self.decay_epsilon(episode)
 
-            # Collect data on the total accumulated rewards over time
+            # Collect data on the rewards over time
             if self.DEBUG > 0: self.logs['total_rewards'].append(total_reward)
             if self.DEBUG > 1: self.logs['all_rewards'].append(rewards)
-            if self.DEBUG > 1: self.logs['infos'].append(self.sim.W.get_info())
 
         # Save the total time taken for this run
-        if self.DEBUG > 0:
-            self.logs['total_time'] = round(time.time() - start_time, 3)
-            self.logs['n_episodes'] = n_episodes
+        self.logs['total_time'] = round(time.time() - start_time, 3)
 
     # Fit the model with a random sample taken from the memory
     def replay(self):
@@ -272,7 +273,7 @@ class DQN:
         width, height = self.sim.W.WIDTH, self.sim.W.HEIGHT
         smallest_dimension = width if width > height else height
         possible_radiuses = np.array(range(1, int(smallest_dimension / 2)))
-        midpoint = (self.sim.W.FIRE_LOC[0], self.sim.W.FIRE_LOC[1])
+        midpoint = (int(width / 2), int(height / 2))
         # Collect the memories
         for i in range(num_of_memories):
             # Generate a random circle
@@ -294,9 +295,21 @@ class DQN:
 
     # Writes the logs and the metadata to a file with an appropriate name
     def write_data(self):
+        # Also save metadata
         self.logs['metadata'] = self.METADATA
-        name = self.sim.get_name()
+
+        # Create log filename
+        n_episodes = self.logs['n_episodes']
+        if n_episodes >= 1000:
+            n_episodes /= 1000
+        else:
+            n_episodes = 0
+        memories = self.logs['init_memories']
+        size = self.sim.W.WIDTH
+        name = self.sim.get_name(n_episodes, memories, size)
         name = "Logs/" + name
+
+        # Write logs
         with open(name, 'w') as file:
             json.dump(self.logs, file)
 

@@ -13,7 +13,3 @@ forestfire = gym.make('gym-forestfire-v0')
 
 # Create the DQN
 DQN = DQN(forestfire)
-
-# Run
-DQN.learn(1)
-DQN.write_data()

@@ -41,11 +41,6 @@ Key:
         The epsilon value for every episode
         Total number of episodes
 
-    infos:
-        List of dictionaries
-        General information on the last state of each episode
-        7 * Total number of episodes
-
     maps:
         List of lists
         Each entry contains the episode number and a string of the final state
@@ -73,11 +68,7 @@ Key:
 
     metadata:
         Dictionary
-        All the DQN parameters
-
-    metadata['constants']:
-        Dictionary
-        All the simulation parameters
+        All the DQN parameters and simulation constants
 }
 '''
 
