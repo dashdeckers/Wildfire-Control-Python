@@ -3,7 +3,7 @@ from keras.layers import Dense, Flatten
 from keras.optimizers import Adam
 
 import numpy as np
-import random, time, keras, json
+import random, time, keras, json, os
 from collections import deque
 
 class DQN:
@@ -22,7 +22,7 @@ class DQN:
             'best_reward'   : -10000,
             'total_rewards' : list(),
             'all_rewards'   : list(),
-            'infos'         : list(),
+            'wind_values'   : list(),
             'TD_errors'     : list(),
             'maps'          : list(),
             'epsilons'      : list(),
@@ -119,6 +119,11 @@ class DQN:
             if self.DEBUG > 0 and len(self.sim.W.agents) == 0:
                 self.logs['deaths'] += 1
 
+            # Keep track of the wind speeds and directions
+            if self.DEBUG > 0:
+                speed, direction = self.sim.wind_speed, self.sim.wind_vector
+                self.logs['wind_values'].append((speed, direction))
+
             # Print some information about the episode
             print(f"[Episode {episode + 1}]\tTime: {round(time.time() - t0, 3)}")
             print(f"\t\tEpsilon: {round(self.eps, 3)}")
@@ -135,6 +140,9 @@ class DQN:
 
         # Save the total time taken for this run
         self.logs['total_time'] = round(time.time() - start_time, 3)
+
+        # Write logs and model to file
+        self.write_data()
 
     # Fit the model with a random sample taken from the memory
     def replay(self):
@@ -188,7 +196,7 @@ class DQN:
         if random.uniform(0, 1) > eps_threshold:
             return np.argmax(self.model.predict(state)[0])
         else:
-            return self.sim.action_space.sample()
+            return np.random.choice(self.METADATA['n_actions'])
 
     # Decay the epsilon value in a rate proportional to the episode number
     def decay_epsilon(self, episode_num=None):
@@ -301,7 +309,7 @@ class DQN:
         # Also save metadata
         self.logs['metadata'] = self.METADATA
 
-        # Create log filename
+        # Create filename
         n_episodes = self.logs['n_episodes']
         if n_episodes >= 1000:
             n_episodes /= 1000
@@ -309,11 +317,20 @@ class DQN:
             n_episodes = 0
         memories = self.logs['init_memories']
         size = self.sim.W.WIDTH
-        name = self.sim.get_name(n_episodes, memories, size)
-        name = "Logs/" + name
+        name = self.sim.get_name(int(n_episodes), memories, size)
+        counter = 0
+        while os.path.isfile("Logs/" + name) or os.path.isfile("Models/" + name):
+            if counter > 0:
+                n_digits_to_delete = len(str(counter))
+                name = name[:-n_digits_to_delete]
+            name = name + str(counter)
+            counter += 1
+
+        # Write model
+        self.save_model(name)
 
         # Write logs
-        with open(name, 'w') as file:
+        with open("Logs/" + name, 'w') as file:
             json.dump(self.logs, file)
 
     # Loads the weights of the model from file.

@@ -79,8 +79,8 @@ def run_human(sim, DQN=None):
 def time_simulation_run(num_runs=100):
     import timeit
     setup = """
-import gym, gym_forestfire
-sim = gym.make('gym-forestfire-v0')
+from Simulation.forest_fire import ForestFire
+sim = ForestFire()
     """
     code = """
 sim.reset()

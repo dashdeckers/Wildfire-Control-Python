@@ -360,7 +360,7 @@ class World:
 
         # If the agent is dead, give a big penalty
         if not self.agents:
-            return (-1) * METADATA['death_penalty']
+            return METADATA['death_penalty']
 
         # If the fire has burnt out, give a reward based on surviving cells
         if not self.burning_cells:
@@ -369,7 +369,7 @@ class World:
             return METADATA['contained_bonus'] * perc_healthy
 
         # Otherwise (normally), give a small penalty
-        return (-0.5)
+        return METADATA['default_reward']
 
     '''
     Return the state of the simulation:

@@ -16,9 +16,10 @@ A_SPEED = 1
 
 # Metadata and DQN parameters
 METADATA = {
-    # For the reward measures
-    "death_penalty"   : 1000 * A_SPEED,
-    "contained_bonus" : 1000 * A_SPEED,
+    # For the reward measure
+    "death_penalty"   : -1000 * A_SPEED,
+    "contained_bonus" :  1000 * A_SPEED,
+    "default_reward"  : -1, # -0.5
 
     # Simulation constants
     "width" : SIZE,
@@ -32,9 +33,9 @@ METADATA = {
     "memory_size"    : 20000,
     "max_eps"        : 1.0,
     "min_eps"        : 0.01,
-    "eps_decay_rate" : 0.001, # 0.005
+    "eps_decay_rate" : 0.005, # 0.005
     "gamma"          : 0.999, # 0.99
-    "alpha"          : 0.002, # 0.001
+    "alpha"          : 0.005, # 0.001
     "target_update"  : 20,
     "batch_size"     : 32, # 32
 }
