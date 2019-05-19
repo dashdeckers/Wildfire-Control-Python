@@ -22,10 +22,11 @@ class DQN:
             'best_reward'   : -10000,
             'total_rewards' : list(),
             'all_rewards'   : list(),
-            'wind_values'   : list(),
             'TD_errors'     : list(),
-            'maps'          : list(),
+            'wind_values'   : list(),
+            'agent_pos'     : list(),
             'epsilons'      : list(),
+            'maps'          : list(),
             'deaths'        : 0,
             'init_memories' : 0,
             'total_time'    : 0,
@@ -78,6 +79,11 @@ class DQN:
             # first dimension to be the batch size
             state = self.sim.reset()
             state = np.reshape(state, [1] + list(state.shape))
+
+            # Keep track of the agent starting positions
+            if self.DEBUG > 0:
+                agent_x, agent_y = self.sim.W.agents[0].x, self.sim.W.agents[0].y
+                self.logs['agent_pos'].append((agent_x, agent_y))
 
             # Start the simulation episode
             while not done:
