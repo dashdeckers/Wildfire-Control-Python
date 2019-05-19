@@ -121,7 +121,7 @@ class DQN:
 
             # Keep track of the wind speeds and directions
             if self.DEBUG > 0:
-                speed, direction = self.sim.wind_speed, self.sim.wind_vector
+                speed, direction = self.sim.W.wind_speed, self.sim.W.wind_vector
                 self.logs['wind_values'].append((speed, direction))
 
             # Print some information about the episode
@@ -243,9 +243,11 @@ class DQN:
         done = False
         total_reward = 0
         state = self.sim.reset()
+        w_speed, w_vector = self.sim.W.wind_speed, self.sim.W.wind_vector
         while not done:
             self.sim.render()
             state = np.reshape(state, [1] + list(state.shape))
+            print(f"Wind Speed: {w_speed}, Wind direction: {w_vector}")
             self.show_best_action(state)
             action = self.choose_action(state, eps=eps)
             state, reward, done, _ = self.sim.step(action)
