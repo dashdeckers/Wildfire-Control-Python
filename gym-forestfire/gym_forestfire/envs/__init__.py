@@ -1,1 +1,0 @@
-from gym_forestfire.envs.forest_fire import ForestFire
