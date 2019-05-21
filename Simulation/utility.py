@@ -75,9 +75,10 @@ def get_agent_location(width, height):
 def get_name(epsiodes, memories, size):
     import time
     NAME = (
-        f"""{epsiodes}k-{memories}m-{size}s-VAR-"""
+        f"""{epsiodes}k-{memories}m-{size}s-VAR_"""
         f"""{"-".join(time.asctime( time.localtime(time.time()) ).split()[2:4])}"""
     )
+    NAME = NAME.replace(":", "")
     return NAME
 
 # Convert a color to grayscale with the grayscale formula from Wikipedia
