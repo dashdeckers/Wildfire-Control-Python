@@ -249,12 +249,10 @@ class DQN:
         done = False
         total_reward = 0
         state = self.sim.reset()
-        w_speed, w_vector = self.sim.W.wind_speed, self.sim.W.wind_vector
         while not done:
             self.sim.render()
             state = np.reshape(state, [1] + list(state.shape))
-            print(f"Wind Speed: {w_speed}, Wind direction: {w_vector}")
-            self.show_best_action(state)
+            self.show_info(state)
             action = self.choose_action(state, eps=eps)
             state, reward, done, _ = self.sim.step(action)
             total_reward += reward
@@ -263,10 +261,10 @@ class DQN:
         print(f"Total reward: {total_reward}")
 
     # Show the Q-values for each action in the current state, and show the highest one
-    def show_best_action(self, state='Current'):
-        if state == 'Current':
-            state = self.sim.W.get_state()
-            state = np.reshape(state, [1] + list(state.shape))
+    def show_info(self, state):
+        w_speed, w_vector = self.sim.W.wind_speed, self.sim.W.wind_vector
+        print(f"Wind Speed: {w_speed}")
+        print(f"Wind direction: {w_vector}")
 
         # Predict the Q-values via the network
         QVals = self.model.predict(state)[0]
@@ -275,8 +273,13 @@ class DQN:
         key_map = {0:'N', 1:'S', 2:'E', 3:'W', 4:'D', 5:' '}
         print("| ", end="")
         for idx, val in enumerate(QVals):
-            print(key_map[idx], ":", round(val, 2), " | ", end="")
-        print(f" Best: {key_map[np.argmax(QVals)]}")
+            val = round(val, 2)
+            direction = key_map[idx]
+            extra_space = " " if val > 0 else ""
+            print(f"{direction} : {extra_space}{val:.2f} | ", end="")
+            if idx == 1:
+                print("\n| ", end="")
+        print(f"\nBest Action: {key_map[np.argmax(QVals)]}\n")
 
     '''
     Automatically fills memories as follows:

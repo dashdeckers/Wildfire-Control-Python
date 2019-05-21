@@ -172,8 +172,12 @@ class World:
     # Reset any changed parameters to their default values
     def reset(self, circle=None):
         # Set wind parameters
-        self.wind_speed = np.random.choice([0, 0.7, 0.85])
-        self.wind_vector = (r.randint(-1, 1), r.randint(-1, 1))
+        if METADATA['wind'] == "random":
+            self.wind_speed = np.random.choice([0, 0.7, 0.85])
+            self.wind_vector = (r.randint(-1, 1), r.randint(-1, 1))
+        else:
+            self.wind_speed = METADATA['wind'][0]
+            self.wind_vector = METADATA['wind'][1]
 
         # Simulation is running
         self.RUNNING = True
