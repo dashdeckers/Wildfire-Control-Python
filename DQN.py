@@ -191,7 +191,8 @@ class DQN:
         self.model.fit(states, predictions, epochs=1, verbose=0)
 
         # Collect the data on TD errors
-        if self.DEBUG > 1: self.logs['TD_errors'].append(td_errors)
+        if self.DEBUG > 1: 
+            self.logs['TD_errors'].append(sum(td_errors) / len(td_errors))
 
     # Choose an action A based on state S following the e-greedy policy
     def choose_action(self, state, eps=None):
