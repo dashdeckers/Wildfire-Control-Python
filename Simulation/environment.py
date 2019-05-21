@@ -270,9 +270,9 @@ class World:
         distance, angle = self.get_distance_and_angle(cell, other_cell, "manhattan")
 
         # Formula:
-        # Heat = Cell_Heat * (Wind_Speed * Angle_to_wind + Distance_to_cell)^-1
-        env_factor = (self.wind_speed * angle + distance)**(-1)
-        calculated_heat = self.env[x, y, layer['heat']] * env_factor
+        # Heat = Cell_Heat * Wind_Speed * (Angle_to_wind + Distance_to_cell)^-1
+        env_factor = (angle + distance)**(-1)
+        calculated_heat = self.wind_speed * self.env[x, y, layer['heat']] * env_factor
 
         # Heat up the cell with the calculated heat
         self.env[ox, oy, layer['temp']] += calculated_heat
