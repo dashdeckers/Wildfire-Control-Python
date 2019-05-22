@@ -7,8 +7,10 @@ pp1 = pprint.PrettyPrinter(depth=1)
 pp2 = pprint.PrettyPrinter(depth=2)
 pp3 = pprint.PrettyPrinter(depth=3)
 
+# Global settings/variables
 logs_folder = "Logs/"
 plots_folder = "Plots/"
+log = None
 
 '''
 TODO: Plots need to show the constants. Main() is nice, but real data presentation
@@ -75,6 +77,7 @@ Key:
 }
 '''
 
+### FILE LOADING
 # Make a list of filenames of everything in logs_folder
 def get_log_filenames():
     all_filenames = list()
@@ -88,7 +91,7 @@ def get_log_filenames():
 def select_file(all_filenames):
     for idx, filename in enumerate(all_filenames):
         print(f"\t[{idx}] {filename}")
-    selection = input("Select one: ")
+    selection = input(f"Select one [0-{idx}]: ")
     print("")
     return all_filenames[int(selection)]
 
@@ -97,23 +100,52 @@ def load_file(filename):
     with open(logs_folder + filename) as file:
         return (filename, json.load(file))
 
-# Generate a plot and save it given the data and metadata
-def make_plot(data, title, ylabel, xlabel, save_filename):
-        plt.clf()
-        plt.plot(data)
-        plt.title(title)
-        plt.ylabel(ylabel)
-        plt.xlabel(xlabel)
-        plt.savefig(save_filename)
-        print(f"Generated {save_filename}")
+# Print relevant constants given the loaded file
+def print_constants(file):
+    if file[1]['metadata']:
+        print(f"The selected log contains the following constants:")
+        metadata = file[1]['metadata']
+        print(f"\tEpisodes:\t{file[1]['n_episodes']}", end="")
+        print(f" ({round(file[1]['total_time']/3600, 1)}hrs)")
+        print(f"\tMap size:\t{max(metadata['width'], metadata['height'])}")
+        print(f"\tMemories:\t{file[1]['init_memories']}")
+        print(f"\tDecay:\t{metadata['eps_decay_rate']}")
+        print(f"\tGamma:\t{metadata['gamma']}")
+        print(f"\tAlpha:\t{metadata['alpha']}")
+    else:
+        print(f"ERROR: No metadata found!")
+    print("")
 
+
+### PLOT MAKING/SHOWING/SAVING
+# Clear plot and start a new one
+def plot_start(title, ylabel, xlabel):
+    plt.clf()
+    plt.title(title)
+    plt.ylabel(ylabel)
+    plt.xlabel(xlabel)
+
+# Add data with respective name to the current plot
+def plot_add(data, given_label):
+    plt.plot(data, label=given_label)
+    
+# Save and show the final plot
+def plot_finish(save_filename):
+    plt.legend()
+    plt.show()
+    plt.savefig(save_filename)
+    print(f"Generated {save_filename}")
+
+
+### PLOT DEFINITIONS
 # Plot the cumulative rewards over time
 def plot_total_rewards(file):
     if file[1]['total_rewards']:
         total_rewards = file[1]['total_rewards']
         save_filename = plots_folder + file[0] + '-(total_rewards).png'
-        make_plot(total_rewards, "Cumulative reward over time", \
-                "Total reward", "Episode", save_filename)
+        plot_start("Cumulative reward over time", "Total reward", "Episode")
+        plot_add(total_rewards, "Total reward")
+        plot_finish(save_filename)
     else:
         print(f"Warning: No data on total rewards...")
 
@@ -136,8 +168,10 @@ def plot_average_reward_per_k(file, k=None):
             avg_reward_per_k.append(sum(group) / k)
         # Generate the plot
         save_filename = plots_folder + file[0] + '-(average_rewards).png'
-        make_plot(avg_reward_per_k, f"Average reward over time (k = {k})", \
-                "Average reward", "Episode/k", save_filename)
+        plot_start(f"Average reward over time (k = {k})", \
+                "Average reward", "Episode/k")
+        plot_add(avg_reward_per_k, "Averaged reward")
+        plot_finish(save_filename)
     else:
         print(f"Warning: No data on total rewards...")
 
@@ -146,8 +180,9 @@ def plot_decay(file):
     if file[1]['epsilons']:
         epsilons = file[1]['epsilons']
         save_filename = plots_folder + file[0] + '-(epsilons).png'
-        make_plot(epsilons, "Epsilon decay over time", \
-                "Epsilon", "Episode", save_filename)
+        plot_start("Epsilon decay over time", "Epsilon", "Episode")
+        plot_add(epsilons, "Epsilon")
+        plot_finish(save_filename)
     else:
         print(f"Warning: No data on epsilon decay...")
 
@@ -156,23 +191,39 @@ def plot_td_error(file):
     if file[1]['TD_errors']:
         TD_errors = file[1]['TD_errors']
         save_filename = plots_folder + file[0] + '-(td_errors).png'
-        make_plot(TD_errors, "TD-error over time", \
-                "TD-error", "Episode", save_filename)
+        plot_start("TD-error over time", "TD-error", "Episode")
+        plot_add(TD_errors, "TD-error")
+        plot_finish(save_filename)
     else:
         print(f"Warning: No data on TD-error...")
 
 
+### MAIN
 def main():
-    # Lets the user view files and select one
-    all_filenames = get_log_filenames()
-    selected_filename = select_file(all_filenames)
-    file = load_file(selected_filename)
+    correct_file = "n"
+    while correct_file == "n":
+        # Lets the user view files and select one
+        all_filenames = get_log_filenames()
+        selected_filename = select_file(all_filenames)
+        file = load_file(selected_filename)
 
-    # Defines the to-be generated plots using the selected logfile
-    plot_total_rewards(file)
-    plot_decay(file)
-    plot_td_error(file)
-    plot_average_reward_per_k(file, 100)
+        # Print relevant constant from the loaded file
+        print_constants(file)
+
+        # Make the file contents available globally
+        # Usage in CLI:     print(log['total_rewards'])
+        log = file[1]
+
+        correct_file = input("Make plots? (y/n): ")
+        if correct_file == "n":
+            print(f"Reselecting file..")
+        else:
+            # Defines the to-be generated plots using the selected logfile
+            plot_total_rewards(file)
+            plot_decay(file)
+            plot_td_error(file)
+            plot_average_reward_per_k(file, 100)
+        print("")
 
 if __name__ == "__main__":
     main()
