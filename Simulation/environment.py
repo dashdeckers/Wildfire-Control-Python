@@ -146,6 +146,11 @@ class Agent:
             if self.W.is_burning((nx, ny)):
                 self.dead = True
 
+    # Checks if the cell in the given direction is burning
+    def fire_in_direction(self, direction):
+        (nx, ny) = self._direction_to_coords(direction)
+        return self.W.inbounds(nx, ny) and self.W.is_burning((nx, ny))
+
     # Convert (N, S, E, W) or (0, 1, 2, 3) into coordinates
     def _direction_to_coords(self, direction):
         if direction in ["N", 0]:
@@ -437,39 +442,3 @@ class World:
         else:
             print(self.env[:, :, layer[layer_num]].T)
 
-
-
-
-    # Testing out a different way to generate memories via astar paths
-    def show_path(self):
-        # create the grid, mark the middle
-        grid = np.ones((WIDTH, HEIGHT)).astype(np.float32)
-        midpoint = [int(WIDTH/2), int(HEIGHT/2)]
-        grid[midpoint[0], midpoint[1]] = np.inf
-            # np.inf area in the center should be larger to avoid teaching
-            # close encounters with the fire
-
-        # find a path
-        r = 4
-        paths = [
-            # [[start.x, start.y], [end.x, end.y]]
-            [[midpoint[0] - r, midpoint[1]], [midpoint[0], midpoint[1] + r]],
-            [[midpoint[0], midpoint[1] + r], [midpoint[0] + r, midpoint[1]]],
-            [[midpoint[0] + r, midpoint[1]], [midpoint[0], midpoint[1] - r]],
-            [[midpoint[0], midpoint[1] - r], [midpoint[0] - r, midpoint[1]]],
-        ]
-
-        for path in paths:
-            # get start and end
-            start, end = path
-
-            # calculate path
-            path = pyastar.astar_path(grid, start, end, allow_diagonal=False)
-
-            # mark the path
-            row_idx = path[:, 0]
-            col_idx = path[:, 1]
-            grid[row_idx, col_idx] = 8
-
-        # show grid
-        print(grid)

@@ -31,6 +31,8 @@ class DQN:
             'init_memories' : 0,
             'total_time'    : 0,
             'n_episodes'    : 0,
+            'mem_death_count'     : 0,
+            'mem_contained_count' : 0,
         }
 
         # DQN Parameters
@@ -283,38 +285,63 @@ class DQN:
         print(f"\nBest Action: {key_map[np.argmax(QVals)]}\n")
 
     '''
-    Automatically fills memories as follows:
-
-    Create a map with a dirt/road circle around the fire of varying radius via the
-    mid point circle drawing algorithm and store that state along with the large
-    containment reward that comes with it in memory
+    Collects memories as follows:
+    Make the agent walk somewhat randomly but always such that it walks clockwise around
+    fire. So if the agent is below and to the right of the fire it will chose an action
+    to either go left or downwards until it is below the fire and then it will go either
+    up or left.
     '''
-    def collect_memories(self, num_of_memories=1000):
+    def collect_memories_randomwalk(self, num_of_memories=1000):
         # Wipe internal memory
         self.memory = deque()
-        # Get the possible values for circle radius
-        width, height = self.sim.W.WIDTH, self.sim.W.HEIGHT
-        smallest_dimension = width if width > height else height
-        possible_radiuses = np.array(range(1, int(smallest_dimension / 2)))
-        midpoint = (int(width / 2), int(height / 2))
-        # Collect the memories
-        for i in range(num_of_memories):
-            # Generate a random circle
-            circle = [np.random.choice(possible_radiuses), midpoint]
-            # Get the state S from a the circle
-            state = self.sim.reset(circle)
+        # While memory is not filled up
+        while len(self.memory) < num_of_memories:
+            done = False
+            state = self.sim.reset()
             state = np.reshape(state, [1] + list(state.shape))
-            # Get the reward and next state S' from closing the circle
-            sprime, reward, done, _ = self.sim.step("D")
-            sprime = np.reshape(sprime, [1] + list(sprime.shape))
-            # Make sure we actually got the containment bonus
-            assert reward == 1000
-            # We pretend a movement action resulted in this reward
-            action = np.random.choice(np.array([0, 1, 2, 3]))
-            # Store experience in memory
-            self.remember(state, action, reward, sprime, done)
+            while not done:
+                # Choose an action depending on position relative to fire
+                count = 0
+                action = self.choose_randomwalk_action()
+                while self.sim.W.agents[0].fire_in_direction(action):
+                    count += 1
+                    action = self.choose_randomwalk_action()
+                    if count > 10:
+                        break
+                # Observe sprime and reward
+                sprime, reward, done, _ = self.sim.step(action)
+                sprime = np.reshape(sprime, [1] + list(sprime.shape))
+                # Store experience in memory
+                self.remember(state, action, reward, sprime, done)
+                state = sprime
+                # If we contained the fire, we are done
+                if reward == self.METADATA['contained_bonus']:
+                    self.logs['mem_contained_count'] += 1
+                    done = True
+                if reward == self.METADATA['death_penalty']:
+                    self.logs['mem_death_count'] += 1
+                #time.sleep(0.1)
+                #self.sim.render()
         # Collect logging info
         if self.DEBUG > 0: self.logs['init_memories'] = len(self.memory)
+
+    # Choose an action depending on the agents position relative to the fire
+    def choose_randomwalk_action(self):
+        width, height = self.sim.W.WIDTH, self.sim.W.HEIGHT
+        agent_x, agent_y = self.sim.W.agents[0].x, self.sim.W.agents[0].y
+        mid_x, mid_y = (int(width / 2), int(height / 2))
+
+        # The chosen action should always make the agent go around the fire
+        if agent_x >= mid_x and agent_y > mid_y:
+            possible_actions = ["S", "W"]
+        if agent_x > mid_x and agent_y <= mid_y:
+            possible_actions = ["S", "E"]
+        if agent_x <= mid_x and agent_y < mid_y:
+            possible_actions = ["N", "E"]
+        if agent_x < mid_x and agent_y >= mid_y:
+            possible_actions = ["N", "W"]
+
+        return np.random.choice(possible_actions)
 
     # Writes the logs and the metadata to a file with an appropriate name
     def write_data(self):
