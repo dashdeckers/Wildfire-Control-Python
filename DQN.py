@@ -327,6 +327,7 @@ class DQN:
 
     # Choose an action depending on the agents position relative to the fire
     def choose_randomwalk_action(self):
+        key_map = {'N':0, 'S':1, 'E':2, 'W':3}
         width, height = self.sim.W.WIDTH, self.sim.W.HEIGHT
         agent_x, agent_y = self.sim.W.agents[0].x, self.sim.W.agents[0].y
         mid_x, mid_y = (int(width / 2), int(height / 2))
@@ -341,10 +342,7 @@ class DQN:
         if agent_x < mid_x and agent_y >= mid_y:
             possible_actions = ["N", "W"]
 
-        key_map = {'N':0, 'S':1, 'E':2, 'W':3}
-        possible_actions = [key_map[a] for a in possible_actions]
-
-        return np.random.choice(possible_actions)
+        return key_map[np.random.choice(possible_actions)]
 
     # Writes the logs and the metadata to a file with an appropriate name
     def write_data(self):
