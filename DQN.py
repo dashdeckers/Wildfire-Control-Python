@@ -133,17 +133,17 @@ class DQN:
                 self.logs['wind_values'].append((speed, direction))
 
             # Print some information about the episode
-            print(f"[Episode {episode + 1}]\tTime: {round(time.time() - t0, 3)}")
-            print(f"\t\tEpsilon: {round(self.eps, 3)}")
-            print(f"\t\tAgent dead: {len(self.sim.W.agents) == 0}")
-            print(f"\t\tReward: {total_reward}\n")
+            #print(f"[Episode {episode + 1}]\tTime: {round(time.time() - t0, 3)}")
+            #print(f"\t\tEpsilon: {round(self.eps, 3)}")
+            #print(f"\t\tAgent dead: {len(self.sim.W.agents) == 0}")
+            #print(f"\t\tReward: {total_reward}\n")
 
             # Log and decay the epsilon value for the next episode
             if self.DEBUG > 1: self.logs['epsilons'].append(self.eps)
             self.decay_epsilon(episode)
 
             # Collect data on the rewards over time
-            if self.DEBUG > 0: self.logs['total_rewards'].append(total_reward)
+            if self.DEBUG >= 0: self.logs['total_rewards'].append(total_reward)
             if self.DEBUG > 1: self.logs['all_rewards'].append(rewards)
 
         # Save the total time taken for this run

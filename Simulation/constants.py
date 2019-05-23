@@ -25,7 +25,7 @@ METADATA = {
     "width" : SIZE,
     "height": SIZE,
     "wind"  : [1, (1, 1)], # "random"
-    "debug" : 1,
+    "debug" : 0,
     "n_actions"     : 4,
     "a_speed"       : A_SPEED,
     "a_speed_iter"  : A_SPEED,
