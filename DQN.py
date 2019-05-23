@@ -291,7 +291,7 @@ class DQN:
     to either go left or downwards until it is below the fire and then it will go either
     up or left.
     '''
-    def collect_memories_randomwalk(self, num_of_memories=1000):
+    def collect_memories(self, num_of_memories=1000):
         # Wipe internal memory
         self.memory = deque()
         # While memory is not filled up
@@ -340,6 +340,9 @@ class DQN:
             possible_actions = ["N", "E"]
         if agent_x < mid_x and agent_y >= mid_y:
             possible_actions = ["N", "W"]
+
+        key_map = {'N':0, 'S':1, 'E':2, 'W':3}
+        possible_actions = [key_map[a] for a in possible_actions]
 
         return np.random.choice(possible_actions)
 
