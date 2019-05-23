@@ -13,3 +13,6 @@ forestfire = ForestFire()
 
 # Create the DQN
 DQN = DQN(forestfire)
+
+DQN.collect_memories(10000)
+DQN.learn(20000)
