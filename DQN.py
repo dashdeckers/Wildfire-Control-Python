@@ -7,7 +7,7 @@ import random, time, keras, json, os
 from collections import deque
 
 class DQN:
-    def __init__(self, sim, name="noname"):
+    def __init__(self, sim, name="no_name"):
         # Constants and such
         self.sim = sim
         self.name = name
@@ -268,7 +268,7 @@ class DQN:
         self.sim.render()
         print(f"Total reward: {total_reward}")
 
-    # Show the Q-values for each action in the current state, and show the highest one
+    # Show the Q-values for each action in the state, the best action, and wind info
     def show_info(self, state):
         w_speed, w_vector = self.sim.W.wind_speed, self.sim.W.wind_vector
         print(f"Wind Speed: {w_speed}")

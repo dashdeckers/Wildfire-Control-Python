@@ -24,7 +24,7 @@ METADATA = {
     # Simulation constants
     "width" : SIZE,
     "height": SIZE,
-    "wind"  : [0.3, (0, 0)], # "random"
+    "wind"  : [0.27, (0, 0)], # "random"
     "debug" : 1,
     "n_actions"     : 4,
     "a_speed"       : A_SPEED,
