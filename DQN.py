@@ -360,6 +360,12 @@ class DQN:
             name = name + str(counter)
             counter += 1
 
+        # If the folders don't exist, create them
+        if not os.path.exists("Logs/"):
+            os.makedirs("Logs/")
+        if not os.path.exists("Models/"):
+            os.makedirs("Models/")
+
         # Write model
         self.save_model(name)
 
