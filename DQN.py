@@ -7,9 +7,10 @@ import random, time, keras, json, os
 from collections import deque
 
 class DQN:
-    def __init__(self, sim):
+    def __init__(self, sim, name="noname"):
         # Constants and such
         self.sim = sim
+        self.name = name
         self.METADATA = sim.METADATA
         self.action_size = self.sim.n_actions
         self.DEBUG = sim.DEBUG
@@ -359,8 +360,7 @@ class DQN:
         else:
             n_episodes = 0
         memories = self.logs['init_memories']
-        size = self.sim.W.WIDTH
-        name = self.sim.get_name(int(n_episodes), memories, size)
+        name = self.sim.get_name(int(n_episodes), memories, self.name)
         counter = 0
         while os.path.isfile("Logs/" + name) or os.path.isfile("Models/" + name):
             if counter > 0:

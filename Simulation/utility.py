@@ -72,10 +72,10 @@ def get_agent_location(width, height):
     return (int(random_loc[0]), int(random_loc[1]))
 
 # Generate a unique name for each run, based on constants and the current time
-def get_name(epsiodes, memories, size):
+def get_name(epsiodes, memories, name):
     import time
     return (
-        f"""{epsiodes}k-{memories}m-{size}s-VAR_{time.strftime("%m-%d-%H%M")}"""
+        f"""{epsiodes}k-{memories}m-{name}-{time.strftime("%m-%d-%H%M")}"""
     )
 
 # Convert a color to grayscale with the grayscale formula from Wikipedia
