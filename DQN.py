@@ -31,8 +31,6 @@ class DQN:
             'init_memories' : 0,
             'total_time'    : 0,
             'n_episodes'    : 0,
-            'mem_death_count'     : 0,
-            'mem_contained_count' : 0,
         }
 
         # DQN Parameters
@@ -291,16 +289,20 @@ class DQN:
     to either go left or downwards until it is below the fire and then it will go either
     up or left.
     '''
-    def collect_memories(self, num_of_memories=1000):
+    def collect_memories(self, num_of_successes=100):
         # Wipe internal memory
         self.memory = deque()
+        success_count = 0
         # While memory is not filled up
-        while len(self.memory) < num_of_memories:
+        while True:
+            memories = []
             done = False
+            # Initialize state
             state = self.sim.reset()
             state = np.reshape(state, [1] + list(state.shape))
             while not done:
                 # Choose an action depending on position relative to fire
+                # Don't walk into fire, but also don't get stuck in a loop
                 count = 0
                 action = self.choose_randomwalk_action()
                 while self.sim.W.agents[0].fire_in_direction(action):
@@ -311,19 +313,20 @@ class DQN:
                 # Observe sprime and reward
                 sprime, reward, done, _ = self.sim.step(action)
                 sprime = np.reshape(sprime, [1] + list(sprime.shape))
-                # Store experience in memory
-                self.remember(state, action, reward, sprime, done)
+                # Collect memories
+                memories.append((state, action, reward, sprime, done))
                 state = sprime
-                # If we contained the fire, we are done
+                # Only if we contained the fire, we collect the memories
                 if reward == self.METADATA['contained_bonus']:
-                    self.logs['mem_contained_count'] += 1
+                    success_count += 1
+                    # Store successful experience in memory
+                    for state, action, reward, sprime, done in memories:
+                        self.remember(state, action, reward, sprime, done)
                     done = True
-                if reward == self.METADATA['death_penalty']:
-                    self.logs['mem_death_count'] += 1
-                #time.sleep(0.1)
-                #self.sim.render()
-        # Collect logging info
-        if self.DEBUG > 0: self.logs['init_memories'] = len(self.memory)
+                    # Collect logging info and return
+                    if success_count == num_of_successes:
+                        if self.DEBUG >= 0: self.logs['init_memories'] = len(self.memory)
+                        return
 
     # Choose an action depending on the agents position relative to the fire
     def choose_randomwalk_action(self):

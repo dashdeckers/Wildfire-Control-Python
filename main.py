@@ -3,7 +3,7 @@ from DQN import DQN
 from misc import run_human, time_simulation_run
 
 # Suppress the many unnecessary TensorFlow warnings
-import os
+import os, sys
 import tensorflow as tf
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 tf.logging.set_verbosity(tf.logging.ERROR)
@@ -14,5 +14,6 @@ forestfire = ForestFire()
 # Create the DQN
 DQN = DQN(forestfire)
 
-DQN.collect_memories(1000)
-DQN.learn(20000)
+if len(sys.argv) > 1 and sys.argv[1] == "-run":
+	DQN.collect_memories(100)
+	DQN.learn(20000)
