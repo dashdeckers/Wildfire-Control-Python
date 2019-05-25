@@ -22,13 +22,9 @@ class DQN:
         self.logs = {
             'best_reward'   : -10000,
             'total_rewards' : list(),
-            'all_rewards'   : list(),
             'TD_errors'     : list(),
-            'wind_values'   : list(),
             'agent_pos'     : list(),
-            'epsilons'      : list(),
             'maps'          : list(),
-            'deaths'        : 0,
             'init_memories' : 0,
             'total_time'    : 0,
             'n_episodes'    : 0,
@@ -49,6 +45,7 @@ class DQN:
         self.target.set_weights(self.model.get_weights())
 
         # Print Constants
+        print("\n\t[Parameters]")
         print("[decay]", self.METADATA['eps_decay_rate'])
         print("[alpha]", self.METADATA['alpha'])
         print("[gamma]", self.METADATA['gamma'])
@@ -71,10 +68,6 @@ class DQN:
 
         # Start the main learning loop
         for episode in range(n_episodes):
-
-            # Every 100 epsiodes, see how the agent is behaving
-            if self.DEBUG > 1 and episode % 100 == 0 and not episode == 0:
-                self.play_optimal(self.eps)
 
             # Initialze the done flag, the reward accumulator, time, rewards etc
             done = False
@@ -124,18 +117,9 @@ class DQN:
                 map_string = self.sim.render()
                 if total_reward > self.logs['best_reward']:
                     self.logs['best_reward'] = total_reward
-                # Save the final state of the map
+                # Save the state of the map
                 if self.DEBUG > 0:
                     self.logs['maps'].append([episode, map_string])
-
-            # Keep track of how often the agent is dying
-            if self.DEBUG > 0 and len(self.sim.W.agents) == 0:
-                self.logs['deaths'] += 1
-
-            # Keep track of the wind speeds and directions
-            if self.DEBUG > 0:
-                speed, direction = self.sim.W.wind_speed, self.sim.W.wind_vector
-                self.logs['wind_values'].append((speed, direction))
 
             # Print some information about the episode
             print(f"[Episode {episode + 1}]\tTime: {round(time.time() - t0, 3)}")
@@ -143,13 +127,11 @@ class DQN:
             print(f"\t\tAgent dead: {len(self.sim.W.agents) == 0}")
             print(f"\t\tReward: {total_reward}\n")
 
-            # Log and decay the epsilon value for the next episode
-            if self.DEBUG > 1: self.logs['epsilons'].append(self.eps)
+            # Decay the epsilon value for the next episode
             self.decay_epsilon(episode)
 
-            # Collect data on the rewards over time
-            if self.DEBUG >= 0: self.logs['total_rewards'].append(total_reward)
-            if self.DEBUG > 1: self.logs['all_rewards'].append(rewards)
+            # Log the rewards over time
+            self.logs['total_rewards'].append(total_reward)
 
         # Save the total time taken for this run
         self.logs['total_time'] = round(time.time() - start_time, 3)
@@ -179,7 +161,7 @@ class DQN:
                 prediction[action] = reward
             # Otherwise, estimate the cumulative reward from that state
             # forward by using the maximum Q-value of the state S' as a
-            # proxy (=bootstrapping)
+            # proxy (=bootstrapping via TD methods)
             else:
                 maxQ = np.amax(self.target.predict(sprime)[0])
                 prediction[action] = reward + self.gamma * maxQ
@@ -291,10 +273,13 @@ class DQN:
 
     '''
     Collects memories as follows:
+
     Make the agent walk somewhat randomly but always such that it walks clockwise around
     fire. So if the agent is below and to the right of the fire it will chose an action
     to either go left or downwards until it is below the fire and then it will go either
-    up or left.
+    up or left. When the fire is contained, the simulation is reset.
+    
+    It only collects the memories that lead to a successful containment of the fire.
     '''
     def collect_memories(self, num_of_successes=100):
         # Wipe internal memory
@@ -332,7 +317,7 @@ class DQN:
                     done = True
                     # Collect logging info and return
                     if success_count == num_of_successes:
-                        if self.DEBUG >= 0: self.logs['init_memories'] = len(self.memory)
+                        self.logs['init_memories'] = len(self.memory)
                         return
 
     # Choose an action depending on the agents position relative to the fire

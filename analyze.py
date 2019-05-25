@@ -31,19 +31,14 @@ Key:
         The difference between every state / prediction in replay()
         Batch size * total number of states
 
-    all_rewards:
-        List of lists
-        The reward collected in every visited state of every episode
-        Total number of states
-
     total_rewards:
         List
         The total cumulative reward for every episode
         Total number of episodes
 
-    epsilons:
+    agent_pos:
         List
-        The epsilon value for every episode
+        The agent starting positions for every episode
         Total number of episodes
 
     maps:
@@ -54,10 +49,6 @@ Key:
     best_reward:
         Float
         The highscore reward across all episodes
-
-    deaths:
-        Int
-        Number of times the agent has died across all episodes
 
     init_memories:
         Int
@@ -155,22 +146,6 @@ def plot_total_rewards(file):
     else:
         print(f"Warning: No data on total rewards")
 
-# Gives an impression on how the epsilon decays over time
-def plot_decay(file):
-    try:
-        epsilons = file[1]['epsilons']
-        save_filename = plots_folder + file[0] + '-(epsilons).png'
-    except:
-        print(f"ERROR: No epsilons field in log!")
-        return
-    if epsilons:
-        # Generate the plot
-        plot_start("Epsilon decay over time", "Epsilon", "Episode")
-        plot_add(epsilons, "Epsilon")
-        plot_finish(save_filename)
-    else:
-        print(f"Warning: No data on epsilon decay")
-
 # Plot the TD errors over time
 def plot_td_error(file):
     try: 
@@ -203,6 +178,9 @@ def plot_average_reward_per_k(file, k=None):
         plot_finish(save_filename)
     else:
         print(f"Warning: No data on total rewards")
+
+# TODO: The quadrant thing is too nice to throw away, but useless now that we can't
+# correlate the agent positions to wind direction (seeing as wind is constant now)
 
 # Plot average reward per quadrant
 def plot_quadrant_reward(file, k=None):
@@ -309,7 +287,6 @@ def main():
         else:
             # Defines the to-be generated plots using the selected logfile
             plot_total_rewards(file)
-            plot_decay(file)
             plot_td_error(file)
             plot_average_reward_per_k(file, 100)
             plot_quadrant_reward(file, 100)
