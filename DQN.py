@@ -48,6 +48,12 @@ class DQN:
         self.target = keras.models.clone_model(self.model)
         self.target.set_weights(self.model.get_weights())
 
+        # Print Constants
+        print("[decay]", self.METADATA['eps_decay_rate'])
+        print("[alpha]", self.METADATA['alpha'])
+        print("[gamma]", self.METADATA['gamma'])
+        print("[batch]", self.METADATA['batch_size'])
+
     '''
     Main methods related to learning
     '''
@@ -132,10 +138,10 @@ class DQN:
                 self.logs['wind_values'].append((speed, direction))
 
             # Print some information about the episode
-            #print(f"[Episode {episode + 1}]\tTime: {round(time.time() - t0, 3)}")
-            #print(f"\t\tEpsilon: {round(self.eps, 3)}")
-            #print(f"\t\tAgent dead: {len(self.sim.W.agents) == 0}")
-            #print(f"\t\tReward: {total_reward}\n")
+            print(f"[Episode {episode + 1}]\tTime: {round(time.time() - t0, 3)}")
+            print(f"\t\tEpsilon: {round(self.eps, 3)}")
+            print(f"\t\tAgent dead: {len(self.sim.W.agents) == 0}")
+            print(f"\t\tReward: {total_reward}\n")
 
             # Log and decay the epsilon value for the next episode
             if self.DEBUG > 1: self.logs['epsilons'].append(self.eps)
