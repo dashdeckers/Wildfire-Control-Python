@@ -296,6 +296,7 @@ def main():
 
         # Make the file contents available globally
         # Usage in CLI:     print(log['total_rewards'])
+        global log
         log = file[1]
 
         correct_file = input("Make plots? (y/n/c): ")
