@@ -9,6 +9,10 @@ Number of steps agent can execute before the environment updates: Both equal
 
 debug:
 Allow collection of logging info etc: 0 = off, 1 = some, 2 = all
+
+wind:
+Wind direction and speed in the form [windspeed, (wind_vector_x, wind_vector_y)].
+Can also be set to "random"
 '''
 
 SIZE = 10
@@ -19,12 +23,12 @@ METADATA = {
     # For the reward measure
     "death_penalty"   : -1000 * A_SPEED,
     "contained_bonus" :  1000 * A_SPEED,
-    "default_reward"  : -1, # -0.5
+    "default_reward"  : -1,
 
     # Simulation constants
     "width" : SIZE,
     "height": SIZE,
-    "wind"  : [0.32, (0, 0)], # "random"
+    "wind"  : [0.27, (0, 0)], # [0.27, (0, 0)]
     "debug" : 1,
     "n_actions"     : 4,
     "a_speed"       : A_SPEED,

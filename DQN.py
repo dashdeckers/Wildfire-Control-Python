@@ -50,6 +50,8 @@ class DQN:
         print("[alpha]", self.METADATA['alpha'])
         print("[gamma]", self.METADATA['gamma'])
         print("[batch]", self.METADATA['batch_size'])
+        print("[wind speed]", self.METADATA['wind'][0])
+        print("[target upd]", self.METADATA['target_update'])
 
     '''
     Main methods related to learning
