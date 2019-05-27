@@ -69,6 +69,12 @@ Key:
 '''
 
 ### FILE LOADING
+# Make sure the log and plot folders exist
+def verify_folder(folder_name):
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+        print(f"Directory " + folder_name + " missing, empty folder created!")
+
 # Make a list of filenames of everything in logs_folder
 def get_log_filenames():
     all_filenames = list()
@@ -121,6 +127,10 @@ def plot_start(title, ylabel, xlabel):
 def plot_add(data, given_label):
     plt.plot(data, label=given_label)
 
+def plot_setxaxis(min, max):
+    plt.gca().set_ylim([min, max])
+    plt.gca().set_xlim([None, None])
+
 # Save and show the final plot
 def plot_finish(save_filename):
     plt.legend()
@@ -142,6 +152,7 @@ def plot_total_rewards(file):
         # Generate the plot
         plot_start("Cumulative reward over time", "Total reward", "Episode")
         plot_add(total_rewards, "Total reward")
+        plot_setxaxis(-1500, 2000)
         plot_finish(save_filename)
     else:
         print(f"Warning: No data on total rewards")
@@ -174,7 +185,8 @@ def plot_average_reward_per_k(file, k=None):
     # Generate the plot
         plot_start(f"Average reward over time (k = {k})", \
                 "Average reward", "Episode/k")
-        plot_add(average_per_k(total_rewards, k), "Averaged reward")
+        plot_add(calc_average_per_k(total_rewards, k), "Averaged reward")
+        plot_setxaxis(-1500, 2000)
         plot_finish(save_filename)
     else:
         print(f"Warning: No data on total rewards")
@@ -219,18 +231,40 @@ def plot_quadrant_reward(file, k=None):
         # Generate the plot
         plot_start(f"Total reward over time per quadrant (k = {k})", \
             "Total reward", "Episode/k")
-        plot_add(reduce_array(topleft, k), "Top left")
-        plot_add(reduce_array(bottomleft, k), "Bottom right")
-        plot_add(reduce_array(topright, k), "Top right")
-        plot_add(reduce_array(bottomright, k), "Bottom right")
+        plot_add(calc_reduce_array(topleft, k), "Top left")
+        plot_add(calc_reduce_array(bottomleft, k), "Bottom right")
+        plot_add(calc_reduce_array(topright, k), "Top right")
+        plot_add(calc_reduce_array(bottomright, k), "Bottom right")
+        plot_setxaxis(-1500, 2000)
         plot_finish(save_filename)
     else:
         print(f"Warning: No data on quadrant rewards")
 
+# Plots the running average
+def plot_running_average(file, k=100):
+    try:
+        total_rewards = file[1]['total_rewards']
+        save_filename = plots_folder + file[0] + '-(running_average).png'
+    except:
+        print(f"ERROR: No total_rewards field in log!")
+        return
+    if total_rewards:
+        running_avgs = []
+        for i in range(len(total_rewards)):
+            running_avgs.append(calc_running_average(total_rewards, i, k))
+        # Generate the plot
+        plot_start(f"Running average reward over time (k = {k})",  \
+            "Running average reward", "Episode")
+        plot_add(running_avgs, "Running average reward")
+        plot_setxaxis(-1500, 2000)
+        plot_finish(save_filename)
+    else:
+        print(f"Warning: No data on total rewards")
+
 
 ### MATH HELPERS
 # Averages some array per some k
-def average_per_k(array, k=None):
+def calc_average_per_k(array, k=None):
     length = len(array)
     # If k was not given, find a decent factor of length to use
     if k is None:
@@ -248,7 +282,7 @@ def average_per_k(array, k=None):
 
 # Takes as many k-size averages as possible from an array,
 # discards the remainder though!
-def reduce_array(array, k=100):
+def calc_reduce_array(array, k=100):
     reduced, temp = ([] for i in range(2))
     idx = 0
     while len(array)- 1 - idx >= k:
@@ -258,10 +292,28 @@ def reduce_array(array, k=100):
             temp = []
         idx += 1
     return reduced
-        
+
+# Returns the average of the last k points given some index
+def calc_running_average(array, given_idx, k):
+    start_idx = given_idx - k + 1
+    stop_idx = given_idx
+    if start_idx < 0:
+        start_idx = 0
+    if stop_idx > len(array):
+        stop_idx = len(array)
+    temp = []
+    idx = start_idx
+    while idx <= stop_idx:
+        temp.append(array[idx])
+        idx += 1
+    return int(sum(temp)/len(temp))
 
 ### MAIN
 def main():
+    # Make sure the necessary folders exist
+    verify_folder(logs_folder)
+    verify_folder(plots_folder)
+
     correct_file = "n"
     while correct_file == "n":
         # Lets the user view files and select one
@@ -286,10 +338,11 @@ def main():
             print(f"Reselecting file..")
         else:
             # Defines the to-be generated plots using the selected logfile
-            plot_total_rewards(file)
-            plot_td_error(file)
-            plot_average_reward_per_k(file, 100)
-            plot_quadrant_reward(file, 100)
+            #plot_total_rewards(file)
+            #plot_td_error(file)
+            #plot_average_reward_per_k(file, 250)
+            #plot_quadrant_reward(file, 250)
+            plot_running_average(file, 1000)
 
 if __name__ == "__main__":
     main()
