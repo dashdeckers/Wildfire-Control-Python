@@ -127,7 +127,7 @@ def plot_start(title, ylabel, xlabel):
 def plot_add(data, given_label):
     plt.plot(data, label=given_label)
 
-def plot_setxaxis(min, max):
+def plot_setyaxis(min, max):
     plt.gca().set_ylim([min, max])
     plt.gca().set_xlim([None, None])
 
@@ -152,7 +152,7 @@ def plot_total_rewards(file):
         # Generate the plot
         plot_start("Cumulative reward over time", "Total reward", "Episode")
         plot_add(total_rewards, "Total reward")
-        plot_setxaxis(-1500, 2000)
+        plot_setyaxis(-1500, 2000)
         plot_finish(save_filename)
     else:
         print(f"Warning: No data on total rewards")
@@ -186,7 +186,7 @@ def plot_average_reward_per_k(file, k=None):
         plot_start(f"Average reward over time (k = {k})", \
                 "Average reward", "Episode/k")
         plot_add(calc_average_per_k(total_rewards, k), "Averaged reward")
-        plot_setxaxis(-1500, 2000)
+        plot_setyaxis(-1500, 2000)
         plot_finish(save_filename)
     else:
         print(f"Warning: No data on total rewards")
@@ -235,7 +235,7 @@ def plot_quadrant_reward(file, k=None):
         plot_add(calc_reduce_array(bottomleft, k), "Bottom right")
         plot_add(calc_reduce_array(topright, k), "Top right")
         plot_add(calc_reduce_array(bottomright, k), "Bottom right")
-        plot_setxaxis(-1500, 2000)
+        plot_setyaxis(-1500, 2000)
         plot_finish(save_filename)
     else:
         print(f"Warning: No data on quadrant rewards")
@@ -249,14 +249,12 @@ def plot_running_average(file, k=100):
         print(f"ERROR: No total_rewards field in log!")
         return
     if total_rewards:
-        running_avgs = []
-        for i in range(len(total_rewards)):
-            running_avgs.append(calc_running_average(total_rewards, i, k))
         # Generate the plot
         plot_start(f"Running average reward over time (k = {k})",  \
             "Running average reward", "Episode")
-        plot_add(running_avgs, "Running average reward")
-        plot_setxaxis(-1500, 2000)
+        plot_add(np.convolve(total_rewards, np.ones((k,))/k, \
+            mode='valid'), "Running average reward")
+        plot_setyaxis(-1500, 2000)
         plot_finish(save_filename)
     else:
         print(f"Warning: No data on total rewards")
@@ -293,20 +291,6 @@ def calc_reduce_array(array, k=100):
         idx += 1
     return reduced
 
-# Returns the average of the last k points given some index
-def calc_running_average(array, given_idx, k):
-    start_idx = given_idx - k + 1
-    stop_idx = given_idx
-    if start_idx < 0:
-        start_idx = 0
-    if stop_idx > len(array):
-        stop_idx = len(array)
-    temp = []
-    idx = start_idx
-    while idx <= stop_idx:
-        temp.append(array[idx])
-        idx += 1
-    return int(sum(temp)/len(temp))
 
 ### MAIN
 def main():
@@ -340,9 +324,9 @@ def main():
             # Defines the to-be generated plots using the selected logfile
             #plot_total_rewards(file)
             #plot_td_error(file)
-            #plot_average_reward_per_k(file, 250)
+            plot_average_reward_per_k(file, 250)
             #plot_quadrant_reward(file, 250)
-            plot_running_average(file, 1000)
+            plot_running_average(file, 250)
 
 if __name__ == "__main__":
     main()
