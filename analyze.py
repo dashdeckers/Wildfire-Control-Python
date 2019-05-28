@@ -191,55 +191,6 @@ def plot_average_reward_per_k(file, k=None):
     else:
         print(f"Warning: No data on total rewards")
 
-# TODO: The quadrant thing is too nice to throw away, but useless now that we can't
-# correlate the agent positions to wind direction (seeing as wind is constant now)
-
-# Plot average reward per quadrant
-def plot_quadrant_reward(file, k=None):
-    # Make sure it doesn't crash on old logs
-    try:
-        total_rewards = file[1]['total_rewards']
-        agent_pos = file[1]['agent_pos']
-        metadata = file[1]['metadata']
-        save_filename = plots_folder + file[0] + '-(quadrant_reward).png'
-    except:
-        print(f"ERROR: Missing datafields for quadrant rewards in log!")
-        return
-    # Continue if shit's okay
-    if total_rewards and agent_pos and metadata:
-        # Initialize all required datafields
-        halfwidth = int(metadata['width']/2)
-        halfheight = int(metadata['height']/2)
-        topleft, topright, bottomleft, bottomright = \
-                ([] for i in range(4))
-        # Assign the total reward of each position to
-        # the relevant quadrant
-        for idx, pos in enumerate(agent_pos):
-            x, y = pos
-            # Case where x < 5 and y < 5
-            if x < halfwidth and y < halfheight:
-                topleft.append(int(total_rewards[idx]))
-            # Case where x < 5 and y >= 5
-            elif x < halfwidth and y >= halfheight:
-                bottomleft.append(int(total_rewards[idx]))
-            # Case where x >= 5 and y < 5
-            elif x >= halfwidth and y < halfheight:
-                topright.append(int(total_rewards[idx]))
-            # Case where x >= 5 and y >= 5
-            elif x >= halfwidth and y >= halfheight:
-                bottomright.append(int(total_rewards[idx]))
-        # Generate the plot
-        plot_start(f"Total reward over time per quadrant (k = {k})", \
-            "Total reward", "Episode/k")
-        plot_add(calc_reduce_array(topleft, k), "Top left")
-        plot_add(calc_reduce_array(bottomleft, k), "Bottom right")
-        plot_add(calc_reduce_array(topright, k), "Top right")
-        plot_add(calc_reduce_array(bottomright, k), "Bottom right")
-        plot_setyaxis(-1500, 2000)
-        plot_finish(save_filename)
-    else:
-        print(f"Warning: No data on quadrant rewards")
-
 # Plots the running average
 def plot_running_average(file, k=100):
     try:
@@ -252,12 +203,54 @@ def plot_running_average(file, k=100):
         # Generate the plot
         plot_start(f"Running average reward over time (k = {k})",  \
             "Running average reward", "Episode")
-        plot_add(np.convolve(total_rewards, np.ones((k,))/k, \
-            mode='valid'), "Running average reward")
+        plot_add(calc_running_average(total_rewards, k), \
+            "Running average reward")
         plot_setyaxis(-1500, 2000)
         plot_finish(save_filename)
     else:
         print(f"Warning: No data on total rewards")
+
+# Plot averages per spawning distance (WIP)
+def plot_fire_distance(file, k=100):
+    # Make sure it doesn't crash on old logs
+    try:
+        total_rewards = file[1]['total_rewards']
+        agent_pos = file[1]['agent_pos']
+        metadata = file[1]['metadata']
+        save_filename = plots_folder + file[0] + '-(fire_distance).png'
+    except:
+        print(f"ERROR: Missing datafields for fire distance in log!")
+        return
+    # Continue if shit's okay
+    if total_rewards and agent_pos and metadata:
+        # Initialize all required datafields
+        fire_x, fire_y = (int(metadata['width']/2), \
+                        int(metadata['height']/2))
+        no_dist, low_dist, med_dist, hi_dist = ([] for i in range(4))
+        # Split rewards according to Manhattan distance
+        for reward, agent_pos in zip(total_rewards, agent_pos):
+            agent_x, agent_y = agent_pos
+            from scipy.spatial import distance
+            dist = distance.cityblock([fire_x, fire_y], [agent_x, agent_y])
+            if dist == 1:
+                no_dist.append(reward)
+            elif dist == 2:
+                low_dist.append(reward)
+            elif dist == 3:
+                med_dist.append(reward)
+            elif dist == 4:
+                hi_dist.append(reward)
+        # Generate the plot
+        plot_start(f"Total reward/episode per Manhattan distance to the fire", \
+            "Total reward", "Episode")
+        plot_add(calc_running_average(no_dist, k), "1")
+        plot_add(calc_running_average(low_dist, k), "2")
+        plot_add(calc_running_average(med_dist, k), "3")
+        plot_add(calc_running_average(hi_dist, k), "4")
+        plot_setyaxis(-1500, 2000)
+        plot_finish(save_filename)
+    else:
+        print(f"Warning: No data on fire distance")
 
 
 ### MATH HELPERS
@@ -290,6 +283,10 @@ def calc_reduce_array(array, k=100):
             temp = []
         idx += 1
     return reduced
+
+# Calculate the running average of an array given k
+def calc_running_average(array, k=100):
+    return np.convolve(array, np.ones((k,))/k, mode='valid')
 
 
 ### MAIN
@@ -324,9 +321,9 @@ def main():
             # Defines the to-be generated plots using the selected logfile
             #plot_total_rewards(file)
             #plot_td_error(file)
-            plot_average_reward_per_k(file, 250)
-            #plot_quadrant_reward(file, 250)
-            plot_running_average(file, 250)
+            #plot_average_reward_per_k(file, 250)
+            #plot_running_average(file, 250)
+            plot_fire_distance(file, 250)
 
 if __name__ == "__main__":
     main()
