@@ -376,9 +376,10 @@ def main():
             #plot_td_error(file)
             plot_average_reward_per_k(file, 250)
             #plot_quadrant_reward(file, 250)
-            plot_running_average(file, 250)
+            plot_running_average(file, 2000)
 
 
 
 if __name__ == "__main__":
-    interactive_example()
+    main()
+#    interactive_example()

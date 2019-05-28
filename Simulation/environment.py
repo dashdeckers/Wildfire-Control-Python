@@ -303,7 +303,7 @@ class World:
     # distance steps from the origin and is burnable
     def get_neighbours(self, cell):
         cx, cy = cell
-        neighbours = list()
+        neighbours = set()
         for x in range(grass['radius'] + 1):
             for y in range(grass['radius'] + 1 - x):
                 if (x, y) == (0, 0):
@@ -315,7 +315,7 @@ class World:
                          (cx - x, cy - y)]
                 for cell in cells:
                     if self.inbounds(*cell) and self.is_burnable(cell):
-                        neighbours.append(cell)
+                        neighbours.add(cell)
         return neighbours
 
     '''

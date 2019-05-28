@@ -25,6 +25,7 @@ class DQN:
             'TD_errors'     : list(),
             'agent_pos'     : list(),
             'maps'          : list(),
+            'consec_wins'   : 0,
             'init_memories' : 0,
             'total_time'    : 0,
             'n_episodes'    : 0,
@@ -134,6 +135,16 @@ class DQN:
 
             # Log the rewards over time
             self.logs['total_rewards'].append(total_reward)
+
+            # Stop condition, if the agent solves the environment X times in a row
+            if total_reward > 1500:
+                self.logs['consec_wins'] += 1
+            else:
+                self.logs['consec_wins'] = 0
+            if self.logs['consec_wins'] >= 8:
+                self.logs['n_episodes'] = episode
+                print("Stopping early!")
+                break
 
         # Save the total time taken for this run
         self.logs['total_time'] = round(time.time() - start_time, 3)
