@@ -5,7 +5,7 @@ import numpy as np
 # Global settings/variables
 logs_folder = "Logs/"
 plots_folder = "Plots/"
-smoothing_factor = 0.995
+smoothing_factor = 0.99
 
 '''
 TODO: Plots need to show the constants. Main() is nice, but real data presentation
@@ -122,9 +122,23 @@ def plot_start(title, ylabel, xlabel):
 def plot_add(data, given_label):
     plt.plot(data, label=given_label)
 
+# Define maximum/minimum y values
 def plot_setyaxis(min, max):
     plt.gca().set_ylim([min, max])
     plt.gca().set_xlim([None, None])
+
+# Add a horizontal line indicating max value
+def plot_maxline(array):
+    maximum = max(array)
+    plt.plot([0, len(array)], [maximum, maximum])
+    plt.text(0, maximum, f"{round(maximum)}")
+
+# Add a horizontal line indicating avg value
+def plot_avgline(array):
+    import statistics
+    avg = statistics.mean(array)
+    plt.plot([0, len(array)], [avg, avg])
+    plt.text(0, avg, f"{round(avg)}")
 
 # Save and show the final plot
 def plot_finish(save_filename):
@@ -139,7 +153,8 @@ def plot_finish(save_filename):
 def plot_total_rewards(file):
     try:
         total_rewards = file[1]['total_rewards']
-        save_filename = plots_folder + file[0] + '-(total_rewards).png'
+        verify_folder(plots_folder + file[0])
+        save_filename = plots_folder + file[0] + '/total_rewards.png'
     except:
         print(f"ERROR: No total_rewards field in log!")
         return
@@ -148,6 +163,8 @@ def plot_total_rewards(file):
         plot_start("Total reward over time", "Total reward", "Episode")
         plot_add(calc_smooth(total_rewards), "Total reward")
         plot_setyaxis(-1500, 2000)
+        plot_maxline(calc_smooth(total_rewards))
+        plot_avgline(calc_smooth(total_rewards))
         plot_finish(save_filename)
     else:
         print(f"Warning: No data on total rewards")
@@ -156,7 +173,8 @@ def plot_total_rewards(file):
 def plot_td_error(file):
     try: 
         TD_errors = file[1]['TD_errors']
-        save_filename = plots_folder + file[0] + '-(td_errors).png'
+        verify_folder(plots_folder + file[0])
+        save_filename = plots_folder + file[0] + '/td_errors.png'
     except:
         print(f"ERROR: No TD_error field in log!")
         return
@@ -172,7 +190,8 @@ def plot_td_error(file):
 def plot_average_reward_per_k(file, k = None):
     try:
         total_rewards = file[1]['total_rewards']
-        save_filename = plots_folder + file[0] + '-(average_rewards).png'
+        verify_folder(plots_folder + file[0])
+        save_filename = plots_folder + file[0] + '/average_rewards.png'
     except:
         print(f"ERROR: No total_rewards field in log!")
         return
@@ -194,7 +213,8 @@ def plot_fire_distance(file):
         total_rewards = file[1]['total_rewards']
         agent_pos = file[1]['agent_pos']
         metadata = file[1]['metadata']
-        save_filename = plots_folder + file[0] + '-(fire_distance).png'
+        verify_folder(plots_folder + file[0])
+        save_filename = plots_folder + file[0] + '/fire_distance.png'
     except:
         print(f"ERROR: Missing datafields for fire distance in log!")
         return
@@ -233,7 +253,8 @@ def plot_fire_distance(file):
 def plot_reward_gained(file, k = 1000):
     try:
         total_rewards = file[1]['total_rewards']
-        save_filename = plots_folder + file[0] + '-(reward_gained).png'
+        verify_folder(plots_folder + file[0])
+        save_filename = plots_folder + file[0] + '/reward_gained.png'
     except:
         print(f"ERROR: No total_rewards field in log!")
         return
@@ -242,24 +263,24 @@ def plot_reward_gained(file, k = 1000):
         avg_so_far = total_rewards[0]
 
         for idx, reward in enumerate(total_rewards):
-            if idx - k < 0:
-                start = 0
-            else:
+            start = 0
+            if idx - k > 0:
                 start = idx - k
 
             if len(total_rewards[start:idx:]) == 0:
-                div_len = 1
+                reward_gains.append(total_rewards[1]-total_rewards[0])
             else:
                 div_len = len(total_rewards[start:idx:])
-
-            avg_so_far = sum(total_rewards[start:idx:]) / div_len
-            reward_gains.append(reward - avg_so_far)
+                avg_so_far = sum(total_rewards[start:idx:]) / div_len
+                reward_gains.append(reward - avg_so_far)
 
         # Generate the plot
         plot_start(f"Reward gained over time", \
             "Reward gained", "Episode")
         plot_add(calc_smooth(reward_gains), "Reward gained")
         plot_setyaxis(-1500, 2000)
+        plot_maxline(calc_smooth(reward_gains))
+        plot_avgline(calc_smooth(reward_gains))
         plot_finish(save_filename)
     else:
         print(f"Warning: No data on total rewards")
@@ -301,12 +322,13 @@ def calc_running_average(array, k = 100):
     return np.convolve(array, np.ones((k,))/k, mode='valid')
 
 # Smooths the dataset given a smoothing factor
-def calc_smooth(array):
+def calc_smooth(array, weight = -1):
+    if weight == -1:
+        weight = smoothing_factor
     last = array[0]
     smoothed = list()
     for value in array:
-        smoothed_val = last * smoothing_factor + \
-                    (1 - smoothing_factor) * value
+        smoothed_val = last * weight + (1 - weight) * value
         smoothed.append(smoothed_val)
         last = smoothed_val
     return smoothed
@@ -394,13 +416,12 @@ def main():
         if correct_file == "n":
             print(f"Reselecting file..")
         else:
-            print(f"NOTE: smoothing_factor: {smoothing_factor}")
             # Defines the to-be generated plots using the selected logfile
             plot_total_rewards(file)
             plot_td_error(file)
             plot_average_reward_per_k(file, 100)
             plot_fire_distance(file)
-            plot_reward_gained(file, 2500)
+            plot_reward_gained(file)
 
 if __name__ == "__main__":
 	main()
