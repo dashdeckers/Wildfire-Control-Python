@@ -5,7 +5,7 @@ import numpy as np
 # Global settings/variables
 logs_folder = "Logs/"
 plots_folder = "Plots/"
-smoothing_factor = 0.999
+smoothing_factor = 0.995
 
 '''
 TODO: Plots need to show the constants. Main() is nice, but real data presentation
@@ -229,8 +229,8 @@ def plot_fire_distance(file):
     else:
         print(f"Warning: No data on fire distance")
 
-# Plots the relative learning amount compared to last k values
-def plot_reward_gained(file):
+# Plots the reward gained compared to last k values
+def plot_reward_gained(file, k = 1000):
     try:
         total_rewards = file[1]['total_rewards']
         save_filename = plots_folder + file[0] + '-(reward_gained).png'
@@ -240,12 +240,19 @@ def plot_reward_gained(file):
     if total_rewards:
         reward_gains = []
         avg_so_far = total_rewards[0]
+
         for idx, reward in enumerate(total_rewards):
-            if len(total_rewards[:idx:]) == 0:
+            if idx - k < 0:
+                start = 0
+            else:
+                start = idx - k
+
+            if len(total_rewards[start:idx:]) == 0:
                 div_len = 1
             else:
-                div_len = len(total_rewards[:idx:])
-            avg_so_far = sum(total_rewards[:idx:]) / div_len
+                div_len = len(total_rewards[start:idx:])
+
+            avg_so_far = sum(total_rewards[start:idx:]) / div_len
             reward_gains.append(reward - avg_so_far)
 
         # Generate the plot
@@ -393,7 +400,7 @@ def main():
             plot_td_error(file)
             plot_average_reward_per_k(file, 100)
             plot_fire_distance(file)
-            plot_reward_gained(file)
+            plot_reward_gained(file, 2500)
 
 if __name__ == "__main__":
 	main()
