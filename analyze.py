@@ -192,10 +192,12 @@ def plot_average_reward_per_k(file, k = None):
         return
     if total_rewards:
     # Generate the plot
+        avg_per_k = calc_average_per_k(total_rewards, k)
+        if not avg_per_k:
+            return
         plot_start(f"Average reward over time (k = {k})", \
                 "Average reward", "Episode * k")
-        plot_add(calc_smooth(calc_average_per_k(total_rewards, k)), \
-                 "Averaged reward")
+        plot_add(calc_smooth(avg_per_k), "Averaged reward")
         plot_setyaxis(-1500, 2000)
         plot_finish(save_filename)
     else:
@@ -235,6 +237,9 @@ def plot_fire_distance(file):
         # Generate the plot
         plot_start(f"Total reward/episode per Manhattan distance to the fire", \
             "Total reward", "Episode")
+        if not (no_dist and low_dist and med_dist and hi_dist):
+            print("ERROR: Not all distances to the fire are represented")
+            return
         plot_add(calc_smooth(no_dist), "1")
         plot_add(calc_smooth(low_dist), "2")
         plot_add(calc_smooth(med_dist), "3")
@@ -285,6 +290,10 @@ def plot_reward_gained(file, k = 1000):
 # Averages some array per some k
 def calc_average_per_k(array, k = None):
     length = len(array)
+    if not length % k == 0:
+        print("ERROR: k has to be a divisor of number of episodes"
+              "to calculate the average reward per k")
+        return
     # If k was not given, find a decent factor of length to use
     if k is None:
         k = 1
