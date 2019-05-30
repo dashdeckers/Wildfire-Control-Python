@@ -138,9 +138,9 @@ def plot_avgline(array):
 # Save and show the final plot
 def plot_finish(save_filename):
     plt.legend()
-    plt.show()
     plt.savefig(save_filename)
     print(f"Generated {save_filename}")
+    plt.show()
 
 
 ### PLOT DEFINITIONS
