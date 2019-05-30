@@ -2,22 +2,12 @@ import os, json, pprint
 import matplotlib.pyplot as plt
 import numpy as np
 
-ppx = pprint.PrettyPrinter()
-pp1 = pprint.PrettyPrinter(depth=1)
-pp2 = pprint.PrettyPrinter(depth=2)
-pp3 = pprint.PrettyPrinter(depth=3)
-
 # Global settings/variables
 logs_folder = "Logs/"
 plots_folder = "Plots/"
-log = None
+smoothing_factor = 0.99
 
 '''
-TODO: Plots need to show the constants. Main() is nice, but real data presentation
-should probably be done interactively because we want to show differences between
-changes to a specific constant and not all constants (although if we only vary some
-of the parameters, we could always show those in the legend)
-
 Logs data structure:
 
 Key:
@@ -127,9 +117,23 @@ def plot_start(title, ylabel, xlabel):
 def plot_add(data, given_label):
     plt.plot(data, label=given_label)
 
+# Define maximum/minimum y values
 def plot_setyaxis(min, max):
     plt.gca().set_ylim([min, max])
     plt.gca().set_xlim([None, None])
+
+# Add a horizontal line indicating max value
+def plot_maxline(array):
+    maximum = max(array)
+    plt.plot([0, len(array)], [maximum, maximum])
+    plt.text(0, maximum, f"{round(maximum)}")
+
+# Add a horizontal line indicating avg value
+def plot_avgline(array):
+    import statistics
+    avg = statistics.mean(array)
+    plt.plot([0, len(array)], [avg, avg])
+    plt.text(0, avg, f"{round(avg)}")
 
 # Save and show the final plot
 def plot_finish(save_filename):
@@ -140,19 +144,22 @@ def plot_finish(save_filename):
 
 
 ### PLOT DEFINITIONS
-# Plot the cumulative rewards over time
+# Plot the total rewards over time
 def plot_total_rewards(file):
     try:
         total_rewards = file[1]['total_rewards']
-        save_filename = plots_folder + file[0] + '-(total_rewards).png'
+        verify_folder(plots_folder + file[0])
+        save_filename = plots_folder + file[0] + '/total_rewards.png'
     except:
         print(f"ERROR: No total_rewards field in log!")
         return
     if total_rewards:
         # Generate the plot
-        plot_start("Cumulative reward over time", "Total reward", "Episode")
-        plot_add(total_rewards, "Total reward")
+        plot_start("Total reward over time", "Total reward", "Episode")
+        plot_add(calc_smooth(total_rewards), "Total reward")
         plot_setyaxis(-1500, 2000)
+        plot_maxline(calc_smooth(total_rewards))
+        plot_avgline(calc_smooth(total_rewards))
         plot_finish(save_filename)
     else:
         print(f"Warning: No data on total rewards")
@@ -161,7 +168,8 @@ def plot_total_rewards(file):
 def plot_td_error(file):
     try: 
         TD_errors = file[1]['TD_errors']
-        save_filename = plots_folder + file[0] + '-(td_errors).png'
+        verify_folder(plots_folder + file[0])
+        save_filename = plots_folder + file[0] + '/td_errors.png'
     except:
         print(f"ERROR: No TD_error field in log!")
         return
@@ -173,88 +181,101 @@ def plot_td_error(file):
     else:
         print(f"Warning: No data on TD-error")
 
-# Plots the average cumulative reward per k episodes
-def plot_average_reward_per_k(file, k=None):
+# Plots the average total reward per k episodes
+def plot_average_reward_per_k(file, k = None):
     try:
         total_rewards = file[1]['total_rewards']
-        save_filename = plots_folder + file[0] + '-(average_rewards).png'
+        verify_folder(plots_folder + file[0])
+        save_filename = plots_folder + file[0] + '/average_rewards.png'
     except:
         print(f"ERROR: No total_rewards field in log!")
         return
     if total_rewards:
     # Generate the plot
         plot_start(f"Average reward over time (k = {k})", \
-                "Average reward", "Episode/k")
-        plot_add(calc_average_per_k(total_rewards, k), "Averaged reward")
+                "Average reward", "Episode * k")
+        plot_add(calc_smooth(calc_average_per_k(total_rewards, k)), \
+                 "Averaged reward")
         plot_setyaxis(-1500, 2000)
         plot_finish(save_filename)
     else:
         print(f"Warning: No data on total rewards")
 
-# TODO: The quadrant thing is too nice to throw away, but useless now that we can't
-# correlate the agent positions to wind direction (seeing as wind is constant now)
-
-# Plot average reward per quadrant
-def plot_quadrant_reward(file, k=None):
+# Plot averages per spawning distance (WIP)
+def plot_fire_distance(file):
     # Make sure it doesn't crash on old logs
     try:
         total_rewards = file[1]['total_rewards']
         agent_pos = file[1]['agent_pos']
         metadata = file[1]['metadata']
-        save_filename = plots_folder + file[0] + '-(quadrant_reward).png'
+        verify_folder(plots_folder + file[0])
+        save_filename = plots_folder + file[0] + '/fire_distance.png'
     except:
-        print(f"ERROR: Missing datafields for quadrant rewards in log!")
+        print(f"ERROR: Missing datafields for fire distance in log!")
         return
     # Continue if shit's okay
     if total_rewards and agent_pos and metadata:
         # Initialize all required datafields
-        halfwidth = int(metadata['width']/2)
-        halfheight = int(metadata['height']/2)
-        topleft, topright, bottomleft, bottomright = \
-                ([] for i in range(4))
-        # Assign the total reward of each position to
-        # the relevant quadrant
-        for idx, pos in enumerate(agent_pos):
-            x, y = pos
-            # Case where x < 5 and y < 5
-            if x < halfwidth and y < halfheight:
-                topleft.append(int(total_rewards[idx]))
-            # Case where x < 5 and y >= 5
-            elif x < halfwidth and y >= halfheight:
-                bottomleft.append(int(total_rewards[idx]))
-            # Case where x >= 5 and y < 5
-            elif x >= halfwidth and y < halfheight:
-                topright.append(int(total_rewards[idx]))
-            # Case where x >= 5 and y >= 5
-            elif x >= halfwidth and y >= halfheight:
-                bottomright.append(int(total_rewards[idx]))
+        fire_x, fire_y = (int(metadata['width']/2), \
+                        int(metadata['height']/2))
+        no_dist, low_dist, med_dist, hi_dist = ([] for i in range(4))
+        # Split rewards according to Manhattan distance
+        for reward, agent_pos in zip(total_rewards, agent_pos):
+            agent_x, agent_y = agent_pos
+            from scipy.spatial import distance
+            dist = distance.cityblock([fire_x, fire_y], [agent_x, agent_y])
+            if dist == 1:
+                no_dist.append(reward)
+            elif dist == 2:
+                low_dist.append(reward)
+            elif dist == 3:
+                med_dist.append(reward)
+            elif dist == 4:
+                hi_dist.append(reward)
         # Generate the plot
-        plot_start(f"Total reward over time per quadrant (k = {k})", \
-            "Total reward", "Episode/k")
-        plot_add(calc_reduce_array(topleft, k), "Top left")
-        plot_add(calc_reduce_array(bottomleft, k), "Bottom right")
-        plot_add(calc_reduce_array(topright, k), "Top right")
-        plot_add(calc_reduce_array(bottomright, k), "Bottom right")
+        plot_start(f"Total reward/episode per Manhattan distance to the fire", \
+            "Total reward", "Episode")
+        plot_add(calc_smooth(no_dist), "1")
+        plot_add(calc_smooth(low_dist), "2")
+        plot_add(calc_smooth(med_dist), "3")
+        plot_add(calc_smooth(hi_dist), "4")
         plot_setyaxis(-1500, 2000)
         plot_finish(save_filename)
     else:
-        print(f"Warning: No data on quadrant rewards")
+        print(f"Warning: No data on fire distance")
 
-# Plots the running average
-def plot_running_average(file, k=100):
+# Plots the reward gained compared to last k values
+def plot_reward_gained(file, k = 1000):
     try:
         total_rewards = file[1]['total_rewards']
-        save_filename = plots_folder + file[0] + '-(running_average).png'
+        verify_folder(plots_folder + file[0])
+        save_filename = plots_folder + file[0] + '/reward_gained.png'
     except:
         print(f"ERROR: No total_rewards field in log!")
         return
     if total_rewards:
+        reward_gains = []
+        avg_so_far = total_rewards[0]
+
+        for idx, reward in enumerate(total_rewards):
+            start = 0
+            if idx - k > 0:
+                start = idx - k
+
+            if len(total_rewards[start:idx:]) == 0:
+                reward_gains.append(total_rewards[1]-total_rewards[0])
+            else:
+                div_len = len(total_rewards[start:idx:])
+                avg_so_far = sum(total_rewards[start:idx:]) / div_len
+                reward_gains.append(reward - avg_so_far)
+
         # Generate the plot
-        plot_start(f"Running average reward over time (k = {k})",  \
-            "Running average reward", "Episode")
-        plot_add(np.convolve(total_rewards, np.ones((k,))/k, \
-            mode='valid'), "Running average reward")
+        plot_start(f"Reward gained over time", \
+            "Reward gained", "Episode")
+        plot_add(calc_smooth(reward_gains), "Reward gained")
         plot_setyaxis(-1500, 2000)
+        plot_maxline(calc_smooth(reward_gains))
+        plot_avgline(calc_smooth(reward_gains))
         plot_finish(save_filename)
     else:
         print(f"Warning: No data on total rewards")
@@ -262,7 +283,7 @@ def plot_running_average(file, k=100):
 
 ### MATH HELPERS
 # Averages some array per some k
-def calc_average_per_k(array, k=None):
+def calc_average_per_k(array, k = None):
     length = len(array)
     # If k was not given, find a decent factor of length to use
     if k is None:
@@ -271,7 +292,7 @@ def calc_average_per_k(array, k=None):
             if length % i == 0:
                 k = i
                 break
-    # Calculate the average cumulative reward
+    # Calculate the average total reward
     rewards_per_k = np.split(np.array(array), length/k)
     avg_reward_per_k = list()
     for group in rewards_per_k:
@@ -280,7 +301,7 @@ def calc_average_per_k(array, k=None):
 
 # Takes as many k-size averages as possible from an array,
 # discards the remainder though!
-def calc_reduce_array(array, k=100):
+def calc_reduce_array(array, k = 100):
     reduced, temp = ([] for i in range(2))
     idx = 0
     while len(array)- 1 - idx >= k:
@@ -290,6 +311,22 @@ def calc_reduce_array(array, k=100):
             temp = []
         idx += 1
     return reduced
+
+# Calculate the running average of an array given k
+def calc_running_average(array, k = 100):
+    return np.convolve(array, np.ones((k,))/k, mode='valid')
+
+# Smooths the dataset given a smoothing factor
+def calc_smooth(array, weight = -1):
+    if weight == -1:
+        weight = smoothing_factor
+    last = array[0]
+    smoothed = list()
+    for value in array:
+        smoothed_val = last * weight + (1 - weight) * value
+        smoothed.append(smoothed_val)
+        last = smoothed_val
+    return smoothed
 
 ### MAIN
 def main():
@@ -321,12 +358,11 @@ def main():
             print(f"Reselecting file..")
         else:
             # Defines the to-be generated plots using the selected logfile
-            #plot_total_rewards(file)
-            #plot_td_error(file)
-            plot_average_reward_per_k(file, 250)
-            #plot_quadrant_reward(file, 250)
-            plot_running_average(file, 2000)
-
+            plot_total_rewards(file)
+            plot_td_error(file)
+            plot_average_reward_per_k(file, 100)
+            plot_fire_distance(file)
+            plot_reward_gained(file)
 
 if __name__ == "__main__":
-    main()
+	main()
