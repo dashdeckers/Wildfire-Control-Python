@@ -87,14 +87,15 @@ class DQN_SARSA(DQN):
             self.logs['total_rewards'].append(total_reward)
 
             # Stop condition, if the agent solves the environment X times in a row
-            if total_reward > 1500:
-                self.logs['consec_wins'] += 1
-            else:
-                self.logs['consec_wins'] = 0
-            if self.logs['consec_wins'] >= 8:
-                self.logs['n_episodes'] = episode
-                print("Stopping early!")
-                break
+            if self.METADATA['stop_early']:
+                if total_reward > 1500:
+                    self.logs['consec_wins'] += 1
+                else:
+                    self.logs['consec_wins'] = 0
+                if self.logs['consec_wins'] >= self.METADATA['stop_early']:
+                    self.logs['n_episodes'] = episode
+                    print("Stopping early!")
+                    break
 
         # Save the total time taken for this run
         self.logs['total_time'] = round(time.time() - start_time, 3)

@@ -1,5 +1,5 @@
 '''
-Simulation constants:
+> Simulation constants:
 
 n_actions:
 Number of allowed actions: 6 to allow "wait", 5 disable it, 4 to also disable dig
@@ -13,6 +13,14 @@ Allow collection of logging info etc: 0 = off, 1 = some, 2 = all
 wind:
 Wind direction and speed in the form [windspeed, (wind_vector_x, wind_vector_y)].
 Can also be set to "random"
+
+
+> Other parameters:
+
+stop_early:
+If 0, don't stop early. Otherwise stop after stop_early consecutive "wins".
+"wins" are runs with a score higher than 1500
+
 '''
 
 SIZE = 10
@@ -43,4 +51,7 @@ METADATA = {
     "alpha"          : 0.005, # 0.005
     "target_update"  : 20, # 20
     "batch_size"     : 32, # 32
+
+    # Learning parameters
+    "stop_early"    : 0,
 }
