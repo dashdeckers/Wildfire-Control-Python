@@ -291,7 +291,7 @@ def plot_reward_gained(file, k = 1000):
 def calc_average_per_k(array, k = None):
     length = len(array)
     if not length % k == 0:
-        print("ERROR: k has to be a divisor of number of episodes"
+        print("ERROR: k has to be a divisor of number of episodes "
               "to calculate the average reward per k")
         return
     # If k was not given, find a decent factor of length to use
