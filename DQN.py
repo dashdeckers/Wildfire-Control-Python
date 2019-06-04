@@ -305,52 +305,64 @@ class DQN:
             # Initialize state
             state = self.sim.reset()
             state = np.reshape(state, [1] + list(state.shape))
+
             while not done:
-                # Choose an action depending on position relative to fire
-                # Don't walk into fire, but also don't get stuck in a loop
-                count = 0
+                # Choose an action
                 action = self.choose_randomwalk_action()
-                while self.sim.W.agents[0].fire_in_direction(action):
-                    count += 1
-                    action = self.choose_randomwalk_action()
-                    if count > 10:
-                        break
+
                 # Observe sprime and reward
                 sprime, reward, done, _ = self.sim.step(action)
                 sprime = np.reshape(sprime, [1] + list(sprime.shape))
+
                 # Collect memories
                 memories.append((state, action, reward, sprime, done))
                 state = sprime
+
                 # Only if we contained the fire, we collect the memories
                 if reward == self.METADATA['contained_bonus']:
                     success_count += 1
                     # Store successful experience in memory
                     for state, action, reward, sprime, done in memories:
                         self.remember(state, action, reward, sprime, done)
+                    # Done is true, but not if it were a real run, so set this after
+                    # storing the transitions in memory
                     done = True
                     # Collect logging info and return
                     if success_count == num_of_successes:
                         self.logs['init_memories'] = len(self.memory)
                         return
 
-    # Choose an action depending on the agents position relative to the fire
+    # Choose an action depending on the agents position relative to the fire.
+    # The action should be safe, if possible
     def choose_randomwalk_action(self):
         key_map = {'N':0, 'S':1, 'E':2, 'W':3}
         width, height = self.sim.W.WIDTH, self.sim.W.HEIGHT
         agent_x, agent_y = self.sim.W.agents[0].x, self.sim.W.agents[0].y
         mid_x, mid_y = (int(width / 2), int(height / 2))
 
-        # The chosen action should always make the agent go around the fire
-        if agent_x >= mid_x and agent_y > mid_y:
-            possible_actions = ["S", "W"]
-        if agent_x > mid_x and agent_y <= mid_y:
-            possible_actions = ["S", "E"]
-        if agent_x <= mid_x and agent_y < mid_y:
-            possible_actions = ["N", "E"]
-        if agent_x < mid_x and agent_y >= mid_y:
-            possible_actions = ["N", "W"]
+        # Loop to try to avoid choosing actions that lead to death
+        count = 0
+        while True:
+            # The chosen action should always make the agent go around the fire
+            if agent_x >= mid_x and agent_y > mid_y:
+                possible_actions = ["S", "W"]
+            if agent_x > mid_x and agent_y <= mid_y:
+                possible_actions = ["S", "E"]
+            if agent_x <= mid_x and agent_y < mid_y:
+                possible_actions = ["N", "E"]
+            if agent_x < mid_x and agent_y >= mid_y:
+                possible_actions = ["N", "W"]
 
-        return key_map[np.random.choice(possible_actions)]
+            # Choose randomly from valid actions
+            action = key_map[np.random.choice(possible_actions)]
+
+            # Break when it is a safe move or when we have tried too often
+            fire_at_loc = self.sim.W.agents[0].fire_in_direction(action)
+            if not fire_at_loc or count > 10:
+                break
+            count += 1
+
+        return action
 
     # Writes the logs and the metadata to a file with an appropriate name
     def write_data(self):
