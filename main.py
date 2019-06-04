@@ -1,5 +1,6 @@
 from Simulation.forest_fire import ForestFire
-from DQN import DQN
+#from DQN import DQN
+from DQN_SARSA import DQN_SARSA as DQN
 from misc import run_human, time_simulation_run
 
 # Suppress the many unnecessary TensorFlow warnings
