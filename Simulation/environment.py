@@ -109,7 +109,10 @@ class Agent:
 
     # Agent is dead if the cell at current position is burning
     def is_dead(self):
-        return self.dead or self.W.is_burning((self.x, self.y))
+        if self.dead or self.W.is_burning((self.x, self.y)):
+            self.W.env[self.x, self.y, layer['agent_pos']] = 0
+            return True
+        return False
 
     # Turn the cell at agent position into a road cell
     def dig(self):

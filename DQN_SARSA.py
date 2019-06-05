@@ -146,7 +146,7 @@ class DQN_SARSA(DQN):
     fire. So if the agent is below and to the right of the fire it will chose an action
     to either go left or downwards until it is below the fire and then it will go either
     up or left. When the fire is contained, the simulation is reset.
-    
+
     It only collects the memories that lead to a successful containment of the fire.
     '''
     def collect_memories(self, num_of_successes=100):
