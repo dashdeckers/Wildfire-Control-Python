@@ -392,6 +392,24 @@ class World:
                           self.env[:, :, layer['type']] == types['fire'],
                           self.env[:, :, layer['fire_mobility']] != np.inf))
 
+    # Print the map from the state (as the agent sees it)
+    def print_state(self, state):
+        for y in range(state.shape[1]):
+            for x in range(state.shape[1]):
+                # Agent layer
+                if state[0, x, y, 0]:
+                    print("A", end="")
+                # Fire layer
+                elif state[0, x, y, 1]:
+                    print("@", end="")
+                # Road layer (fire mobility is 0 if road)
+                elif not state[0, x, y, 2]:
+                    print("0", end="")
+                else:
+                    print("+", end="")
+            print("")
+        print("")
+
     # Print information about a cell (x, y)
     def inspect(self, cell):
         x, y = cell
