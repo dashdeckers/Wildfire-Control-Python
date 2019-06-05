@@ -296,6 +296,8 @@ class DQN:
     It only collects the memories that lead to a successful containment of the fire.
     '''
     def collect_memories(self, num_of_successes=100):
+        if not num_of_successes:
+            return
         # Wipe internal memory
         self.memory = deque()
         success_count = 0
