@@ -177,8 +177,8 @@ class DQN:
             # forward by using the maximum Q-value of the state S' as a
             # proxy (=bootstrapping via TD methods)
             else:
-                maxQ = np.amax(self.target.predict(sprime)[0])
-                prediction[action] = reward + self.gamma * maxQ
+                predQ = np.amax(self.target.predict(sprime)[0])
+                prediction[action] = reward + self.gamma * predQ
 
             # The TD error is the difference between the old predicted
             # Q-value for the state S and action A and the new prediction
