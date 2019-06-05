@@ -58,6 +58,88 @@ Key:
 }
 '''
 
+# Just a random attempt to make some 3D plots. Might be useful, might not be
+class Plot_3D:
+    def __init__(self):
+        # This it enables using projection='3d' in add_subplot
+        from mpl_toolkits.mplot3d import Axes3D  
+        self.surface_plot()
+        self.plot_heat_factor()
+        self.plot_simple_heat_factor()
+
+    # TODO: Find a better function for these
+    def heat_factor(self, x, y):
+        return (x + y)**(-1)
+
+    def simple_heat_factor(self, x):
+        return (x + 1)**(-1)
+
+    # TODO: Find a better function for these as well
+    def smooth_gradient(self, x, y):
+        return 10 * np.power(np.multiply(x, y), -1)
+
+    def rough_gradient(self, x, y):
+        return 10 * np.power(np.multiply(x, y), -10)
+
+    # With distance and angle both variable
+    def plot_heat_factor(self):
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+        x = np.arange(0, 3.14, 0.1)
+        y = np.arange(1, 3,    0.1)
+        X, Y = np.meshgrid(x, y)
+
+        zs = np.array(self.heat_factor(np.ravel(X), np.ravel(Y)))
+        Z = zs.reshape(X.shape)
+
+        ax.plot_surface(X, Y, Z)
+
+        ax.set_xlabel('Angle')
+        ax.set_ylabel('Distance')
+        ax.set_zlabel('Heat Factor')
+
+        plt.show()
+
+    # With distance held constant at 1
+    def plot_simple_heat_factor(self):
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        x = np.arange(0, 3.14, 0.1)
+
+        y = np.array(self.simple_heat_factor(x))
+
+        ax.plot(x, y)
+
+        ax.set_xlabel('Angle')
+        ax.set_ylabel('Heat Factor')
+
+        plt.show()
+
+    # Plot a "smooth" or a "rough" example of a reward landscape
+    def surface_plot(self, gradient="smooth"):
+        if gradient == "smooth":
+            gradient_function = self.smooth_gradient
+        else:
+            gradient_function = self.rough_gradient
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+        x = np.arange(1, 10, 0.1)
+        y = np.arange(1, 10, 0.1)
+        X, Y = np.meshgrid(x, y)
+
+        zs = np.array(gradient_function(np.ravel(X), np.ravel(Y)))
+        Z = zs.reshape(X.shape)
+
+        ax.plot_surface(X, Y, Z)
+
+        ax.set_zlabel('Reward Value')
+
+        plt.show()
+
 ### FILE LOADING
 # Make sure the log and plot folders exist
 def verify_folder(folder_name):
