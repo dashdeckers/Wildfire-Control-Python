@@ -1,0 +1,20 @@
+\section{Introduction}\label{sec:introduction}
+Forest fires have the potential to be a very dangerous threat to rising temperature levels in the world. (this sounds like shit) Rising temperature levels due to global warming increase the likelihood of forest fires and the fires in turn release large amounts of CO2 into the air which helps increase the global temperatures due to the greenhouse effect (provide a reference and make it sound better). This (cataclysmic? spirals out of control?) effect could spiral out of control after some threshold is reached.
+
+(more basic reasons why forest fires are bad)
+(more references to marcos papers)
+(more general information, definitions, analysis of what makes a forest fire and how to prevent it + references)
+(explain why cutting forest lines is the best choice + references)
+(explain why DQN is a good idea)
+
+Research question: Do on-policy or off-policy methods, with function approximation, perform better at containing the spread of a fire by cutting fire lines in a simulated environment.
+
+\subsection{Reinforcement Learning}\label{sec:reinforcementlearning}
+Reinforcement learning is a machine learning paradigm typically consisting of two elements. The first is the agent, which represents the reinforcement learning algorithm or in other words, the machine. The second is the environment, which represents what the algorithm is trying to solve or at least perform quite well at. This is typically a game or in this case, a simulated forest fire that should be contained.
+
+% insert (make your own) an image of agent <--> environment interaction including reward function
+At each discrete time step (t=1,2,3...), the environment provides the agent with an observation (St) and a reward (Rt), which is obtained by passing the state to the reward function. Then, the agent interacts with the environment by choosing an action A from a set of possible actions, and observes the result of that action in (St+1) and (Rt+1). This interaction can be modelled by a Markov Decision Process, or MDP, as long as the Markov property holds: The probability of state (St+1) can be determined by only knowing the previous state (S). This property indeed holds, as the simulation only requires the current state to produce the next state.
+
+The goal of the agent is to learn what actions to take, given access to the current state (St), to maximize the total cumulative reward from the initial state (S) to the terminal state (ST).
+
+It can achieve this by learning the Q-values for each state, or in other words the quality values of each state corresponding to the expected cumulative reward that would be achieved by following the optimal policy from that state forward \citep{sutton_barto_2018}. The approximation of those Q-values is done via TD methods and the Bellman equations \citep{sutton_barto_2018}, and they would classically be stored in a Q-table but in deep reinforcement learning a deep neural network is used to approximate the function that takes as an input the state and outputs the estimated Q-values for each action. In this paper we use the DQN algorithm, which has been developed to do exactly that \citep{mnih2015human}, however we use a comparitatively shallow network with a single hidden layer.

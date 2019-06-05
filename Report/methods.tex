@@ -1,0 +1,48 @@
+\section{The Environment}\label{sec:environment}
+some basic info on the simulation like fire spread algorithm etc
+
+\subsection{Fire Spread Dynamics}\label{sec:fire_spread}
+also here, figure that out
+
+\subsection{The Reward function}\label{sec:reward_function}
+The reward function is a function to approximate the "goodness" or value of a state. As such, this function is a vital part of the learning process because the performance of the, for example, best reinforcement learning algorithm will be bottle-capped by two things. The quality of the state representation, or in other words how much of- and how well the agent sees the environment, and the quality of the reward function, or how well the agents notion of success corresponds with our notion of success. 
+
+% would be nice to have a pic of a smooth hilly landscape vs one which is flat and spiky
+The reward function also determines the speed at which the agent will be able to learn to solve the problem. To take the gradient descent analogy of a problem landscape, if the reward function produces a smooth gradient to the optimal solution, the agent will be able to find a path to that solution more easily than if the reward is always 0 or negative until the optimal solution is reached by chance at which point the reward is high. In other words, the agent should be provided gradual feedback instead of sparse rewards in order to facilitate fast and efficient learning.
+
+Crafting a good reward function for this problem turned out to be quite difficult because it was hard to define a measure of success that is both valid in its formulation and which provides gradual feedback, or a smooth gradient, towards the containment of the fire. After considering some options which produce a smooth gradient but don't define the problem as rigorously as I wanted, I decided to choose a reward function that is more valid, and then compensate for the sub-optimal reward gradient with demonstration data to lead it towards the high rewards.
+
+The reward function is defined as follows:
+Rt = -1 if fire is not contained
+    -1000 if the agent dies (terminal state)
+    1000 if the fire is contained
+    1000*(percent healthy) if the fire burns out (terminal state)
+
+
+\subsection{The State Representation}\label{sec:state_rep}
+The state of the environment, or rather the observation of the environment as is visible to the agent, consists of 3 layers of size N*N, stacked depth-wise, resulting in a total of (3 * N*N) boolean inputs where N is the size of the map. Assuming the shape of the map is always square, a map size of (N=10) elements is represented three times: One layer contains only the agent position, so a matrix of zeros except for a single one representing the position of the agent. The second layer consists of the position of the fire, so cells that are burning are represented by a 1 otherwise 0. The third layer represents the fire lines cut by the agent in a similar boolean fashion, resulting in a total of 300 inputs to the agent.
+
+This vision grid approach can speed up the learning process as well as increase the performance (citation Opponent Modelling in the Game of Tron using Reinforcement Learning). Indeed it had a significant effect on the performance and learning speed of our implementation compared to a single layer of gray scale input, likely because the agent can more easily differentiate between the different elements and only the relevant information is presented. Further, the agent can now see whether the cell it is occupying is already dug or not.
+
+
+
+
+
+\section{The Agent}\label{sec:agent}
+
+\subsection{Q-Learning vs SARSA}\label{sec:q_sarsa}
+% side by side pseudocoooode
+
+\subsection{Neural Network Architecture}\label{sec:architecture}
+
+\subsection{Target Network}\label{sec:target_network}
+Because the combination of function approximation (the deep neural network), bootstrapping (TD methods that update Q-values using estimated return values) and off-policy training (the Q-Learning algorithm) make up the deadly triad \citep{sutton_barto_2018}, which causes instability and divergence in the learning process, we need a way to counteract this. To this effect, we used a secondary target network which is used to generate the target Q-values. After every set number of updates, we clone the model network to obtain a target network which is then used to generate the targets until it is replaced by a new clone. This modification is called Double Q-Learning \citep{NIPS2010_3964}, and was also used by \citep{mnih2015human} to make the algorithm more stable and prevent divergence.
+
+\subsection{Experience Replay}\label{sec:exp_replay}
+% https://arxiv.org/pdf/1511.05952.pdf
+(Check out the link for good reasons why experience replay is useful. already in .bib file)
+% again the triad
+
+\subsection{Demonstration Data}\label{sec:demo_data}
+Because the reward function defined earlier provides sparse rewards, the agent needs additional guidance to fast track the learning process. To point it to the right direction, we can fill the memory buffer with human demonstration data before learning. However, this takes a lot of time to do by hand a sufficient number of times and can be automated. To this effect, the pseudocode in (figure so and so) was developed: It randomly picks from a set of two actions which depend on the position of the agent relative to the fire such that the agent will always move in a clockwise motion around the fire. As soon as the containment bonus is collected the environment resets, and this is continued until that bonus has been collected a specified number of times.
+% pseudocoooode

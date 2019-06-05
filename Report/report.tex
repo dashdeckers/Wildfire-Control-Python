@@ -1,0 +1,45 @@
+\documentclass[10pt,a4paper,twocolumn]{article}
+\usepackage{bachelorproject}
+
+\title{\vspace{-0.5in}{\bfseries\scshape 
+    Connectionist Reinforcement Learning to Contain Forest Fires
+    } \\ 
+    \vspace{1ex} 
+    \normalsize{Bachelor's Project Thesis}\vspace{-2ex}
+}
+
+\author{
+    \normalsize{Travis Hammond, s2880024, dashdeckers@gmail.com,} \\ 
+    \normalsize{Supervisor: Prof Marco Weiring}
+}
+
+\date{\vspace{-5ex}}
+
+
+\begin{document}
+
+\twocolumn[
+  \maketitle
+  \begin{@twocolumnfalse}
+    \input{./abstract.tex}
+  \end{@twocolumnfalse}
+]
+
+\thispagestyle{firststyle}
+
+\input{./introduction.tex}
+\input{./methods.tex}
+\input{./results.tex}
+\input{./conclusions.tex}
+
+\bibliographystyle{plainnat}
+\bibliography{literature}
+
+\clearpage
+
+\begin{appendices}
+    \input{./appendix.tex}
+    \newpage
+\end{appendices}
+
+\end{document}
