@@ -65,6 +65,13 @@ class DQN_SARSA(DQN):
                 total_reward += reward
                 rewards.append(reward)
 
+            # Keep track of agent deaths
+            if self.DEBUG > 0:
+                if len(self.sim.W.agents) == 0:
+                    self.logs['agent_deaths'].append(True)
+                else:
+                    self.logs['agent_deaths'].append(False)
+
             # If the last episode was somewhat successful, render its final state
             if total_reward >= 0.9 * self.logs['best_reward'] or total_reward > 300:
                 map_string = self.sim.render()
@@ -85,17 +92,6 @@ class DQN_SARSA(DQN):
 
             # Log the rewards over time
             self.logs['total_rewards'].append(total_reward)
-
-            # Stop condition, if the agent solves the environment X times in a row
-            if self.METADATA['stop_early']:
-                if total_reward > 1500:
-                    self.logs['consec_wins'] += 1
-                else:
-                    self.logs['consec_wins'] = 0
-                if self.logs['consec_wins'] >= self.METADATA['stop_early']:
-                    self.logs['n_episodes'] = episode
-                    print("Stopping early!")
-                    break
 
         # Save the total time taken for this run
         self.logs['total_time'] = round(time.time() - start_time, 3)

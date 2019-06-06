@@ -116,6 +116,13 @@ class DQN:
                 total_reward += reward
                 rewards.append(reward)
 
+            # Keep track of agent deaths
+            if self.DEBUG > 0:
+                if len(self.sim.W.agents) == 0:
+                    self.logs['agent_deaths'].append(True)
+                else:
+                    self.logs['agent_deaths'].append(False)
+
             # If the last episode was somewhat successful, render its final state
             if total_reward >= 0.9 * self.logs['best_reward'] or total_reward > 300:
                 map_string = self.sim.render()

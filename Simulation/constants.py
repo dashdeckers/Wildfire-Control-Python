@@ -14,13 +14,6 @@ wind:
 Wind direction and speed in the form [windspeed, (wind_vector_x, wind_vector_y)].
 Can also be set to "random"
 
-
-> Other parameters:
-
-stop_early:
-If 0, don't stop early. Otherwise stop after stop_early consecutive "wins".
-"wins" are runs with a score higher than 1500
-
 '''
 
 SIZE = 10
