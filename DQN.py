@@ -22,7 +22,6 @@ class DQN:
         self.logs = {
             'best_reward'   : -10000,
             'total_rewards' : list(),
-            'TD_errors'     : list(),
             'agent_pos'     : list(),
             'maps'          : list(),
             'consec_wins'   : 0,
@@ -157,7 +156,6 @@ class DQN:
     def replay(self):
         states_batch = list()
         predicted_batch = list()
-        td_errors = list()
 
         # Sample a random batch of memories from memory
         batch = random.sample(self.memory, self.METADATA['batch_size'])
@@ -165,9 +163,6 @@ class DQN:
         for state, action, reward, sprime, done in batch:
             # Get the prediction for the state S
             prediction = self.target.predict(state)[0]
-
-            # Save the current Q-value estimate to calculate TD error
-            old_predicted_qval = prediction[action]
 
             # If S was a terminal state, the cumulative reward from that
             # state forward is simply the reward recieved for that state
@@ -180,10 +175,6 @@ class DQN:
                 predQ = np.amax(self.target.predict(sprime)[0])
                 prediction[action] = reward + self.gamma * predQ
 
-            # The TD error is the difference between the old predicted
-            # Q-value for the state S and action A and the new prediction
-            td_errors.append(abs(float(old_predicted_qval - prediction[action])))
-
             # Store the states and their updated predictions for this batch
             states_batch.append(state[0])
             predicted_batch.append(prediction)
@@ -192,10 +183,6 @@ class DQN:
         states = np.array(states_batch)
         predictions = np.array(predicted_batch)
         self.model.fit(states, predictions, epochs=1, verbose=0)
-
-        # Collect the data on TD errors
-        if self.DEBUG > 1: 
-            self.logs['TD_errors'].append(sum(td_errors) / len(td_errors))
 
     # Choose an action A based on state S following the e-greedy policy
     def choose_action(self, state, eps=None):
