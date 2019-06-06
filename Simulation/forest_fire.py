@@ -49,8 +49,8 @@ class ForestFire:
                 {}]
 
     # Reset the simulation to its initial state
-    def reset(self, circle=None):
-        self.W.reset(circle)
+    def reset(self):
+        self.W.reset()
         return self.W.get_state()
 
     # Print an ascii rendering of the simulation

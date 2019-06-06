@@ -7,7 +7,6 @@ from collections import deque
 from .utility import (
     get_agent_location,
     get_fire_location,
-    circle_points,
     color2ascii,
     dirt,
     grass,
@@ -50,18 +49,8 @@ def create_map():
 '''
 Reset the layers of the map that have changed to default values
 This function is also called after initialization
-
-If you want to preinitialize the map with a circular route according
-to the midpoint circle drawing algorithm, then provide the mid point
-and radius in the following format:
-
-circle = [radius, (midx, midy)]
-
-This leaves one point of the circle open, and puts the agent at that
-location so that we can record the agent closing the circle and getting
-the reward
 '''
-def reset_map(env, circle=None):
+def reset_map(env):
     env[:, :, layer['gray']].fill(grass['gray'])
     env[:, :, layer['temp']].fill(0)
     env[:, :, layer['heat']].fill(grass['heat'])
@@ -70,29 +59,9 @@ def reset_map(env, circle=None):
     env[:, :, layer['agent_pos']].fill(0)
     env[:, :, layer['type']].fill(0)
 
-    if circle is not None:
-        r = circle[0]
-        x, y = circle[1]
-        points = circle_points(x, y, r)
-
-        # Don't dig at a random point yet, but put the agent there
-        random_idx = np.random.choice(np.array(range(len(points))))
-        agentx, agenty = points[random_idx]
-        del points[random_idx]
-
-        # Dig at all the other points
-        for point in points:
-            x, y = point
-            env[x, y, layer['type']] = types['road']
-            env[x, y, layer['gray']] = dirt['gray']
-            env[x, y, layer['fire_mobility']] = np.inf
-
-        # Put the agent at the opening in the circle
-        env[agentx, agenty, layer['agent_pos']] = 1
-
 # Agents can move, die and dig a cell to turn it into a road
 class Agent:
-    def __init__(self, W, position, allow_digging=True):
+    def __init__(self, W, position):
         self.W = W
         # If we have already set a position for the agent on the map, use that instead
         if self.W.env[:, :, layer['agent_pos']].any():
@@ -104,7 +73,7 @@ class Agent:
             self.W.env[self.x, self.y, layer['agent_pos']] = 1
 
         self.dead = False
-        self.digging = allow_digging
+        self.digging = True
         self.dig()
 
     # Agent is dead if the cell at current position is burning
@@ -178,7 +147,7 @@ class World:
         self.reset()
 
     # Reset any changed parameters to their default values
-    def reset(self, circle=None):
+    def reset(self):
         # Set wind parameters
         if METADATA['wind'] == "random":
             self.wind_speed = np.random.choice([0, 0.7, 0.85])
@@ -191,21 +160,15 @@ class World:
         self.RUNNING = True
 
         # Reset the map
-        reset_map(self.env, circle)
+        reset_map(self.env)
 
         # Keep track of burning cells. A cell is represented by a tuple (x, y)
         self.burning_cells = set()
         self.set_fire_to(get_fire_location(WIDTH, HEIGHT))
 
-        # If we are collecting memories, we don't want the agent to immediately
-        # dig where it is standing, otherwise the transition can't be captured
-        allow_digging = True
-        if circle is not None:
-            allow_digging = False
-
         # Create the agent(s)
         self.agents = [
-            Agent(self, get_agent_location(WIDTH, HEIGHT), allow_digging)
+            Agent(self, get_agent_location(WIDTH, HEIGHT))
         ]
 
         # Keep track of all the points along the border (For the A* algorithm)
