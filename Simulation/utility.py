@@ -51,7 +51,13 @@ def circle_points(midx, midy, r):
 
     return coords
 
-# Find the middle point of the map to start the fire
+'''
+Find the middle point of the map to start the fire
+
+This function has to stay deterministic because we call it multiple times
+throughout the code and we rely on the fact that it always returns the same
+position every time.
+'''
 def get_fire_location(width, height):
     midx = int(width / 2)
     midy = int(height / 2)
@@ -98,9 +104,11 @@ grass = {
 # The parameters for dirt
 dirt = {
     "gray" : grayscale(Color("Brown")),
-    "heat" : -1,
-    "fuel" : -1,
-    "threshold" : -1,
+}
+
+# The parameters for water
+water = {
+    "gray" : grayscale(Color("Blue")),
 }
 
 # The (depth) layers of the map, which corresponds to cell attributes
@@ -113,6 +121,7 @@ layer = {
     "threshold" : 5,
     "agent_pos" : 6,
     "fire_mobility" : 7,
+    "agent_mobility": 8,
 }
 
 # Which cell type (from the type layer) corresponds to which value
@@ -120,12 +129,14 @@ types = {
     0 : "grass",
     1 : "fire",
     2 : "burnt",
-    3 : "road",
+    3 : "dirt",
+    4 : "water",
 
     "grass" : 0,
     "fire"  : 1,
     "burnt" : 2,
-    "road"  : 3,
+    "dirt"  : 3,
+    "water" : 4,
 }
 
 # Convert grayscale to ascii for rendering
@@ -134,4 +145,5 @@ color2ascii = {
     grayscale(Color("Red"))   : '@',
     grayscale(Color("Black")) : '#',
     grayscale(Color("Brown")) : '0',
+    grayscale(Color("Blue"))  : 'x',
 }

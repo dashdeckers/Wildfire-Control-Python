@@ -10,6 +10,7 @@ from .utility import (
     color2ascii,
     dirt,
     grass,
+    water,
     layer,
     types,
 )
@@ -41,25 +42,60 @@ def create_map():
     fuel = np.full((WIDTH, HEIGHT), grass['fuel'])
     threshold = np.full((WIDTH, HEIGHT), grass['threshold'])
     f_mobility = np.ones((WIDTH, HEIGHT))
+    a_mobility = np.ones((WIDTH, HEIGHT))
     agent_pos = np.zeros((WIDTH, HEIGHT))
     type_map = np.zeros((WIDTH, HEIGHT))
     return np.dstack((type_map, gray, temp, heat, fuel, 
-                      threshold, agent_pos, f_mobility))
+                      threshold, agent_pos, f_mobility,
+                      a_mobility))
 
 '''
 Reset the layers of the map that have changed to default values
 This function is also called after initialization
+
+It also makes a simple river from a starting position near the top
+of the map randomly downwards to almost the bottom of the map
 '''
-def reset_map(env):
+def reset_map(env, make_river=True):
     env[:, :, layer['gray']].fill(grass['gray'])
     env[:, :, layer['temp']].fill(0)
     env[:, :, layer['heat']].fill(grass['heat'])
     env[:, :, layer['fuel']].fill(grass['fuel'])
     env[:, :, layer['fire_mobility']].fill(1)
+    env[:, :, layer['agent_mobility']].fill(1)
     env[:, :, layer['agent_pos']].fill(0)
     env[:, :, layer['type']].fill(0)
 
-# Agents can move, die and dig a cell to turn it into a road
+    if make_river:
+        # Range of distances to keep from borders etc
+        d = [1, 2, 3]
+        # Remember where the fire is
+        (fx, fy) = get_fire_location(WIDTH, HEIGHT)
+        # Start anywhere on the x-axis
+        river_x = np.random.choice(list(range(WIDTH)))
+        # Start near the top on the y-axis but don't touch the border
+        river_y = np.random.choice(d)
+        # While we are not close to hitting the bottom of the y-axis
+        while river_y < (HEIGHT - np.random.choice(d)):
+            # Change the type
+            env[river_x, river_y, layer['type']] = types['water']
+            # Change the color
+            env[river_x, river_y, layer['gray']] = water['gray']
+            # Set the fire mobility to inf
+            env[river_x, river_y, layer['fire_mobility']] = np.inf
+            # Set the agent mobility to inf
+            env[river_x, river_y, layer['agent_mobility']] = np.inf
+            # Increment the position stochastically
+            new_y = river_y + 1
+            new_x = river_x + np.random.choice([1, -1])
+            while not np.random.choice(d) <= new_x < (WIDTH - np.random.choice(d)) \
+                    and not (new_x, new_y) == (fx, fy):
+                new_x = river_x + np.random.choice([1, -1])
+
+            (river_x, river_y) = (new_x, new_y)
+
+
+# Agents can move, die and dig a cell to turn it into dirt
 class Agent:
     def __init__(self, W, position):
         self.W = W
@@ -83,14 +119,14 @@ class Agent:
             return True
         return False
 
-    # Turn the cell at agent position into a road cell
+    # Turn the cell at agent position into a dirt cell
     def dig(self):
         # Ignore dig command if we are not in dig mode
         if self.digging:
-            # Ignore dig command if the cell is already a road cell
-            if not types[self.W.env[self.x, self.y, layer['type']]] == 'road':
+            # Ignore dig command if the cell is already a dirt cell
+            if not types[self.W.env[self.x, self.y, layer['type']]] == 'dirt':
                 # Change the type
-                self.W.env[self.x, self.y, layer['type']] = types['road']
+                self.W.env[self.x, self.y, layer['type']] = types['dirt']
                 # Change the color
                 self.W.env[self.x, self.y, layer['gray']] = dirt['gray']
                 # Set the fire mobility to inf
@@ -107,7 +143,7 @@ class Agent:
         # Get the new position
         (nx, ny) = self._direction_to_coords(direction)
         # If the new position is inbounds
-        if self.W.inbounds(nx, ny):
+        if self.W.inbounds(nx, ny) and self.W.traversable(nx, ny):
             # Go to new position
             (self.x, self.y) = (nx, ny)
             self.W.env[self.x, self.y, layer['agent_pos']] = 1
@@ -160,7 +196,7 @@ class World:
         self.RUNNING = True
 
         # Reset the map
-        reset_map(self.env)
+        reset_map(self.env, METADATA['make_rivers'])
 
         # Keep track of burning cells. A cell is represented by a tuple (x, y)
         self.burning_cells = set()
@@ -189,6 +225,10 @@ class World:
     def inbounds(self, x, y):
         return 0 <= x < self.WIDTH and 0 <= y < self.HEIGHT
 
+    # Determine whether a coordinate is traversable by the agent
+    def traversable(self, x, y):
+        return self.env[x, y, layer['type']] != types['water']
+
     # Set a cell to be burning
     def set_fire_to(self, cell):
         x, y = cell
@@ -213,7 +253,8 @@ class World:
     # Determine whether the cell can catch fire
     def is_burnable(self, cell):
         x, y = cell
-        return types[self.env[x, y, layer['type']]] not in ['fire', 'burnt', 'road']
+        return types[self.env[x, y, layer['type']]] not in \
+                            ['fire', 'burnt', 'dirt', 'water']
 
     # Returns the distance and angle (relative to the wind direction) between two cells
     def get_distance_and_angle(self, cell, other_cell, distance_metric):
@@ -351,7 +392,7 @@ class World:
     State consists of three layers with each containing only boolean entries
     - The agents position
     - The fire positions
-    - The road positions
+    - The dirt positions
     '''
     def get_state(self):
         return np.dstack((self.env[:, :, layer['agent_pos']],
@@ -368,7 +409,7 @@ class World:
                 # Fire layer
                 elif state[0, x, y, 1]:
                     print("@", end="")
-                # Road layer (fire mobility is 0 if road)
+                # Dirt layer (fire mobility is 0 if dirt)
                 elif not state[0, x, y, 2]:
                     print("0", end="")
                 else:
@@ -397,7 +438,7 @@ class World:
         type_map = self.env[:, :, layer['type']]
         num_burnt = np.count_nonzero(type_map == types['burnt'])
         num_burning = np.count_nonzero(type_map == types['fire'])
-        num_dug = np.count_nonzero(type_map == types['road'])
+        num_dug = np.count_nonzero(type_map == types['dirt'])
         num_healthy = np.count_nonzero(type_map == types['grass'])
         print("[# of Burnt Cells] ", num_burnt)
         print("[# of Burning Cells] ", num_burning)

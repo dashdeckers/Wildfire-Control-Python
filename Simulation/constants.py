@@ -34,6 +34,7 @@ METADATA = {
     "n_actions"     : 4,
     "a_speed"       : A_SPEED,
     "a_speed_iter"  : A_SPEED,
+    "make_rivers"   : True,
 
     # DQN parameters
     "memory_size"    : 20000,
