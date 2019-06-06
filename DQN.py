@@ -399,7 +399,7 @@ class DQN:
             name = os.path.join("Models", all_names[selection])
             self.model.load_weights(name)
             print("Model loaded!")
-        except ValueError as e:
+        except (ValueError, IndexError) as e:
             print("Invalid Selection")
 
     # Saves the weights of the model to file

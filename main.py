@@ -52,14 +52,40 @@ if args.run:
     Agent.collect_memories(args.memories)
     Agent.learn(args.episodes)
 
-# Just import everything for interactive mode
+# Don't start learning
 else:
+    # Run the simulation in human mode
     if args.type == "Human":
         from misc import run_human
         run_human(forestfire)
+    # Just import everything for interactive mode
     else:
         from misc import run_human, time_simulation_run
         from DQN import DQN
         from DQN_SARSA import DQN_SARSA
         from DQN_DUEL import DQN_DUEL
-        print("Imported algorithms for interactive mode")
+
+        # Create the agents
+        DQN = DQN(forestfire, verbose=False)
+        DQN_SARSA = DQN_SARSA(forestfire, verbose=False)
+        DQN_DUEL = DQN_DUEL(forestfire, verbose=False)
+
+        # Get a list of imported algorithms to play with
+        options = [o for o in dir() \
+                  if not o.startswith("__") \
+                  and not o in ["os", "code", "tf", "argparse", 
+                                "args", "parser", "ForestFire"]]
+        # Display those algorithms for ease of use
+        msg = (
+            f"\nImported the following functions and algorithms for interactive mode:"
+            f"\n{[o for o in options]}\n\n"
+            f"For autocomplete functionality, call the script with '-i'.\n"
+            f"Initialize an algorithm with the simulation: DQN = DQN(forestfire).\n"
+            f"Load a model with .load_model, play optimally with .play_optimal.\n"
+        )
+        # Drop the user in the interpreter, if the script is not already called with -i
+        if sys.flags.interactive:
+            print(msg)
+        else:
+            import code
+            code.interact(banner=msg, local=locals())
