@@ -7,13 +7,14 @@ import random, time, keras, json, os
 from collections import deque
 
 class DQN:
-    def __init__(self, sim, name="no_name"):
+    def __init__(self, sim, name="no_name", verbose=True):
         # Constants and such
         self.sim = sim
         self.name = name
         self.METADATA = sim.METADATA
         self.action_size = self.sim.n_actions
         self.DEBUG = sim.DEBUG
+        self.verbose = verbose
 
         # DQN memory
         self.memory = deque(maxlen=self.METADATA['memory_size'])
@@ -45,13 +46,14 @@ class DQN:
         self.target.set_weights(self.model.get_weights())
 
         # Print Constants
-        print("\n\t[Parameters]")
-        print("[decay]", self.METADATA['eps_decay_rate'])
-        print("[alpha]", self.METADATA['alpha'])
-        print("[gamma]", self.METADATA['gamma'])
-        print("[batch]", self.METADATA['batch_size'])
-        print("[wind speed]", self.METADATA['wind'][0])
-        print("[target upd]", self.METADATA['target_update'])
+        if self.verbose:
+            print("\n\t[Parameters]")
+            print("[decay]", self.METADATA['eps_decay_rate'])
+            print("[alpha]", self.METADATA['alpha'])
+            print("[gamma]", self.METADATA['gamma'])
+            print("[batch]", self.METADATA['batch_size'])
+            print("[wind speed]", self.METADATA['wind'][0])
+            print("[target upd]", self.METADATA['target_update'])
 
     '''
     Main methods related to learning
@@ -228,7 +230,8 @@ class DQN:
                       # And an Adam optimizer with gradient clipping
                       optimizer=Adam(lr=self.alpha,
                                      clipvalue=1))
-        model.summary()
+        if self.verbose:
+            model.summary()
         return model
 
     '''

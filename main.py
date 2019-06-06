@@ -25,7 +25,7 @@ if args.run and args.name == "no_name":
 
 
 # Suppress the many unnecessary TensorFlow warnings
-import os
+import os, sys
 import tensorflow as tf
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 tf.logging.set_verbosity(tf.logging.ERROR)

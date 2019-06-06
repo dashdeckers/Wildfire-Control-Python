@@ -11,8 +11,8 @@ from keras.optimizers import Adam
 from keras import backend as K
 
 class DQN_DUEL(DQN):
-    def __init__(self, sim, name="no_name"):
-        DQN.__init__(self, sim, name)
+    def __init__(self, sim, name="no_name", verbose=True):
+        DQN.__init__(self, sim, name, verbose)
 
     def make_network(self):
         input_shape = (self.sim.W.WIDTH, self.sim.W.HEIGHT, self.sim.W.DEPTH)
@@ -42,5 +42,6 @@ class DQN_DUEL(DQN):
         model.compile(loss='mse', optimizer=Adam(lr=self.alpha, clipvalue=1))
 
         # Print summary and return resulting model
-        model.summary()
+        if self.verbose:
+            model.summary()
         return model
