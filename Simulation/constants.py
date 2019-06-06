@@ -51,7 +51,4 @@ METADATA = {
     "alpha"          : 0.005, # 0.005
     "target_update"  : 20, # 20
     "batch_size"     : 32, # 32
-
-    # Learning parameters
-    "stop_early"    : 0,
 }
