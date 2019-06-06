@@ -389,9 +389,18 @@ class DQN:
             json.dump(self.logs, file)
 
     # Loads the weights of the model from file.
-    def load_model(self, name):
-        name = "Models/" + name
-        self.model.load_weights(name)
+    def load_model(self):
+        all_names = os.listdir("Models")
+        print("\nChoose a model from the list below to load:")
+        for idx, name in enumerate(all_names):
+            print(f"\t[{idx}] {name}")
+        try:
+            selection = int(input(f"Select one [0-{idx}]: \n"))
+            name = os.path.join("Models", all_names[selection])
+            self.model.load_weights(name)
+            print("Model loaded!")
+        except ValueError as e:
+            print("Invalid Selection")
 
     # Saves the weights of the model to file
     def save_model(self, name):
