@@ -78,9 +78,7 @@ else:
         # Display those algorithms for ease of use
         msg = (
             f"\nImported the following functions and algorithms for interactive mode:"
-            f"\n{[o for o in options]}\n\n"
-            f"For autocomplete functionality, call the script with '-i'.\n"
-            f"Initialize an algorithm with the simulation: DQN = DQN(forestfire).\n"
+            f"\n{[o for o in options]}\n"
             f"Load a model with .load_model, play optimally with .play_optimal.\n"
         )
         # Drop the user in the interpreter, if the script is not already called with -i
