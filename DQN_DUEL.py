@@ -23,11 +23,11 @@ class DQN_DUEL(DQN):
 
         # Advantage stream connected to flatten, output size is action_size
         dense1 = Dense(units=50, activation='sigmoid')(flatten)
-        advantage = Dense(self.action_size)(dense1)
+        advantage = Dense(self.action_size, activation='linear')(dense1)
 
         # Value stream connected to flatten, output size is 1
-        dense2 = Dense(units=1, activation='sigmoid')(flatten)
-        value = Dense(1)(dense2)
+        dense2 = Dense(units=50, activation='sigmoid')(flatten)
+        value = Dense(1, activation='linear')(dense2)
 
         # Combine both streams using: q = a - mean(a) + v
         output_layer = Lambda(
@@ -37,7 +37,7 @@ class DQN_DUEL(DQN):
         output_layer = Activation('linear')(output_layer)
 
         # Create model by setting input and output
-        model = Model(input=[input_layer], output=[output_layer])
+        model = Model(inputs=[input_layer], outputs=[output_layer])
         # Copied from DQN, need to understand more
         model.compile(loss='mse', optimizer=Adam(lr=self.alpha, clipvalue=1))
 
