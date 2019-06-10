@@ -362,6 +362,8 @@ class World:
                     # If there are no more routes from any burning cell to any border
                     if len(burning) == 0:
                         # The fire is contained! Give a big reward
+                        if METADATA['containment_wins']:
+                            self.RUNNING = True
                         return METADATA['contained_bonus']
                     # No more border points: try a different burning cell
                     self.reset_border_points()
