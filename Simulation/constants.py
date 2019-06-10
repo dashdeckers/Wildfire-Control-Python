@@ -16,7 +16,7 @@ Can also be set to "random"
 
 '''
 
-SIZE = 15
+SIZE = 10
 A_SPEED = 1
 
 # Metadata and DQN parameters

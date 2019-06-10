@@ -13,28 +13,23 @@ Logs data structure:
 Key:
     Type
     Description
-    Size
 
 {
-    TD_errors:
-        List of lists (should be list of lists of lists though)
-        The difference between every state / prediction in replay()
-        Batch size * total number of states
-
     total_rewards:
         List
         The total cumulative reward for every episode
-        Total number of episodes
+
+    agent_deaths
+        List
+        For every episode, whether the agent died or not
 
     agent_pos:
         List
         The agent starting positions for every episode
-        Total number of episodes
 
     maps:
         List of lists
         Each entry contains the episode number and a string of the final state
-        Only every printed map is saved
 
     best_reward:
         Float
@@ -204,6 +199,14 @@ def plot_setyaxis(min, max):
     plt.gca().set_ylim([min, max])
     plt.gca().set_xlim([None, None])
 
+# Define maximum/minimum y values
+def plot_setxaxis(min, max, steps=None):
+    if steps:
+        plt.gca().set_xlim([min, max])
+        plt.gca().set_xticks(steps)
+    else:
+        plt.gca().set_xlim([min, max])
+
 # Add a horizontal line indicating max value
 def plot_maxline(array):
     maximum = max(array)
@@ -245,23 +248,6 @@ def plot_total_rewards(file):
         plot_finish(save_filename)
     else:
         print(f"Warning: No data on total rewards")
-
-# Plot the TD errors over time
-def plot_td_error(file):
-    try: 
-        TD_errors = file[1]['TD_errors']
-        verify_folder(plots_folder + file[0])
-        save_filename = plots_folder + file[0] + '/td_errors.png'
-    except:
-        print(f"ERROR: No TD_error field in log!")
-        return
-    if TD_errors:
-        # Generate the plot
-        plot_start("TD-error over time", "TD-error", "Episode")
-        plot_add(TD_errors, "TD-error")
-        plot_finish(save_filename)
-    else:
-        print(f"Warning: No data on TD-error")
 
 # Plots the average total reward per k episodes
 def plot_average_reward_per_k(file, k = None):
@@ -367,6 +353,35 @@ def plot_reward_gained(file, k = 1000):
     else:
         print(f"Warning: No data on total rewards")
 
+# Plot the percent of agent deaths per k runs
+def plot_agent_deaths(file, k=100):
+    try:
+        agent_deaths = file[1]['agent_deaths']
+        verify_folder(plots_folder + file[0])
+        save_filename = plots_folder + file[0] + '/agent_deaths.png'
+    except:
+        print("ERROR: No agent_deaths field in log!")
+        return
+    if agent_deaths:
+        n_episodes = file[1]['n_episodes']
+        if n_episodes % k != 0:
+            print("k is not a divisor of n_episodes!")
+            return
+
+        avgs = list()
+        ticks = list()
+        for i in range(int(n_episodes/k)):
+            avgs.append(sum(agent_deaths[i * k : (i+1) * k]) / k)
+            ticks.append(i)
+
+        # Generate the plot
+        plot_start(f"Agent deaths per {k} epsiodes",
+                    "Percent dead", "Episode set (starting index)")
+        plot_add(avgs, "Percent dead")
+        plot_setxaxis(0, len(ticks), ticks)
+        plot_finish(save_filename)
+    else:
+        print("Warning: No data on agent deaths")
 
 ### MATH HELPERS
 # Averages some array per some k
@@ -450,10 +465,10 @@ def main():
         else:
             # Defines the to-be generated plots using the selected logfile
             plot_total_rewards(file)
-            plot_td_error(file)
-            plot_average_reward_per_k(file, 100)
-            plot_fire_distance(file)
-            plot_reward_gained(file)
+            plot_agent_deaths(file)
+            #plot_average_reward_per_k(file, 100)
+            #plot_fire_distance(file)
+            #plot_reward_gained(file)
 
 if __name__ == "__main__":
 	main()
