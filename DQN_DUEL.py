@@ -24,11 +24,11 @@ class DQN_DUEL(DQN):
         flatten = Flatten()(input_layer)
 
         # Advantage stream connected to flatten, output size is action_size
-        dense1 = Dense(units=50, activation='sigmoid')(flatten)
+        dense1 = Dense(units=25, activation='sigmoid')(flatten)
         advantage = Dense(self.action_size, activation='linear')(dense1)
 
         # Value stream connected to flatten, output size is 1
-        dense2 = Dense(units=50, activation='sigmoid')(flatten)
+        dense2 = Dense(units=25, activation='sigmoid')(flatten)
         value = Dense(units=1, activation='linear')(dense2)
 
         # Combine advantage & value streams into output layer

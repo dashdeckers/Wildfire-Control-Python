@@ -81,7 +81,7 @@ def get_agent_location(width, height):
 def get_name(epsiodes, memories, name):
     import time
     return (
-        f"""{epsiodes}k-{memories}m-{name}-{time.strftime("%m-%d-%H%M")}"""
+        f"""{name}-{epsiodes}k-{memories}m-{time.strftime("%m-%d-%H%M")}"""
     )
 
 # Convert a color to grayscale with the grayscale formula from Wikipedia
