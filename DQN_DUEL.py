@@ -5,8 +5,8 @@ import numpy as np
 import time, random
 
 # Dueling DQN specific imports
-from keras.models import Model
-from keras.layers import Input, Flatten, Dense, Lambda, Activation
+from keras.models import Model, Sequential
+from keras.layers import Input, Flatten, Dense, Lambda
 from keras.optimizers import Adam
 from keras import backend as K
 
@@ -14,7 +14,9 @@ class DQN_DUEL(DQN):
     def __init__(self, sim, name="no_name", verbose=True):
         DQN.__init__(self, sim, name, verbose)
 
+### DUELING DQN NETWORK
     def make_network(self):
+        model = Sequential()
         input_shape = (self.sim.W.WIDTH, self.sim.W.HEIGHT, self.sim.W.DEPTH)
         
         # Create input layer according to input_shape and flatten it
@@ -27,18 +29,18 @@ class DQN_DUEL(DQN):
 
         # Value stream connected to flatten, output size is 1
         dense2 = Dense(units=50, activation='sigmoid')(flatten)
-        value = Dense(1, activation='linear')(dense2)
+        value = Dense(units=1, activation='linear')(dense2)
 
-        # Combine both streams using: q = a - mean(a) + v
-        output_layer = Lambda(
-                lambda x: x[0]-K.mean(x[0])+x[1],
-                output_shape = (self.action_size,)
-            )([advantage, value])
-        output_layer = Activation('linear')(output_layer)
+        # Combine advantage & value streams into output layer
+        #		Formula: q = v + (a - mean(a))
+        def merger(streams):
+            adv, val = streams
+            return val + (adv - K.mean(adv, axis=1, keepdims=True))
+        output_layer = Lambda(merger)([advantage, value])
 
-        # Create model by setting input and output
+        # Create model by defining input and output layers
         model = Model(inputs=[input_layer], outputs=[output_layer])
-        # Copied from DQN, need to understand more
+        # Set the loss function and optimizer
         model.compile(loss='mse', optimizer=Adam(lr=self.alpha, clipvalue=1))
 
         # Print summary and return resulting model

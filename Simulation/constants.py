@@ -34,7 +34,7 @@ METADATA = {
     "n_actions"    : 4,
     "a_speed"      : A_SPEED,
     "a_speed_iter" : A_SPEED,
-    "make_rivers"  : True,
+    "make_rivers"  : False,
     "containment_wins" : False,
 
     # DQN parameters
