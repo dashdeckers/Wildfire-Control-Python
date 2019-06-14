@@ -365,7 +365,8 @@ class DQN:
         else:
             n_episodes = 0
         memories = self.logs['init_memories']
-        name = self.sim.get_name(int(n_episodes), memories, self.name)
+        name = self.sim.get_name(self.sim.W.WIDTH, \
+            int(n_episodes), memories, self.name)
         counter = 0
         while os.path.isfile("Logs/" + name) or os.path.isfile("Models/" + name):
             if counter > 0:
