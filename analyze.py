@@ -145,7 +145,6 @@ def verify_folder(folder_name):
 # Make a list of filenames of everything in logs_folder
 def get_log_filenames():
     all_filenames = list()
-    print(f"The following log files are available:")
     for root, dirs, files in os.walk(logs_folder + "."):
         for filename in files:
             all_filenames.append(filename)
@@ -153,6 +152,7 @@ def get_log_filenames():
 
 # Let user select a filename given all the filenames
 def select_file(all_filenames):
+    print(f"The following log files are available:")
     for idx, filename in enumerate(all_filenames):
         print(f"\t[{idx}] {filename}")
     selection = input(f"Select one [0-{idx}]: ")

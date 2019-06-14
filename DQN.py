@@ -136,7 +136,7 @@ class DQN:
             print(f"[Episode {episode + 1}]\tTime: {round(time.time() - t0, 3)}")
             print(f"\t\tEpsilon: {round(self.eps, 3)}")
             print(f"\t\tAgent dead: {len(self.sim.W.agents) == 0}")
-            print(f"\t\tReward: {total_reward}\n")
+            print(f"\t\tReward: {round(total_reward, 0)}\n")
 
             # Decay the epsilon value for the next episode
             self.decay_epsilon(episode)
@@ -365,7 +365,8 @@ class DQN:
         else:
             n_episodes = 0
         memories = self.logs['init_memories']
-        name = self.sim.get_name(int(n_episodes), memories, self.name)
+        name = self.sim.get_name(self.sim.W.WIDTH, \
+            int(n_episodes), memories, self.name)
         counter = 0
         while os.path.isfile("Logs/" + name) or os.path.isfile("Models/" + name):
             if counter > 0:
