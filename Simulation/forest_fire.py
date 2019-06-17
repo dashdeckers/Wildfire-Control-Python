@@ -32,7 +32,7 @@ class ForestFire:
         if action in ["N", "S", "E", "W"] or action in range(4):
             self.W.agents[0].move(action)
         # Handle the dig action
-        if action in ["D", 4]:
+        if METADATA['allow_dig_toggle'] and action in ["D", 4]:
             self.W.agents[0].toggle_digging()
         # If the action is not handled, the agent does nothing
 
