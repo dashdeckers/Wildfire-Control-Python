@@ -7,8 +7,8 @@
 *.blg
 *.pdf
 
-# Don't need to commit plots
-Plots/
+# Do need to commit plots
+# Plots/
 
 # Sublime Text files
 *.sublime-project

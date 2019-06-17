@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Global settings/variables
-logs_folder = "Logs/"
+logs_folder = "Logs/Process/"
 plots_folder = "Plots/"
 smoothing_factor = 0.99
 
@@ -216,23 +216,79 @@ def calc_smooth(array, weight = -1):
 
 ### MAIN
 def main():
-    selecting_files = True
-    selected_files = []
-    all_filenames = get_log_filenames()
+    answer = input(f"Interactive or hardcoded? [i/h]: ")
+    if answer == "i":
+        selecting_files = True
+        selected_files = []
+        all_filenames = get_log_filenames()
 
-    while selecting_files:
-        selected_file = select_file(all_filenames)
-        selected_files.append(selected_file)
-        all_filenames.remove(selected_file[0])
+        while selecting_files:
+            selected_file = select_file(all_filenames)
+            selected_files.append(selected_file)
+            all_filenames.remove(selected_file[0])
 
-        if len(selected_files) >= 2:
-            file_select_answer = input(f"Select more files? [y/n]: ")
-            if file_select_answer == "n":
-                selecting_files = False
-    print("")
+            if len(selected_files) >= 2:
+                file_select_answer = input(f"Select more files? [y/n]: ")
+                if file_select_answer == "n":
+                    selecting_files = False
+        print("")
 
-    plot_total_rewards(selected_files)
-    plot_agent_deaths(selected_files)
+        plot_total_rewards(selected_files)
+        plot_agent_deaths(selected_files)
+    else:
+        # Define how logfiles should be grouped
+        all_filenames = get_log_filenames()
+        first_files, second_files, third_files = ([] for i in range(3))
+        for filename in all_filenames:
+            if "DDQN" in filename:
+                first_files.append(filename)
+                continue
+            if "DQN" in filename:
+                second_files.append(filename)
+                continue
+            if "SARSA" in filename:
+                third_files.append(filename)
+                continue
+
+        # Check if all file groups are equal to 10 (runs)
+        if len(first_files) == 10 and \
+            len(first_files) == len(second_files) and \
+            len(second_files) == len(third_files):
+            print("\tSanity check OK!")
+        else:
+            print("\tSanity check FAIL! Plot not reliable.")
+            exit()
+
+        # Average all arrays per group
+        first_avg, second_avg, third_avg = ([] for i in range(3))
+        temp = []
+        for filename in first_files:
+            file = load_file(filename)
+            temp.append(file[1]['total_rewards'])
+            first_avg = np.average(np.array(temp), axis=0)
+        temp = []
+        for filename in second_files:
+            file = load_file(filename)
+            temp.append(file[1]['total_rewards'])
+            second_avg = np.average(np.array(temp), axis=0)
+        temp = []
+        for filename in third_files:
+            file = load_file(filename)
+            temp.append(file[1]['total_rewards'])
+            third_avg = np.average(np.array(temp), axis=0)
+
+        # Start the plot
+        folder_name = "HARDCODED"
+        plot_start("Total reward over time", "Total reward", "Episode")
+        # Populate plot
+        plot_add(calc_smooth(first_avg), "DDQN")
+        plot_add(calc_smooth(second_avg), "DQN")
+        plot_add(calc_smooth(third_avg), "SARSA")
+        # Finish plot
+        plot_setyaxis(-1500, 2000)
+        verify_folder(plots_folder + folder_name)
+        save_filename = plots_folder + folder_name + '/total_rewards_test.png'
+        plot_finish(save_filename)
 
 if __name__ == "__main__":
     main()
