@@ -7,7 +7,7 @@ import time, random
 class DQN_SARSA(DQN):
     def __init__(self, sim, name="no_name", verbose=True):
         DQN.__init__(self, sim, name, verbose)
-    
+
     # The learning algorithm
     def learn(self, n_episodes=1000):
         # Time the entire run
