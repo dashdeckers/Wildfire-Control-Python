@@ -324,6 +324,11 @@ class DQN:
     # Choose an action depending on the agents position relative to the fire.
     # The action should be safe, if possible
     def choose_randomwalk_action(self):
+        # It can happen in SARSA to ask for an action when agent has died.
+        # However, that action is never looked at and is irrelevant
+        if not self.sim.W.agents:
+            return 0
+
         key_map = {'N':0, 'S':1, 'E':2, 'W':3}
         width, height = self.sim.W.WIDTH, self.sim.W.HEIGHT
         agent_x, agent_y = self.sim.W.agents[0].x, self.sim.W.agents[0].y
