@@ -1,3 +1,13 @@
 \begin{abstract}
-{Abstract text\vspace{6ex}}
+{With global temperatures on the rise, forest fires are becoming more frequent and forest fires, in turn, contribute to global warming by releasing large amounts of CO2 into the atmosphere and eliminating the trees that would be able to process the CO2. Finding a way to effectively control and contain these fires is therefore becoming more and more of a priority.
+
+In this paper, we propose a connectionist reinforcement learning system that can learn to contain the spread of a simulated fire. It can do this by cutting fire lines around the fire, removing the fuel needed for it to spread further.
+
+We show the performance of a Q-Learning algorithm with a target network, experience replay, and demonstration data, and compare it to two more implementations. One that uses the on-policy algorithm SARSA, and one with the addition of a duelling network architecture. 
+
+To accelerate learning, we use a vision grid approach in which the system receives as input three versions of the full map size each showing only a single feature such as agent location and fire locations.
+
+The results show the ability of each proposed system to successfully contain the fire within a reasonable number of training episodes.
+
+\vspace{6ex}}
 \end{abstract}
