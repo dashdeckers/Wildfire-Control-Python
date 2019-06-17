@@ -7,133 +7,6 @@ logs_folder = "Logs/"
 plots_folder = "Plots/"
 smoothing_factor = 0.99
 
-'''
-Logs data structure:
-
-Key:
-    Type
-    Description
-
-{
-    total_rewards:
-        List
-        The total cumulative reward for every episode
-
-    agent_deaths
-        List
-        For every episode, whether the agent died or not
-
-    agent_pos:
-        List
-        The agent starting positions for every episode
-
-    maps:
-        List of lists
-        Each entry contains the episode number and a string of the final state
-
-    best_reward:
-        Float
-        The highscore reward across all episodes
-
-    init_memories:
-        Int
-        Number of memories the agent was initialized with before learning
-
-    n_episodes:
-        Int
-        Total number of episodes the algorithm learnt for
-
-    total_time:
-        Int
-        Total number of seconds the run took to run
-
-    metadata:
-        Dictionary
-        All the DQN parameters and simulation constants
-}
-'''
-
-# Just a random attempt to make some 3D plots. Might be useful, might not be
-class Plot_3D:
-    def __init__(self):
-        # This it enables using projection='3d' in add_subplot
-        from mpl_toolkits.mplot3d import Axes3D  
-        self.surface_plot()
-        self.plot_heat_factor()
-        self.plot_simple_heat_factor()
-
-    # TODO: Find a better function for these
-    def heat_factor(self, x, y):
-        return (x + y)**(-1)
-
-    def simple_heat_factor(self, x):
-        return (x + 1)**(-1)
-
-    # TODO: Find a better function for these as well
-    def smooth_gradient(self, x, y):
-        return 10 * np.power(np.multiply(x, y), -1)
-
-    def rough_gradient(self, x, y):
-        return 10 * np.power(np.multiply(x, y), -10)
-
-    # With distance and angle both variable
-    def plot_heat_factor(self):
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-
-        x = np.arange(0, 3.14, 0.1)
-        y = np.arange(1, 3,    0.1)
-        X, Y = np.meshgrid(x, y)
-
-        zs = np.array(self.heat_factor(np.ravel(X), np.ravel(Y)))
-        Z = zs.reshape(X.shape)
-
-        ax.plot_surface(X, Y, Z)
-
-        ax.set_xlabel('Angle')
-        ax.set_ylabel('Distance')
-        ax.set_zlabel('Heat Factor')
-
-        plt.show()
-
-    # With distance held constant at 1
-    def plot_simple_heat_factor(self):
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-
-        x = np.arange(0, 3.14, 0.1)
-
-        y = np.array(self.simple_heat_factor(x))
-
-        ax.plot(x, y)
-
-        ax.set_xlabel('Angle')
-        ax.set_ylabel('Heat Factor')
-
-        plt.show()
-
-    # Plot a "smooth" or a "rough" example of a reward landscape
-    def surface_plot(self, gradient="smooth"):
-        if gradient == "smooth":
-            gradient_function = self.smooth_gradient
-        else:
-            gradient_function = self.rough_gradient
-
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-
-        x = np.arange(1, 10, 0.1)
-        y = np.arange(1, 10, 0.1)
-        X, Y = np.meshgrid(x, y)
-
-        zs = np.array(gradient_function(np.ravel(X), np.ravel(Y)))
-        Z = zs.reshape(X.shape)
-
-        ax.plot_surface(X, Y, Z)
-
-        ax.set_zlabel('Reward Value')
-
-        plt.show()
 
 ### FILE LOADING
 # Make sure the log and plot folders exist
@@ -148,16 +21,17 @@ def get_log_filenames():
     for root, dirs, files in os.walk(logs_folder + "."):
         for filename in files:
             all_filenames.append(filename)
-    return all_filenames
+    return sorted(all_filenames)
 
 # Let user select a filename given all the filenames
 def select_file(all_filenames):
     print(f"The following log files are available:")
     for idx, filename in enumerate(all_filenames):
-        print(f"\t[{idx}] {filename}")
+        print(f"\t[{idx}]\t{filename}")
     selection = input(f"Select one [0-{idx}]: ")
+    label = input(f"Name the logfile: ")
     print("")
-    return all_filenames[int(selection)]
+    return [all_filenames[int(selection)], label]
 
 # Load a file given its name
 def load_file(filename):
@@ -199,14 +73,6 @@ def plot_setyaxis(min, max):
     plt.gca().set_ylim([min, max])
     plt.gca().set_xlim([None, None])
 
-# Define maximum/minimum y values
-def plot_setxaxis(min, max, steps=None):
-    if steps:
-        plt.gca().set_xlim([min, max])
-        plt.gca().set_xticks(steps)
-    else:
-        plt.gca().set_xlim([min, max])
-
 # Add a horizontal line indicating max value
 def plot_maxline(array):
     maximum = max(array)
@@ -230,158 +96,72 @@ def plot_finish(save_filename):
 
 ### PLOT DEFINITIONS
 # Plot the total rewards over time
-def plot_total_rewards(file):
-    try:
+def plot_total_rewards(selected_files):
+    # Start the plot
+    folder_name = str()
+    plot_start("Total reward over time", "Total reward", "Episode")
+    # Populate plot
+    for selected_file in selected_files:
+        file = load_file(selected_file[0])
         total_rewards = file[1]['total_rewards']
-        verify_folder(plots_folder + file[0])
-        save_filename = plots_folder + file[0] + '/total_rewards.png'
-    except:
-        print(f"ERROR: No total_rewards field in log!")
-        return
-    if total_rewards:
-        # Generate the plot
-        plot_start("Total reward over time", "Total reward", "Episode")
-        plot_add(calc_smooth(total_rewards), "Total reward")
-        plot_setyaxis(-1500, 2000)
-        plot_maxline(calc_smooth(total_rewards))
-        plot_avgline(calc_smooth(total_rewards))
-        plot_finish(save_filename)
-    else:
-        print(f"Warning: No data on total rewards")
+        plot_add(calc_smooth(total_rewards), selected_file[1])
+        folder_name = folder_name + selected_file[1]
+    # Finish plot
+    plot_setyaxis(-1500, 2000)
+    verify_folder(plots_folder + folder_name)
+    save_filename = plots_folder + folder_name + '/total_rewards.png'
+    plot_finish(save_filename)
 
 # Plots the average total reward per k episodes
-def plot_average_reward_per_k(file, k = None):
-    try:
-        total_rewards = file[1]['total_rewards']
-        verify_folder(plots_folder + file[0])
-        save_filename = plots_folder + file[0] + '/average_rewards.png'
-    except:
-        print(f"ERROR: No total_rewards field in log!")
-        return
-    if total_rewards:
-    # Generate the plot
-        avg_per_k = calc_average_per_k(total_rewards, k)
-        if not avg_per_k:
-            return
-        plot_start(f"Average reward over time (k = {k})", \
+def plot_average_reward_per_k(selected_files, k = None):
+    # Start plot
+    folder_name = str()
+    plot_start(f"Average reward over time (k = {k})", \
                 "Average reward", "Episode * k")
-        plot_add(calc_smooth(avg_per_k), "Averaged reward")
-        plot_setyaxis(-1500, 2000)
-        plot_finish(save_filename)
-    else:
-        print(f"Warning: No data on total rewards")
-
-# Plot averages per spawning distance (WIP)
-def plot_fire_distance(file):
-    # Make sure it doesn't crash on old logs
-    try:
+    # Populate plot
+    for selected_file in selected_files:
+        file = load_file(selected_file[0])
         total_rewards = file[1]['total_rewards']
-        agent_pos = file[1]['agent_pos']
-        metadata = file[1]['metadata']
-        verify_folder(plots_folder + file[0])
-        save_filename = plots_folder + file[0] + '/fire_distance.png'
-    except:
-        print(f"ERROR: Missing datafields for fire distance in log!")
-        return
-    # Continue if shit's okay
-    if total_rewards and agent_pos and metadata:
-        # Initialize all required datafields
-        fire_x, fire_y = (int(metadata['width']/2), \
-                        int(metadata['height']/2))
-        no_dist, low_dist, med_dist, hi_dist = ([] for i in range(4))
-        # Split rewards according to Manhattan distance
-        for reward, agent_pos in zip(total_rewards, agent_pos):
-            agent_x, agent_y = agent_pos
-            from scipy.spatial import distance
-            dist = distance.cityblock([fire_x, fire_y], [agent_x, agent_y])
-            if dist == 1:
-                no_dist.append(reward)
-            elif dist == 2:
-                low_dist.append(reward)
-            elif dist == 3:
-                med_dist.append(reward)
-            elif dist == 4:
-                hi_dist.append(reward)
-        # Generate the plot
-        plot_start(f"Total reward/episode per Manhattan distance to the fire", \
-            "Total reward", "Episode")
-        if not (no_dist and low_dist and med_dist and hi_dist):
-            print("ERROR: Not all distances to the fire are represented")
-            return
-        plot_add(calc_smooth(no_dist), "1")
-        plot_add(calc_smooth(low_dist), "2")
-        plot_add(calc_smooth(med_dist), "3")
-        plot_add(calc_smooth(hi_dist), "4")
-        plot_setyaxis(-1500, 2000)
-        plot_finish(save_filename)
-    else:
-        print(f"Warning: No data on fire distance")
-
-# Plots the reward gained compared to last k values
-def plot_reward_gained(file, k = 1000):
-    try:
-        total_rewards = file[1]['total_rewards']
-        verify_folder(plots_folder + file[0])
-        save_filename = plots_folder + file[0] + '/reward_gained.png'
-    except:
-        print(f"ERROR: No total_rewards field in log!")
-        return
-    if total_rewards:
-        reward_gains = []
-        avg_so_far = total_rewards[0]
-
-        for idx, reward in enumerate(total_rewards):
-            start = 0
-            if idx - k > 0:
-                start = idx - k
-
-            if len(total_rewards[start:idx:]) == 0:
-                reward_gains.append(total_rewards[1]-total_rewards[0])
-            else:
-                div_len = len(total_rewards[start:idx:])
-                avg_so_far = sum(total_rewards[start:idx:]) / div_len
-                reward_gains.append(reward - avg_so_far)
-
-        # Generate the plot
-        plot_start(f"Reward gained over time", \
-            "Reward gained", "Episode")
-        plot_add(calc_smooth(reward_gains), "Reward gained")
-        plot_setyaxis(-1500, 2000)
-        plot_maxline(calc_smooth(reward_gains))
-        plot_avgline(calc_smooth(reward_gains))
-        plot_finish(save_filename)
-    else:
-        print(f"Warning: No data on total rewards")
+        try:
+            avg_per_k = calc_average_per_k(total_rewards, k)
+        except:
+            avg_per_k = calc_reduce_array(total_rewards, k)
+        plot_add(calc_smooth(avg_per_k), selected_file[1])
+        folder_name = folder_name + selected_file[1]
+    #Finish plot
+    plot_setyaxis(-1500, 2000)
+    verify_folder(plots_folder + folder_name)
+    save_filename = plots_folder + folder_name + '/average_rewards.png'
+    plot_finish(save_filename)
 
 # Plot the percent of agent deaths per k runs
-def plot_agent_deaths(file, k=100):
-    try:
+def plot_agent_deaths(selected_files, k=100):
+    # Start plot
+    folder_name = str()
+    plot_start(f"Agent deaths per {k} epsiodes",
+            "Percent dead", f"Episode * {k}")
+    # Populate plot
+    for selected_file in selected_files:
+        file = load_file(selected_file[0])
         agent_deaths = file[1]['agent_deaths']
-        verify_folder(plots_folder + file[0])
-        save_filename = plots_folder + file[0] + '/agent_deaths.png'
-    except:
-        print("ERROR: No agent_deaths field in log!")
-        return
-    if agent_deaths:
         n_episodes = file[1]['n_episodes']
+
         if n_episodes % k != 0:
             print("k is not a divisor of n_episodes!")
             return
-
         avgs = list()
         ticks = list()
         for i in range(int(n_episodes/k)):
             avgs.append(sum(agent_deaths[i * k : (i+1) * k]) / k)
             ticks.append(i)
 
-        # Generate the plot
-        plot_start(f"Agent deaths per {k} epsiodes",
-                    "Percent dead", "Episode set (starting index)")
-        plot_add(avgs, "Percent dead")
-        plot_setxaxis(0, len(ticks), ticks)
-        plot_finish(save_filename)
-    else:
-        print("Warning: No data on agent deaths")
+        plot_add(avgs, selected_file[1])
+        folder_name = folder_name + selected_file[1]
+    # Finish plot
+    verify_folder(plots_folder + folder_name)
+    save_filename = plots_folder + folder_name + '/agent_deaths.png'
+    plot_finish(save_filename)
+
 
 ### MATH HELPERS
 # Averages some array per some k
@@ -436,39 +216,23 @@ def calc_smooth(array, weight = -1):
 
 ### MAIN
 def main():
-    # Make sure the necessary folders exist
-    verify_folder(logs_folder)
-    verify_folder(plots_folder)
+    selecting_files = True
+    selected_files = []
+    all_filenames = get_log_filenames()
 
-    correct_file = "n"
-    while correct_file == "n":
-        # Lets the user view files and select one
-        all_filenames = get_log_filenames()
-        selected_filename = select_file(all_filenames)
-        file = load_file(selected_filename)
+    while selecting_files:
+        selected_file = select_file(all_filenames)
+        selected_files.append(selected_file)
+        all_filenames.remove(selected_file[0])
 
-        # Print relevant constant from the loaded file
-        print_constants(file)
+        if len(selected_files) >= 2:
+            file_select_answer = input(f"Select more files? [y/n]: ")
+            if file_select_answer == "n":
+                selecting_files = False
+    print("")
 
-        # Make the file contents available globally
-        # Usage in CLI:     print(log['total_rewards'])
-        global log
-        log = file[1]
-
-        correct_file = input("Make plots? (y/n/c): ")
-        print("")
-        if correct_file == "c":
-            print(f"Canceling file selection..")
-            break
-        if correct_file == "n":
-            print(f"Reselecting file..")
-        else:
-            # Defines the to-be generated plots using the selected logfile
-            plot_total_rewards(file)
-            plot_agent_deaths(file)
-            #plot_average_reward_per_k(file, 100)
-            #plot_fire_distance(file)
-            #plot_reward_gained(file)
+    plot_total_rewards(selected_files)
+    plot_agent_deaths(selected_files)
 
 if __name__ == "__main__":
-	main()
+    main()
