@@ -240,13 +240,13 @@ def main():
         all_filenames = get_log_filenames()
         first_files, second_files, third_files = ([] for i in range(3))
         for filename in all_filenames:
-            if len(filename) == 26:
+            if len(filename) == 28:
                 first_files.append(filename)
                 continue
-            if len(filename) == 29:
+            if len(filename) == 31:
                 second_files.append(filename)
                 continue
-            if len(filename) == 30:
+            if len(filename) == 32:
                 third_files.append(filename)
                 continue
 
@@ -287,7 +287,7 @@ def main():
         # Finish plot
         plot_setyaxis(-1500, 2000)
         verify_folder(plots_folder + folder_name)
-        save_filename = plots_folder + folder_name + '/total_rewards_DQN.png'
+        save_filename = plots_folder + folder_name + '/total_rewards_SARSA.png'
         plot_finish(save_filename)
 
 if __name__ == "__main__":
