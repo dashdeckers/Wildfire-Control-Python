@@ -332,6 +332,7 @@ class DQN:
 
                 # Stop if we are done
                 if episode == num_of_episodes - 1:
+                    self.logs['n_episodes'] = num_of_episodes
                     break
                 episode += 1
 
