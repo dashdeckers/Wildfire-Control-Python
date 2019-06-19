@@ -28,7 +28,7 @@ def select_file(all_filenames):
     print(f"The following log files are available:")
     for idx, filename in enumerate(all_filenames):
         print(f"\t[{idx}]\t{filename}")
-    selection = input(f"Select one [0-{idx}]: ")
+    selection = input(f"Select one [0-{len(all_filenames)}]: ")
     label = input(f"Name the logfile: ")
     print("")
     return [all_filenames[int(selection)], label]
