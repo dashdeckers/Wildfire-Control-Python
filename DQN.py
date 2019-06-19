@@ -324,11 +324,17 @@ class DQN:
                         self.logs['init_memories'] = len(self.memory)
                         return
 
-            # Collect logging data if we are doing a baseline run
+            # Collect logging data and print status if we are doing a baseline run
             if perform_baseline:
                 self.logs['total_rewards'].append(total_reward)
+
                 if episode % 100 == 0:
                     print(f"Episode {episode}/{num_of_episodes}")
+
+                if len(self.sim.W.agents) == 0:
+                    self.logs['agent_deaths'].append(True)
+                else:
+                    self.logs['agent_deaths'].append(False)
 
                 # Stop if we are done
                 if episode == num_of_episodes - 1:
