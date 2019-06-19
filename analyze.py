@@ -240,13 +240,13 @@ def main():
         all_filenames = get_log_filenames()
         first_files, second_files, third_files = ([] for i in range(3))
         for filename in all_filenames:
-            if "25u" in filename:
+            if len(filename) == 28:
                 first_files.append(filename)
                 continue
-            if "50u" in filename:
+            if len(filename) == 31:
                 second_files.append(filename)
                 continue
-            if "100u" in filename:
+            if len(filename) == 32:
                 third_files.append(filename)
                 continue
 
@@ -281,9 +281,9 @@ def main():
         folder_name = "HARDCODED"
         plot_start("Total reward over time", "Total reward", "Episode")
         # Populate plot
-        plot_add(calc_smooth(first_avg), "25u")
-        plot_add(calc_smooth(second_avg), "50u")
-        plot_add(calc_smooth(third_avg), "100u")
+        plot_add(calc_smooth(first_avg), "0 memories")
+        plot_add(calc_smooth(second_avg), "100 memories")
+        plot_add(calc_smooth(third_avg), "1000 memories")
         # Finish plot
         plot_setyaxis(-1500, 2000)
         verify_folder(plots_folder + folder_name)
