@@ -12,7 +12,7 @@ parser.add_argument("-e", "--episodes", type=int, default=10000,
                     help="Number of episodes / runs to learn for")
 
 parser.add_argument("-t", "--type", type=str, default="DQN",
-                    choices=["DQN", "SARSA", "DDQN", "BOTH", "Human"],
+                    choices=["DQN", "SARSA", "DDQN", "BOTH", "Baseline", "Human"],
                     help="The algorithm to use")
 
 parser.add_argument("-n", "--name", type=str, default="no_name",
@@ -23,6 +23,8 @@ args = parser.parse_args()
 if args.run and args.name == "no_name":
     parser.error("You should provide a name when running a learning session")
 
+if args.type in ["Baseline", "DQN", "SARSA", "DDQN", "BOTH"] and args.episodes == 0:
+    parser.error("You should specify the number of episodes for the algorithm")
 
 # Suppress the many unnecessary TensorFlow warnings
 import os, sys
@@ -38,10 +40,13 @@ forestfire = ForestFire()
 
 # Start learning straight away
 if args.run:
-    print(f"Running {args.type} with {args.memories} "
-          f"memories and {args.episodes} episodes")
+    if args.type == "Baseline":
+        print(f"Running Baseline with {args.episodes} episodes")
+    else:
+        print(f"Running {args.type} with {args.memories} "
+              f"memories and {args.episodes} episodes")
     
-    if args.type == "DQN":
+    if args.type in ["DQN", "Baseline"]:
         from DQN import DQN
     if args.type == "SARSA":
         from DQN_SARSA import DQN_SARSA as DQN
@@ -51,8 +56,12 @@ if args.run:
         from DQN_BOTH import DQN_BOTH as DQN
 
     Agent = DQN(forestfire, args.name)
-    Agent.collect_memories(args.memories)
-    Agent.learn(args.episodes)
+
+    if args.type == "Baseline":
+        Agent.collect_memories(args.episodes, perform_baseline=True)
+    else:
+        Agent.collect_memories(args.memories)
+        Agent.learn(args.episodes)
 
 # Don't start learning
 else:

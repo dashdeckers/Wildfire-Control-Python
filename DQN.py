@@ -53,7 +53,7 @@ class DQN:
             print("[gamma]", self.METADATA['gamma'])
             print("[batch]", self.METADATA['batch_size'])
             print("[wind speed]", self.METADATA['wind'][0])
-            print("[target upd]", self.METADATA['target_update'])
+            print("[target upd]", self.METADATA['target_update'], "\n")
 
     '''
     Main methods related to learning
@@ -281,17 +281,20 @@ class DQN:
     
     It only collects the memories that lead to a successful containment of the fire.
     '''
-    def collect_memories(self, num_of_successes=100):
-        if not num_of_successes:
+    def collect_memories(self, num_of_episodes=100, perform_baseline=False):
+        if not num_of_episodes:
             return
         # Wipe internal memory
         self.memory = deque()
         success_count = 0
+        episode = 0
+
         # While memory is not filled up
         while True:
-            memories = []
+            total_reward = 0
+            memories = list()
             done = False
-            # Initialize state
+
             state = self.sim.reset()
             state = np.reshape(state, [1] + list(state.shape))
 
@@ -306,24 +309,39 @@ class DQN:
                 # Collect memories
                 memories.append((state, action, reward, sprime, done))
                 state = sprime
+                total_reward += reward
 
                 # Only if we contained the fire, we collect the memories
-                if reward == self.METADATA['contained_bonus']:
+                if not perform_baseline and reward == self.METADATA['contained_bonus']:
                     success_count += 1
                     # Store successful experience in memory
                     for state, action, reward, sprime, done in memories:
                         self.remember(state, action, reward, sprime, done)
-                    # Done is true, but not if it were a real run, so set this after
-                    # storing the transitions in memory
+                    # Set done to true
                     done = True
                     # Collect logging info and return
-                    if success_count == num_of_successes:
+                    if success_count == num_of_episodes:
                         self.logs['init_memories'] = len(self.memory)
                         return
 
+            # Collect logging data if we are doing a baseline run
+            if perform_baseline:
+                self.logs['total_rewards'].append(total_reward)
+                if episode % 100 == 0:
+                    print(f"Episode {episode}/{num_of_episodes}")
+
+                # Stop if we are done
+                if episode == num_of_episodes - 1:
+                    break
+                episode += 1
+
+        # Write (sparse) log to file (if we are doing a baseline run)
+        self.write_data()
+
+
     # Choose an action depending on the agents position relative to the fire.
-    # The action should be safe, if possible
-    def choose_randomwalk_action(self):
+    # The action should be safe (avoiding the fire), if possible
+    def choose_randomwalk_action(self, avoid_fire=True):
         # It can happen in SARSA to ask for an action when agent has died.
         # However, that action is never looked at and is irrelevant
         if not self.sim.W.agents:
@@ -349,6 +367,9 @@ class DQN:
 
             # Choose randomly from valid actions
             action = key_map[np.random.choice(possible_actions)]
+
+            if not avoid_fire:
+                break
 
             # Break when it is a safe move or when we have tried too often
             fire_at_loc = self.sim.W.agents[0].fire_in_direction(action)
