@@ -88,7 +88,7 @@ def plot_avgline(array):
 
 # Save and show the final plot
 def plot_finish(save_filename):
-    plt.legend()
+    plt.legend(loc=4)
     plt.savefig(save_filename)
     print(f"Generated {save_filename}")
     plt.show()
@@ -259,35 +259,54 @@ def main():
             print("\tSanity check FAIL! Plot not reliable.")
             exit()
 
-        # Average all arrays per group
+        ## Calculate all the stuffs
+        first_all, second_all, third_all = ([] for i in range(3)) 
         first_avg, second_avg, third_avg = ([] for i in range(3))
-        temp = []
-        for filename in first_files:
-            file = load_file(filename)
-            temp.append(file[1]['total_rewards'])
-            first_avg = np.average(np.array(temp), axis=0)
-        temp = []
-        for filename in second_files:
-            file = load_file(filename)
-            temp.append(file[1]['total_rewards'])
-            second_avg = np.average(np.array(temp), axis=0)
-        temp = []
-        for filename in third_files:
-            file = load_file(filename)
-            temp.append(file[1]['total_rewards'])
-            third_avg = np.average(np.array(temp), axis=0)
+        first_std, second_std, third_std = ([] for i in range(3))
+        # Load all 10 runs and append them to their respective lists
+        for first_filename, second_filename, third_filename in zip(\
+            first_files, second_files, third_files):
+            first_file = load_file(first_filename)
+            second_file = load_file(second_filename)
+            third_file = load_file(third_filename)
+            first_all.append(first_file[1]['total_rewards'])
+            second_all.append(second_file[1]['total_rewards'])
+            third_all.append(third_file[1]['total_rewards'])
+        # Calculate the averages given the 10 runs
+        first_avg = np.average(np.array(first_all), axis=0)
+        second_avg = np.average(np.array(second_all), axis=0)
+        third_avg = np.average(np.array(third_all), axis=0)
+        # Calculate the stddevs given the 10 runs
+        first_std = np.std(first_all, axis=0)
+        second_std = np.std(second_all, axis=0)
+        third_std = np.std(third_all, axis=0)
 
         # Start the plot
         folder_name = "HARDCODED"
+        std_factor = 1.0
+        area_alpha = 0.3
+        first_clr, second_clr, third_clr = ["blue", "red", "green"]
         plot_start("Total reward over time", "Total reward", "Episode")
         # Populate plot
-        plot_add(calc_smooth(first_avg), "0 memories")
-        plot_add(calc_smooth(second_avg), "100 memories")
-        plot_add(calc_smooth(third_avg), "1000 memories")
+        plt.plot(calc_smooth(first_avg), label="0 memories", color=first_clr)
+        plt.fill_between(range(len(first_avg)), \
+            calc_smooth(np.add(first_avg, std_factor * first_std)), \
+            calc_smooth(np.add(first_avg, std_factor * -first_std)), \
+            alpha=area_alpha, color=first_clr)
+        plt.plot(calc_smooth(second_avg), label="100 memories", color=second_clr)
+        plt.fill_between(range(len(second_avg)), \
+            calc_smooth(np.add(second_avg, std_factor * second_std)), \
+            calc_smooth(np.add(second_avg, std_factor * -second_std)), \
+            alpha=area_alpha, color=second_clr)
+        plt.plot(calc_smooth(third_avg), label="1000 memories", color=third_clr)
+        plt.fill_between(range(len(third_avg)), \
+            calc_smooth(np.add(third_avg, std_factor * third_std)), \
+            calc_smooth(np.add(third_avg, std_factor * -third_std)), \
+            alpha=area_alpha, color=third_clr)
         # Finish plot
-        plot_setyaxis(-1500, 2000)
+        plot_setyaxis(-1750, 2250)
         verify_folder(plots_folder + folder_name)
-        save_filename = plots_folder + folder_name + '/total_rewards_SARSA.png'
+        save_filename = plots_folder + folder_name + '/total_rewards_DEV.png'
         plot_finish(save_filename)
 
 if __name__ == "__main__":
