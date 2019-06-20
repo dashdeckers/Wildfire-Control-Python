@@ -15,7 +15,6 @@
 *.sublime-workspace
 
 # Baseline algorithms and models
-baselines/
 *.pkl
 
 # JetBrains crap
