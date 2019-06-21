@@ -240,13 +240,14 @@ def main():
         all_filenames = get_log_filenames()
         first_files, second_files, third_files = ([] for i in range(3))
         for filename in all_filenames:
-            if len(filename) == 28:
+            if "DDQN" in filename and len(filename) == (27+4):
                 first_files.append(filename)
                 continue
-            if len(filename) == 31:
+            if "DQN" in filename and len(filename) == (26+4) \
+                and not "DDQN" in filename:
                 second_files.append(filename)
                 continue
-            if len(filename) == 32:
+            if "SARSA" in filename and len(filename) == (28+4):
                 third_files.append(filename)
                 continue
 
@@ -257,6 +258,7 @@ def main():
             print("\tSanity check OK!")
         else:
             print("\tSanity check FAIL! Plot not reliable.")
+            print(f"\t{len(first_files)}-{len(second_files)}-{len(third_files)}")
             exit()
 
         ## Calculate all the stuffs
@@ -286,19 +288,19 @@ def main():
         std_factor = 1.0
         area_alpha = 0.3
         first_clr, second_clr, third_clr = ["blue", "red", "green"]
-        plot_start("Total reward over time", "Total reward", "Episode")
+        plot_start("Total reward over time (1000 memories)", "Total reward", "Episode")
         # Populate plot
-        plt.plot(calc_smooth(first_avg), label="0 memories", color=first_clr)
+        plt.plot(calc_smooth(first_avg), label="Dueling Q-N", color=first_clr)
         plt.fill_between(range(len(first_avg)), \
             calc_smooth(np.add(first_avg, std_factor * first_std)), \
             calc_smooth(np.add(first_avg, std_factor * -first_std)), \
             alpha=area_alpha, color=first_clr)
-        plt.plot(calc_smooth(second_avg), label="100 memories", color=second_clr)
+        plt.plot(calc_smooth(second_avg), label="Q-Network", color=second_clr)
         plt.fill_between(range(len(second_avg)), \
             calc_smooth(np.add(second_avg, std_factor * second_std)), \
             calc_smooth(np.add(second_avg, std_factor * -second_std)), \
             alpha=area_alpha, color=second_clr)
-        plt.plot(calc_smooth(third_avg), label="1000 memories", color=third_clr)
+        plt.plot(calc_smooth(third_avg), label="SARSA", color=third_clr)
         plt.fill_between(range(len(third_avg)), \
             calc_smooth(np.add(third_avg, std_factor * third_std)), \
             calc_smooth(np.add(third_avg, std_factor * -third_std)), \
@@ -306,7 +308,7 @@ def main():
         # Finish plot
         plot_setyaxis(-1750, 2250)
         verify_folder(plots_folder + folder_name)
-        save_filename = plots_folder + folder_name + '/total_rewards_DEV.png'
+        save_filename = plots_folder + folder_name + '/total_rewards_1000m.png'
         plot_finish(save_filename)
 
 if __name__ == "__main__":
