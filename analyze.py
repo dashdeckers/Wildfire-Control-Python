@@ -238,81 +238,122 @@ def main():
     else:
         # Define how logfiles should be grouped
         all_filenames = get_log_filenames()
-        first_files, second_files, third_files = ([] for i in range(3))
-        #DDQN=27 - DQN=26 - SARSA=28
+        baseline_files, first_files, second_files, third_files, \
+            fourth_files = ([] for i in range(5))
+        #DDQN=27 - DQN=26 - SARSA=28 - BOTH=27
         for filename in all_filenames:
-            if "SARSA" in filename and len(filename) == (28+0):
+            if "Baseline" in filename:
+                baseline_files.append(filename)
+                continue
+            if "DDQN" in filename and len(filename) == (27+0):
                 first_files.append(filename)
                 continue
-            if "SARSA" in filename and len(filename) == (28+3):
+            if "DQN" in filename and len(filename) == (26+0) \
+                and not "DDQN" in filename:
                 second_files.append(filename)
                 continue
-            if "SARSA" in filename and len(filename) == (28+4):
+            if "SARSA" in filename and len(filename) == (28+0):
                 third_files.append(filename)
+                continue
+            if "BOTH" in filename and len(filename) == (27+0):
+                fourth_files.append(filename)
                 continue
 
         # Check if all file groups are equal to 10 (runs)
         if len(first_files) == 10 and \
             len(first_files) == len(second_files) and \
-            len(second_files) == len(third_files):
+            len(second_files) == len(third_files) and \
+            len(third_files) == len(baseline_files) and \
+            len(baseline_files) == len(fourth_files):
             print("\tSanity check OK!")
         else:
-            print("\tSanity check FAIL! Plot not reliable.")
-            print(f"\t{len(first_files)}-{len(second_files)}-{len(third_files)}")
+            print("\tSanity check FAIL!")
+            print(f"\tBase:\t{len(baseline_files)}")
+            print(f"\tFirst:\t{len(first_files)}")
+            print(f"\tSecond:\t{len(second_files)}")
+            print(f"\tThird:\t{len(third_files)}")
+            print(f"\tFourth:\t{len(fourth_files)}")
             exit()
 
         ## Calculate all the stuffs
-        first_all, second_all, third_all, \
-        first_avg, second_avg, third_avg, \
-        first_std, second_std, third_std = ([] for i in range(9))
+        baseline_all, first_all, second_all, third_all, fourth_all, \
+        baseline_avg, first_avg, second_avg, third_avg, fourth_avg, \
+        baseline_std, first_std, second_std, third_std, fourth_std \
+             = ([] for i in range(15))
         # Load all 10 runs and append them to their respective lists
-        for first_filename, second_filename, third_filename in \
-            zip(first_files, second_files, third_files):
+        for baseline_filename, first_filename, second_filename, \
+            third_filename, fourth_filename in zip(baseline_files, \
+            first_files, second_files, third_files, fourth_files):
+            baseline_file = load_file(baseline_filename)
             first_file = load_file(first_filename)
             second_file = load_file(second_filename)
             third_file = load_file(third_filename)
+            fourth_file = load_file(fourth_filename)
+            baseline_all.append(baseline_file[1]['total_rewards'])
             first_all.append(first_file[1]['total_rewards'])
             second_all.append(second_file[1]['total_rewards'])
             third_all.append(third_file[1]['total_rewards'])
+            fourth_all.append(fourth_file[1]['total_rewards'])
         # Calculate the averages given the 10 runs
+        baseline_avg = np.average(np.array(baseline_all), axis=0)
         first_avg = np.average(np.array(first_all), axis=0)
         second_avg = np.average(np.array(second_all), axis=0)
         third_avg = np.average(np.array(third_all), axis=0)
+        fourth_avg = np.average(np.array(fourth_all), axis=0)
         # # Calculate the stddevs given the 10 runs
         # first_std = np.std(first_all, axis=0)
         # second_std = np.std(second_all, axis=0)
         # third_std = np.std(third_all, axis=0)
         # Calculate the stderr given the 10 runs
         from scipy import stats
+        baseline_std = stats.sem(baseline_all)
         first_std = stats.sem(first_all)
         second_std = stats.sem(second_all)
         third_std = stats.sem(third_all)
+        fourth_std = stats.sem(fourth_all)
 
         # Start the plot
         folder_name = "HARDCODED"
+        plot_start("Total reward over time (0 memories)", "Total reward", "Episode")
+        baseline_clr, first_clr, second_clr, third_clr, fourth_clr = \
+            ["black", "blue", "red", "green", "yellow"]
         area_alpha = 0.3
-        first_clr, second_clr, third_clr = ["blue", "red", "green"]
-        plot_start("Total reward over time (SARSA)", "Total reward", "Episode")
-        # Populate plot
-        plt.plot(calc_smooth(first_avg), label="0 memories", color=first_clr)
-        plt.fill_between(range(len(first_avg)), \
-            calc_smooth(np.add(first_avg, first_std)), \
-            calc_smooth(np.add(first_avg, -first_std)), \
-            alpha=area_alpha, color=first_clr)
-        plt.plot(calc_smooth(second_avg), label="100 memories", color=second_clr)
-        plt.fill_between(range(len(second_avg)), \
-            calc_smooth(np.add(second_avg, second_std)), \
-            calc_smooth(np.add(second_avg, -second_std)), \
-            alpha=area_alpha, color=second_clr)
-        plt.plot(calc_smooth(third_avg), label="1000 memories", color=third_clr)
-        plt.fill_between(range(len(third_avg)), \
-            calc_smooth(np.add(third_avg, third_std)), \
-            calc_smooth(np.add(third_avg, -third_std)), \
-            alpha=area_alpha, color=third_clr)
+        Baseline, Dueling, QNetwork, SARSA, Both = (1, 1, 0, 1, 1)
+        # Populate the plot
+        if Baseline:
+            plt.plot(calc_smooth(baseline_avg), label="Baseline", color=baseline_clr)
+            plt.fill_between(range(len(baseline_avg)), \
+                calc_smooth(np.add(baseline_avg, baseline_std)), \
+                calc_smooth(np.add(baseline_avg, -baseline_std)), \
+                alpha=area_alpha, color=baseline_clr)
+        if Dueling:
+            plt.plot(calc_smooth(first_avg), label="Dueling Q-N", color=first_clr)
+            plt.fill_between(range(len(first_avg)), \
+                calc_smooth(np.add(first_avg, first_std)), \
+                calc_smooth(np.add(first_avg, -first_std)), \
+                alpha=area_alpha, color=first_clr)
+        if QNetwork:
+            plt.plot(calc_smooth(second_avg), label="Q-Network", color=second_clr)
+            plt.fill_between(range(len(second_avg)), \
+                calc_smooth(np.add(second_avg, second_std)), \
+                calc_smooth(np.add(second_avg, -second_std)), \
+                alpha=area_alpha, color=second_clr)
+        if SARSA:
+            plt.plot(calc_smooth(third_avg), label="SARSA", color=third_clr)
+            plt.fill_between(range(len(third_avg)), \
+                calc_smooth(np.add(third_avg, third_std)), \
+                calc_smooth(np.add(third_avg, -third_std)), \
+                alpha=area_alpha, color=third_clr)
+        if Both:
+            plt.plot(calc_smooth(fourth_avg), label="Both", color=fourth_clr)
+            plt.fill_between(range(len(fourth_avg)), \
+                calc_smooth(np.add(fourth_avg, fourth_std)), \
+                calc_smooth(np.add(fourth_avg, -fourth_std)), \
+                alpha=area_alpha, color=fourth_clr)
         # Finish plot
-        plot_setyaxis(-1250, 1750)
+        plot_setyaxis(-1250, 2000)
         verify_folder(plots_folder + folder_name)
-        save_filename = plots_folder + folder_name + '/total_rewards_SARSA.png'
+        save_filename = plots_folder + folder_name + '/total_rewards_0m-dev.png'
         plot_finish(save_filename)
 
 if __name__ == "__main__":
