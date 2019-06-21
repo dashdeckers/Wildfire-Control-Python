@@ -12,12 +12,21 @@ The reward function also determines the speed at which the agent will be able to
 
 Crafting a good reward function for this problem turned out to be quite difficult because it was hard to define a measure of success that is both valid in its formulation and which provides gradual feedback, or a smooth gradient, towards the containment of the fire. After considering some options which produce a smooth gradient but don't define the problem as rigorously as I wanted, I decided to choose a reward function that is more valid, and then compensate for the sub-optimal reward gradient with demonstration data to lead it towards the high rewards.
 
+\[
+Reward = \left\{\begin{array}{lr}
+    1000, & \text{ When the fire is contained }\\
+    1000 * (p), & \text{ If the fire burns out }\\
+    -1000, & \text{ If the agent dies }\\
+    -1 & \text{ Otherwise }
+
+    \end{array}\right\}
+\]
+
 The reward function is defined as follows:
 Rt = -1 if fire is not contained
     -1000 if the agent dies (terminal state)
     1000 if the fire is contained
     1000*(percent healthy) if the fire burns out (terminal state)
-
 
 \subsection{The State Representation}\label{sec:state_rep}
 The state of the environment, or rather the observation of the environment as is visible to the agent, consists of 3 layers of size N*N, stacked depth-wise, resulting in a total of (3 * N*N) boolean inputs where N is the size of the map. Assuming the shape of the map is always square, a map size of (N=10) elements is represented three times: One layer contains only the agent position, so a matrix of zeros except for a single one representing the position of the agent. The second layer consists of the position of the fire, so cells that are burning are represented by a 1 otherwise 0. The third layer represents the fire lines cut by the agent in a similar boolean fashion, resulting in a total of 300 inputs to the agent.
