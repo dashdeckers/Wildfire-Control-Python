@@ -239,12 +239,12 @@ def main():
         # Define how logfiles should be grouped
         all_filenames = get_log_filenames()
         first_files, second_files, third_files = ([] for i in range(3))
+        #DDQN=27 - DQN=26 - SARSA=28
         for filename in all_filenames:
-            if "DDQN" in filename and len(filename) == (27+4):
+            if "SARSA" in filename and len(filename) == (28+0):
                 first_files.append(filename)
                 continue
-            if "DQN" in filename and len(filename) == (26+4) \
-                and not "DDQN" in filename:
+            if "SARSA" in filename and len(filename) == (28+3):
                 second_files.append(filename)
                 continue
             if "SARSA" in filename and len(filename) == (28+4):
@@ -262,12 +262,12 @@ def main():
             exit()
 
         ## Calculate all the stuffs
-        first_all, second_all, third_all = ([] for i in range(3)) 
-        first_avg, second_avg, third_avg = ([] for i in range(3))
-        first_std, second_std, third_std = ([] for i in range(3))
+        first_all, second_all, third_all, \
+        first_avg, second_avg, third_avg, \
+        first_std, second_std, third_std = ([] for i in range(9))
         # Load all 10 runs and append them to their respective lists
-        for first_filename, second_filename, third_filename in zip(\
-            first_files, second_files, third_files):
+        for first_filename, second_filename, third_filename in \
+            zip(first_files, second_files, third_files):
             first_file = load_file(first_filename)
             second_file = load_file(second_filename)
             third_file = load_file(third_filename)
@@ -278,37 +278,41 @@ def main():
         first_avg = np.average(np.array(first_all), axis=0)
         second_avg = np.average(np.array(second_all), axis=0)
         third_avg = np.average(np.array(third_all), axis=0)
-        # Calculate the stddevs given the 10 runs
-        first_std = np.std(first_all, axis=0)
-        second_std = np.std(second_all, axis=0)
-        third_std = np.std(third_all, axis=0)
+        # # Calculate the stddevs given the 10 runs
+        # first_std = np.std(first_all, axis=0)
+        # second_std = np.std(second_all, axis=0)
+        # third_std = np.std(third_all, axis=0)
+        # Calculate the stderr given the 10 runs
+        from scipy import stats
+        first_std = stats.sem(first_all)
+        second_std = stats.sem(second_all)
+        third_std = stats.sem(third_all)
 
         # Start the plot
         folder_name = "HARDCODED"
-        std_factor = 1.0
         area_alpha = 0.3
         first_clr, second_clr, third_clr = ["blue", "red", "green"]
-        plot_start("Total reward over time (1000 memories)", "Total reward", "Episode")
+        plot_start("Total reward over time (SARSA)", "Total reward", "Episode")
         # Populate plot
-        plt.plot(calc_smooth(first_avg), label="Dueling Q-N", color=first_clr)
+        plt.plot(calc_smooth(first_avg), label="0 memories", color=first_clr)
         plt.fill_between(range(len(first_avg)), \
-            calc_smooth(np.add(first_avg, std_factor * first_std)), \
-            calc_smooth(np.add(first_avg, std_factor * -first_std)), \
+            calc_smooth(np.add(first_avg, first_std)), \
+            calc_smooth(np.add(first_avg, -first_std)), \
             alpha=area_alpha, color=first_clr)
-        plt.plot(calc_smooth(second_avg), label="Q-Network", color=second_clr)
+        plt.plot(calc_smooth(second_avg), label="100 memories", color=second_clr)
         plt.fill_between(range(len(second_avg)), \
-            calc_smooth(np.add(second_avg, std_factor * second_std)), \
-            calc_smooth(np.add(second_avg, std_factor * -second_std)), \
+            calc_smooth(np.add(second_avg, second_std)), \
+            calc_smooth(np.add(second_avg, -second_std)), \
             alpha=area_alpha, color=second_clr)
-        plt.plot(calc_smooth(third_avg), label="SARSA", color=third_clr)
+        plt.plot(calc_smooth(third_avg), label="1000 memories", color=third_clr)
         plt.fill_between(range(len(third_avg)), \
-            calc_smooth(np.add(third_avg, std_factor * third_std)), \
-            calc_smooth(np.add(third_avg, std_factor * -third_std)), \
+            calc_smooth(np.add(third_avg, third_std)), \
+            calc_smooth(np.add(third_avg, -third_std)), \
             alpha=area_alpha, color=third_clr)
         # Finish plot
-        plot_setyaxis(-1750, 2250)
+        plot_setyaxis(-1250, 1750)
         verify_folder(plots_folder + folder_name)
-        save_filename = plots_folder + folder_name + '/total_rewards_1000m.png'
+        save_filename = plots_folder + folder_name + '/total_rewards_SARSA.png'
         plot_finish(save_filename)
 
 if __name__ == "__main__":
