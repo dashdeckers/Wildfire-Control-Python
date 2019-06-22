@@ -245,14 +245,14 @@ def main():
             if "Baseline" in filename:
                 baseline_files.append(filename)
                 continue
-            if "DDQN" in filename and len(filename) == (27+0):
-                first_files.append(filename)
-                continue
             if "DQN" in filename and len(filename) == (26+0) \
                 and not "DDQN" in filename:
-                second_files.append(filename)
+                first_files.append(filename)
                 continue
             if "SARSA" in filename and len(filename) == (28+0):
+                second_files.append(filename)
+                continue
+            if "DDQN" in filename and len(filename) == (27+0):
                 third_files.append(filename)
                 continue
             if "BOTH" in filename and len(filename) == (27+0):
@@ -320,11 +320,11 @@ def main():
 
         # Start the plot
         folder_name = "HARDCODED"
-        plot_start("Total reward over time (0 memories)", "Total reward", "Episode")
+        plot_start("Total reward over time (no memories)", "Total reward", "Episode")
         baseline_clr, first_clr, second_clr, third_clr, fourth_clr = \
             ["black", "blue", "orange", "green", "crimson"]
         area_alpha = 0.3
-        Baseline, Dueling, QNetwork, SARSA, Both = (1, 1, 1, 1, 1)
+        Baseline, First, Second, Third, Fourth = (1, 1, 1, 1, 1)
         # Populate the plot
         if Baseline:
             plt.plot(calc_smooth(baseline_avg), label="Baseline", color=baseline_clr)
@@ -332,25 +332,25 @@ def main():
                 calc_smooth(np.add(baseline_avg, baseline_std)), \
                 calc_smooth(np.add(baseline_avg, -baseline_std)), \
                 alpha=area_alpha, color=baseline_clr)
-        if QNetwork:
-            plt.plot(calc_smooth(second_avg), label="Q-Network", color=first_clr)
-            plt.fill_between(range(len(second_avg)), \
-                calc_smooth(np.add(second_avg, second_std)), \
-                calc_smooth(np.add(second_avg, -second_std)), \
-                alpha=area_alpha, color=first_clr)
-        if SARSA:
-            plt.plot(calc_smooth(third_avg), label="SARSA", color=second_clr)
-            plt.fill_between(range(len(third_avg)), \
-                calc_smooth(np.add(third_avg, third_std)), \
-                calc_smooth(np.add(third_avg, -third_std)), \
-                alpha=area_alpha, color=second_clr)
-        if Dueling:
-            plt.plot(calc_smooth(first_avg), label="Dueling Q-Net", color=third_clr)
+        if First:
+            plt.plot(calc_smooth(first_avg), label="Q-Network", color=first_clr)
             plt.fill_between(range(len(first_avg)), \
                 calc_smooth(np.add(first_avg, first_std)), \
                 calc_smooth(np.add(first_avg, -first_std)), \
+                alpha=area_alpha, color=first_clr)
+        if Second:
+            plt.plot(calc_smooth(second_avg), label="SARSA", color=second_clr)
+            plt.fill_between(range(len(second_avg)), \
+                calc_smooth(np.add(second_avg, second_std)), \
+                calc_smooth(np.add(second_avg, -second_std)), \
+                alpha=area_alpha, color=second_clr)
+        if Third:
+            plt.plot(calc_smooth(third_avg), label="Dueling Q-Net", color=third_clr)
+            plt.fill_between(range(len(third_avg)), \
+                calc_smooth(np.add(third_avg, third_std)), \
+                calc_smooth(np.add(third_avg, -third_std)), \
                 alpha=area_alpha, color=third_clr)
-        if Both:
+        if Fourth:
             plt.plot(calc_smooth(fourth_avg), label="Dueling SARSA", color=fourth_clr)
             plt.fill_between(range(len(fourth_avg)), \
                 calc_smooth(np.add(fourth_avg, fourth_std)), \
