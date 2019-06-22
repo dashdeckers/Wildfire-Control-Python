@@ -89,7 +89,7 @@ def plot_avgline(array):
 # Save and show the final plot
 def plot_finish(save_filename):
     plt.legend(loc=4)
-    plt.savefig(save_filename)
+    plt.savefig(save_filename, dpi=500)
     print(f"Generated {save_filename}")
     plt.show()
 
@@ -245,19 +245,25 @@ def main():
             if "Baseline" in filename:
                 baseline_files.append(filename)
                 continue
-            if "DDQN" in filename and len(filename) == (27+4):
+            if "DDQN" in filename and len(filename) == (27+0):
                 first_files.append(filename)
                 continue
-            if "DQN" in filename and len(filename) == (26+4) \
+            if "DQN" in filename and len(filename) == (26+0) \
                 and not "DDQN" in filename:
                 second_files.append(filename)
                 continue
-            if "SARSA" in filename and len(filename) == (28+4):
+            if "SARSA" in filename and len(filename) == (28+0):
                 third_files.append(filename)
                 continue
-            if "BOTH" in filename and len(filename) == (27+4):
+            if "BOTH" in filename and len(filename) == (27+0):
                 fourth_files.append(filename)
                 continue
+
+        print(baseline_files)
+        print(first_files)
+        print(second_files)
+        print(third_files)
+        print(fourth_files)
 
         # Check if all file groups are equal to 10 (runs)
         if len(first_files) == 10 and \
@@ -314,9 +320,9 @@ def main():
 
         # Start the plot
         folder_name = "HARDCODED"
-        plot_start("Total reward over time (1000 memories)", "Total reward", "Episode")
+        plot_start("Total reward over time (0 memories)", "Total reward", "Episode")
         baseline_clr, first_clr, second_clr, third_clr, fourth_clr = \
-            ["black", "blue", "red", "green", "yellow"]
+            ["black", "blue", "orange", "green", "crimson"]
         area_alpha = 0.3
         Baseline, Dueling, QNetwork, SARSA, Both = (1, 1, 1, 1, 1)
         # Populate the plot
@@ -326,26 +332,26 @@ def main():
                 calc_smooth(np.add(baseline_avg, baseline_std)), \
                 calc_smooth(np.add(baseline_avg, -baseline_std)), \
                 alpha=area_alpha, color=baseline_clr)
-        if Dueling:
-            plt.plot(calc_smooth(first_avg), label="Dueling Q-N", color=first_clr)
-            plt.fill_between(range(len(first_avg)), \
-                calc_smooth(np.add(first_avg, first_std)), \
-                calc_smooth(np.add(first_avg, -first_std)), \
-                alpha=area_alpha, color=first_clr)
         if QNetwork:
-            plt.plot(calc_smooth(second_avg), label="Q-Network", color=second_clr)
+            plt.plot(calc_smooth(second_avg), label="Q-Network", color=first_clr)
             plt.fill_between(range(len(second_avg)), \
                 calc_smooth(np.add(second_avg, second_std)), \
                 calc_smooth(np.add(second_avg, -second_std)), \
-                alpha=area_alpha, color=second_clr)
+                alpha=area_alpha, color=first_clr)
         if SARSA:
-            plt.plot(calc_smooth(third_avg), label="SARSA", color=third_clr)
+            plt.plot(calc_smooth(third_avg), label="SARSA", color=second_clr)
             plt.fill_between(range(len(third_avg)), \
                 calc_smooth(np.add(third_avg, third_std)), \
                 calc_smooth(np.add(third_avg, -third_std)), \
+                alpha=area_alpha, color=second_clr)
+        if Dueling:
+            plt.plot(calc_smooth(first_avg), label="Dueling Q-Net", color=third_clr)
+            plt.fill_between(range(len(first_avg)), \
+                calc_smooth(np.add(first_avg, first_std)), \
+                calc_smooth(np.add(first_avg, -first_std)), \
                 alpha=area_alpha, color=third_clr)
         if Both:
-            plt.plot(calc_smooth(fourth_avg), label="Both", color=fourth_clr)
+            plt.plot(calc_smooth(fourth_avg), label="Dueling SARSA", color=fourth_clr)
             plt.fill_between(range(len(fourth_avg)), \
                 calc_smooth(np.add(fourth_avg, fourth_std)), \
                 calc_smooth(np.add(fourth_avg, -fourth_std)), \
@@ -353,7 +359,7 @@ def main():
         # Finish plot
         plot_setyaxis(-1250, 2000)
         verify_folder(plots_folder + folder_name)
-        save_filename = plots_folder + folder_name + '/total_rewards_1000m-dev.png'
+        save_filename = plots_folder + folder_name + '/total_rewards_0m.png'
         plot_finish(save_filename)
 
 if __name__ == "__main__":
