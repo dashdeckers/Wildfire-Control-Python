@@ -47,11 +47,13 @@ class DQN:
 
         # Print Constants
         if self.verbose:
+            width, height = self.METADATA['width'], self.METADATA['height']
             print("\n\t[Parameters]")
             print("[decay]", self.METADATA['eps_decay_rate'])
             print("[alpha]", self.METADATA['alpha'])
             print("[gamma]", self.METADATA['gamma'])
             print("[batch]", self.METADATA['batch_size'])
+            print("[size]", f"{width}x{height}")
             print("[wind speed]", self.METADATA['wind'][0])
             print("[target upd]", self.METADATA['target_update'], "\n")
 
