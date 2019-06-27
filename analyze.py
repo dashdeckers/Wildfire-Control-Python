@@ -245,17 +245,17 @@ def main():
             if "Baseline" in filename:
                 baseline_files.append(filename)
                 continue
-            if "DQN" in filename and len(filename) == (26+3) \
+            if "DQN" in filename and len(filename) == (26+0) \
                 and not "DDQN" in filename:
                 first_files.append(filename)
                 continue
-            if "SARSA" in filename and len(filename) == (28+3):
+            if "SARSA" in filename and len(filename) == (28+0):
                 second_files.append(filename)
                 continue
-            if "DDQN" in filename and len(filename) == (27+3):
+            if "DDQN" in filename and len(filename) == (27+0):
                 third_files.append(filename)
                 continue
-            if "BOTH" in filename and len(filename) == (27+3):
+            if "BOTH" in filename and len(filename) == (27+0):
                 fourth_files.append(filename)
                 continue
 
@@ -320,11 +320,11 @@ def main():
 
         # Start the plot (±)
         folder_name = "HARDCODED"
-        plot_start("Total reward over time (±4800 memories)", "Total reward", "Episode")
+        plot_start("Total reward over time (No memories)", "Total reward", "Episode")
         baseline_clr, first_clr, second_clr, third_clr, fourth_clr = \
             ["black", "blue", "orange", "green", "crimson"]
         area_alpha = 0.3
-        Baseline, First, Second, Third, Fourth = (0, 1, 1, 1, 1)
+        Baseline, First, Second, Third, Fourth = (1, 1, 1, 1, 1)
         # Populate the plot
         if Baseline:
             plt.plot(calc_smooth(baseline_avg), label="Baseline", color=baseline_clr)
@@ -359,7 +359,7 @@ def main():
         # Finish plot
         plot_setyaxis(-1250, 2000)
         verify_folder(plots_folder + folder_name)
-        save_filename = plots_folder + folder_name + '/total_rewards_100m-14s.png'
+        save_filename = plots_folder + folder_name + '/total_rewards_0m.png'
         plot_finish(save_filename)
 
 if __name__ == "__main__":
