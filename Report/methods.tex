@@ -55,3 +55,23 @@ Because the combination of function approximation (the deep neural network), boo
 \subsection{Demonstration Data}\label{sec:demo_data}
 Because the reward function defined earlier provides sparse rewards, the agent needs additional guidance to fast track the learning process. To point it to the right direction, we can fill the memory buffer with human demonstration data before learning. However, this takes a lot of time to do by hand a sufficient number of times and can be automated. To this effect, the pseudocode in (figure so and so) was developed: It randomly picks from a set of two actions which depend on the position of the agent relative to the fire such that the agent will always move in a clockwise motion around the fire. As soon as the containment bonus is collected the environment resets, and this is continued until that bonus has been collected a specified number of times.
 % pseudocoooode
+
+% Insert the algorithm
+\begin{algorithm}
+  \caption{Baseline algorithm to contain the fire}
+  \label{baseline_algo}
+  \begin{algorithmic}[1]
+    \Procedure{RunBaseline}{}
+    \State $totalreward = 0$
+    \While {\textbf{not} $done$}
+    \State {$action =$ random(possible actions)}
+    \If {$action$ is dangerous}
+    \State {$action =$ other possible action}
+    \EndIf
+    \State {$reward, done =$ execute(action)}
+    \State $totalreward = totalreward + reward$
+    \EndWhile
+    \State \Return $totalreward$
+    \EndProcedure
+  \end{algorithmic}
+\end{algorithm}
