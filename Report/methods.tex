@@ -29,26 +29,52 @@ Containment of the fire is determined by (Link to algorithm). The algorithm retu
 
 
 \subsubsection{The State Representation}\label{sec:state_rep}
-The state of the environment, or the observation of the environment as it is visible to the agent, consists of 3 matrices of size N*M with a boolean domain resulting in, after flattening, an array of (3 * N*M) boolean inputs where (N, M) are the dimensions of the map. Assuming the shape of the map is always square, a map size of (N=10) elements is represented three times: One layer contains only the agent position, translating to a matrix of zeros except for a single one representing the position of the agent. The second layer consists of the position of the fire. Cells that are on fire are represented by a 1, the rest are set to 0. The third layer represents the fire lines cut by the agent in a similar boolean fashion, resulting in a total of 300 inputs to the agent.
+The state of the environment, or the observation of the environment as it is visible to the agent, consists of 3 matrices of size N*M with a boolean domain resulting in, after flattening, an array of (3 * N*M) boolean inputs where (N, M) are the dimensions of the map. Assuming the shape of the map is always square, a map size of (N=10) elements is represented three times: One layer contains only the agent position, translating to a matrix of zeros except for a single one representing the position of the agent. The second layer consists of the position of the fire. Cells that are on fire are represented by a 1, the rest are set to 0. The third layer represents the fire lines cut by the agent in a similar boolean fashion, resulting in a total of 300 inputs to the agent. This is schematically shown in \ref{fig:visiongrid}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\linewidth]{img/Vision_Grid.png}
+    \caption{A vision grid representation of an example state}
+    \label{fig:visiongrid}
+\end{figure}
 
 This vision grid approach can speed up the learning process as well as increase the performance (citation Opponent Modelling in the Game of Tron using Reinforcement Learning). Indeed it had a noticeable effect on the performance and learning speed of our implementation compared to a single matrix representing the gray-scaled map as input, likely because the agent can more easily differentiate between different attributes and because only the relevant information is presented. Further, the agent can now see whether the cell it is occupying is already dug or not.
-
-% Image of the vision grid
 
 
 \subsection{The Agent}\label{sec:agent}
 
 
 \subsubsection{Known Problems with Connectionist RL}\label{sec:problems}
-Move all deadly triad stuff to here, and then go into the two partial solutions (exp replay and target network)
+The combination of function approximation (the neural network), bootstrapping (TD methods that update Q-values using estimated return values) and off-policy training (the Q-Learning algorithm) make up the deadly triad \citep{sutton_barto_2018}, which is known to cause instabilities and even divergence in the learning process. There are two well known strategies to reduce this effect and stabilise learning, using experience replay and a target network \citep{mnih2015human}.
 
 \subsubsection{Experience Replay}\label{sec:exp_replay}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\linewidth]{img/Experience_Replay.png}
+    \caption{Schematic structure of experience replay}
+    \label{fig:expreplay}
+\end{figure}
+
+Instead of training the network on incoming experiences directly, the experiences can be stored in a memory buffer and the network can be trained on a mini-batch of memories randomly sampled from this buffer (see \ref{fig:expreplay}). This helps because neural networks assume that each training sample is identically and independently distributed with regard to the population the algorithm is set up to approximate (Citation needed), and training directly on incoming experiences break this assumption in two regards.
+
+For one, consecutive incoming experiences are obviously highly correlated because the environment does not radically change after any action (unless it leads to a terminal state). This means that any experience differs from the previous experience only to the extent to which the environment can change in one update step from a single action from the agent. (Citation needed)
+
+The distribution of incoming experiences is also dependent on the agents current policy. If the current policy determines that the agent should head east, then the next experiences recorded by the agent will involve the agent headed east. Apart from the obvious correlation, this can also lead to feedback loops (Explain the loops and cite dqn + paper below)
+
 % https://arxiv.org/pdf/1511.05952.pdf
 %(Check out the link for good reasons why experience replay is useful. already in .bib file)
-% again the triad
 
 \subsubsection{Target Network}\label{sec:target_network}
-Because the combination of function approximation (the deep neural network), bootstrapping (TD methods that update Q-values using estimated return values) and off-policy training (the Q-Learning algorithm) make up the deadly triad \citep{sutton_barto_2018}, which causes instability and divergence in the learning process, we need a way to counteract this. To this effect, we used a secondary target network which is used to generate the target Q-values. After every set number of updates, we clone the model network to obtain a target network which is then used to generate the targets until it is replaced by a new clone. This modification is called Double Q-Learning \citep{NIPS2010_3964}, and was also used by \citep{mnih2015human} to make the algorithm more stable and prevent divergence.
+Another source of instability is that we use the predictions of the network to generate the target values which, combined with the rest of the update rule which will be explained in the next section, directly update the weights of that same network. This can lead to unwanted feedback loops. We can add a delay to the loop to reduce these effects by using a periodically updated, frozen copy of the network to generate the target values instead (as shown in \ref{fig:targetnet}). Every C iterations, the target network is replaced by a copy of the main network. This modification is called Double Q-Learning \citep{NIPS2010_3964}, and was also used by \citep{mnih2015human} to make the algorithm more stable and prevent divergence.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\linewidth]{img/Target_Network.png}
+    \caption{Highlighting the schematic difference of using a target network}
+    \label{fig:targetnet}
+\end{figure}
+
 
 \subsubsection{Q-Learning vs SARSA}\label{sec:ql_sarsa}
 
