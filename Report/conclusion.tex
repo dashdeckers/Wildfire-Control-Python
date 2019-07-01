@@ -1,7 +1,22 @@
 \section{Discussion}\label{sec:discussion}
-Interpret the results
+The results show that all algorithms respond very differently and sometimes uniquely to the demonstration data given at the start of the training process. 
+
+Starting with the 10-by-10 sized simulation, Q-Networks performed optimally with 100 episodes of memories, while the performance of Dueling Q-Networks was less dependent on the memories. The latter also showed to have a large spike near the 1000th episode. This can be due to the memory buffer being filled completely by demonstration data. In this way, the algorithm has very few chances to make mistakes and learn from those transitions during its exploration phase. It focuses too much on the demonstrated behaviour and is hindered in trying out actions to explore consequences. This explanation can also hold for why the Q-Network performs worse with 1000 episodes of memories.
+
+SARSA showed to be one of the most consistent and trustworthy algorithms in terms of its response to the memories. In essence, more memories meant a higher sustained performance level. However, the speed at which it learned was decreased. This may also be due to the same reason mentioned; large amounts of memories hinder the algorithms exploration abilities. More memories also showed to have another positive effect on SARSA, namely its standard error. Higher performance levels came with lower standard errors. (MAY BE ADD A SARSA TRAIT AS REASON?)
+
+We found that combining Dueling Q-Networks and SARSA into Dueling SARSA proved to be and success and resulted in the overall best performer, especially in high memory scenarios. It inherits the best of both worlds; the learning speed from the first, and the performance and consistency from the latter. The algorithm inherited the performance peak from the Dueling Q-Networks, albeit not as high and slightly earlier. We estimate the maximum possible reward for an algorithm to achieve to be around 1850. In Figure \ref{fig:10sized-1000mem} the algorithms performance gets very close to that maximum score and stays there throughout the rest of the training episodes. Moreover, its standard error there is similar to the baseline algorithm, which is impressive since the latter is a hard-coded solution.
+
+
+When switching to a simulation consisting of a square grid of size 14 instead of 10, we see the algorithms struggle a lot more in general. This setting nearly doubles the amount of inputs for relatively small neural networks, which seem to struggle to properly learn and process all information.
+
+When they are not given any memories the Dueling Q-Networks is still able to perform better than the rest, but it achieves similar scores to the worst performers in the 10-by-10 simulation. Q-Networks, SARSA and Dueling SARSA seem to barely improve at all. When given 100 or 1000 episodes of memories the Dueling Q-Network improves in both cases, but does not achieve the same levels of performance. The Q-Network shows the same behaviour as before as it performs best with the medium amount of memories given and drops that advantage when given a high amount. This algorithm is also not able to solve the problem. Both Q-Network and Dueling Q-Networks fail to solve the problem and beat the baseline in all cases.
+
+SARSA is still very receptive to memories with its best performance being the scenario where $\pm 35000$ memories were given. Here it is the only algorithm so far that is able to match the baseline algorithm. The only algorithm that is able to consistently beat it is Dueling SARSA in the high memory scenario. It shows performance very similar to the 10-by-10 simulation. The only difference is that it tops out later and suffers from a slightly higher standard error.
+
+One last interesting thing to mention is that also in the 14-by-14 simulation Both Dueling Q-Networks and Dueling SARSA show a peak in performance at the start of the learning process. While the peak is now not as high, both algorithms have a peak of roughly the same size. The peaks are more spread out and Dueling SARSA's peak still happens earlier. In the 10-by-10 simulation both algorithms managed to quickly regain performance and continue learning after this peak, while in the 14-by-14 simulation only Dueling SARSA is able to continue learning properly.
 
 \section{Conclusion}\label{sec:conclusions}
-What went well, what can be improved, other remarks etc
+%What went well, what can be improved, other remarks etc
+Since all algorithms are based on Q-Learning, they are likely to benefit from other improvements shown to be useful. Examples we think would perform well are prioritized replay (CITATION) and Deep Q-Networks (CITATION). Using a deep network with convolutional layers might extract some meaningful information that it cannot otherwise, like shape of the circle and position of the agent relative to it for example.
 
-(Using a deep network with convolutional layers might extract some meaningful information that it cant otherwise, like shape of the circle and position of the agent relative to it etc.)

@@ -130,8 +130,10 @@ In contrast, SARSA optimizes the same $\epsilon$-greedy policy that it is follow
 
 
 
-\subsubsection{Duelling Networks}\label{sec:duelling}
-
+\subsubsection{Dueling Networks}\label{sec:dueling}
+One limitation of the Q-Network approach is that it is not able to estimate the value of a state and the action separately \citep{wang2015dueling}. This ability can be very useful, since often in states an action has no relevant consequence. The Dueling Network Architecture achieves this by having two streams each predicting different things, instead of one stream predicting both. It is implemented by configuring two hidden layers in parallel, replacing the single hidden layer that is standard in the Q-Network. One of these two layers will estimate the state value, while the other layer will estimate the action advantages for each possible action. The two are merged together with the following formula:
+$$ Q = value + (advantage - mean(advantage))$$
+It automatically prevents the layer for the state value from estimating anything related to the action advantages, since the sum of these advantages is kept at zero. This formula results in the Q-values which can be used no different from the single stream Q-values. All learning techniques and code can be recycled.
 
 
 
