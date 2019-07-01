@@ -153,10 +153,11 @@ The environment is reset upon containment (as defined in the algorithm \ref{alg:
 
 
 
-\section{The Experimental Setup}\label{sec:experiment}
-How were the results collected, which runs were done with which parameters etc
+\subsection{The Experimental Setup}\label{sec:experiment}
 
-% Insert the algorithm
+\subsubsection{Baseline Algorithm}\label{sec:baseline}
+To be able to reliably compare the performance of the different algorithms, we need a stable baseline. We build on the ideas discussed in section \ref{sec:demo_data} to define the algorithm shown in \ref{alg:baseline}. This algorithm is identical to the demonstration data generation except that it continues until the fire has burnt out, and does not stop as soon as the fire is contained.
+
 \begin{algorithm}
   \caption{Baseline algorithm to contain the fire}
   \label{alg:baseline}
@@ -175,3 +176,8 @@ How were the results collected, which runs were done with which parameters etc
     \EndProcedure
   \end{algorithmic}
 \end{algorithm}
+
+\subsubsection{Collection of Results}\label{sec:datacollection}
+We investigate the performance of both Q-Learning and SARSA, both with and without the duelling network modification for a total of 4 different algorithms.
+
+Each algorithm and parameter combination was run 10 times for 10,000 episodes per run. We compared the baseline performance to 2 map sizes (10x10, 14x14), 3 different amounts of demonstration data (0, 3,500, 35,000) and 4 algorithms for a total of 240 runs (260 including the baseline). Because each run took on average 4.5 hours, they were run on the Peregrine computing cluster provided by the University of Groningen.
