@@ -1,15 +1,23 @@
 \section{Introduction}\label{sec:introduction}
 
 \subsection{Forest Fires}
-Forest fires have the potential to be a very dangerous threat to rising temperature levels in the world. (this sounds like shit) Rising temperature levels due to global warming increase the likelihood of forest fires and the fires in turn release large amounts of CO2 into the air which helps increase the global temperatures due to the greenhouse effect (provide a reference and make it sound better). This (cataclysmic? spirals out of control?) effect could spiral out of control after some threshold is reached.
+TO DO: citations, expansions. \\
 
-(more basic reasons why forest fires are bad)
-(more references to marcos papers)
-(more general information, definitions, analysis of what makes a forest fire and how to prevent it + references)
-(explain why cutting forest lines is the best choice + references)
-(explain why DQN is a good idea)
+The ever increasing temperature around the globe due to global warming brings many consequences. One of which is the increased risk of forest fires. Warmer climates are not only plagued by forest fires more frequently, but also more intense forest fires.  In most cases, beginning wildfires are extinguished before they get out of hand. Sadly, some wildfires escalate into nearly uncontrollable infernos.
 
-Research question: Do on-policy or off-policy methods, with function approximation, perform better at containing the spread of a fire by cutting fire lines in a simulated environment.
+Fighting these forest fires is a challenging task. To kill a fire one or more of the three required elements has to be eliminated: fuel, heat or oxygen. The ordinary tactic is to remove the heat and oxygen by spraying water or foam from hoses, but large forest fires require more effort to be contained. Possible options include aircraft dropping water bombs, burning down specific areas in a controlled fashion, or using a bulldozer to cut fire lines. The use of these techniques need to be carefully planned by the fire-fighters when constructing a plan. To create the perfect plan is a near impossible job and it is not uncommon for it to fail and cause the loss of more forest.
+
+Not only can forest fires result in the tragic loss of lives and houses, the ecological effect has to be taken into account as well. Trees and plants are a key factor in the carbon cycle. Using photosynthesis massive amounts of CO$_{2}$ are filtered from the atmosphere and stored. When fires destroy large forests, all this stored CO$_{2}$ is released back into the atmosphere, which is inconsistent with the carbon cycle. Since this CO$_{2}$ is considered a greenhouse gas, it boosts the already increasing global warming. This, in turn, increases the likelihood and risk of forest fires. The just described will result in a vicious cycle that is heading towards a warm, fiery planet that may not be able to support life in the future, in the same way it does today. 
+
+In this paper we explore how forest fires can be simulated and connectionist reinforcement learning can be used on these simulations to let an agent learn to contain starting forest fires with the use of a bulldozer. We make use of existing algorithms: Q-Networks, SARSA and Dueling Q-Networks. We show that using a simple baseline algorithm to generate demonstration data to be used in experience replay can greatly increase the algorithm's performance. We show that these algorithms based on Q-learning are able to complete this task successfully in small environments. We also show that the latter two can be combined into Dueling SARSA which performs outperforms all, even in larger environments where others fail.
+
+%(more basic reasons why forest fires are bad)
+%(more references to marcos papers)
+%(more general information, definitions, analysis of what makes a forest fire and how to prevent it + references)
+%(explain why cutting forest lines is the best choice + references)
+%(explain why DQN is a good idea)
+
+Research question: Do on-policy or off-policy methods, with function approximation, perform better at containing the spread of a fire by cutting fire lines in a simulated environment?
 
 \subsection{Reinforcement Learning}\label{sec:reinforcementlearning}
 Reinforcement learning is a machine learning paradigm typically consisting of two elements. The first is the agent, which represents the reinforcement learning algorithm or in other words, the machine. The second is the environment, which represents what the algorithm is trying to solve or at least perform quite well at. This is typically a game or in this case, a simulated forest fire that should be contained.
@@ -19,4 +27,4 @@ At each discrete time step (t=1,2,3...), the environment provides the agent with
 
 The goal of the agent is to learn what actions to take, given access to the current state (St), to maximize the total cumulative reward from the initial state (S) to the terminal state (ST).
 
-It can achieve this by learning the Q-values for each state, or in other words the quality values of each state corresponding to the expected cumulative reward that would be achieved by following the optimal policy from that state forward \citep{sutton_barto_2018}. The approximation of those Q-values is done via TD methods and the Bellman equations \citep{sutton_barto_2018}, and they would classically be stored in a Q-table but in deep reinforcement learning a deep neural network is used to approximate the function that takes as an input the state and outputs the estimated Q-values for each action. In this paper we use the DQN algorithm, which has been developed to do exactly that \citep{mnih2015human}, however we use a comparitatively shallow network with a single hidden layer.
+It can achieve this by learning the Q-values for each state, or in other words the quality values of each state corresponding to the expected cumulative reward that would be achieved by following the optimal policy from that state forward \citep{sutton_barto_2018}. The approximation of those Q-values is done via TD methods and the Bellman equations \citep{sutton_barto_2018}, and they would classically be stored in a Q-table but in deep reinforcement learning a deep neural network is used to approximate the function that takes as an input the state and outputs the estimated Q-values for each action. In this paper we use the DQN algorithm, which has been developed to do exactly that \citep{mnih2015human}, however we use a comparatively shallow network with a single hidden layer.
