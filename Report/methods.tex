@@ -27,24 +27,40 @@ R = \left\{\begin{array}{lr}
 \]
 where~$p$ is the percent of the map undamaged by either fire or digging. We decided to choose a reward function that defines the goal well, and then compensate for the lack of a smooth gradient with demonstration data to lead it towards the sparse rewards. Note that the 2nd and 3rd states are the only terminal states.
 
-Containment of the fire is defined in \ref{alg:containment}. The algorithm returns true as soon as it can find a path, not allowing diagonal movements, between any burning cell and any cell on the border of the map. It uses the A* path-finding algorithm to check for a path between any two points.
+Containment of the fire is defined in \ref{alg:containment}. The algorithm returns true as soon as it can find a path, not allowing diagonal movements, between any burning cell and any cell on the border of the map. If there exists a path, then there exists a way for the fire to spread. It uses the A* path-finding algorithm to check for a path between any two points.
 
 \begin{algorithm}
   \caption{Algorithm to check if the fire is contained}
   \label{alg:containment}
   \begin{algorithmic}[1]
-    \Procedure{CheckContainment}{}
-    \State {do stuff}
+    \Procedure{fireIsContained}{}
+    \State {F = set of burning cells}
+    \State {f = pop(F)}
+    \State {B = set of burning cells}
+    \State {b = pop(B)}
+    \State {p = astarpath(f, b)}
+    \While {p is not a path}
+    \If {B is empty}
+    \If {F is empty}
+    \State \Return {True}
+    \Else
+    \State {B = set of border cells}
+    \State {f = pop(F)}
+    \EndIf
+    \Else
+    \State {b = pop(B)}
+    \State {p = astarpath(f, b)}
+    \EndIf
+    \EndWhile
+    \State \Return {False}
     \EndProcedure
   \end{algorithmic}
 \end{algorithm}
 
-% pseudocode for the containment algorithm
-
 
 
 \subsubsection{The State Representation}\label{sec:state_rep}
-The state of the environment, or the observation of the environment as it is visible to the agent, consists of 3 matrices of size N*M with a boolean domain resulting in, after flattening, an array of (3 * N*M) boolean inputs where (N, M) are the dimensions of the map. Assuming the shape of the map is always square, a map size of (N=10) elements is represented three times: One layer contains only the agent position, translating to a matrix of zeros except for a single one representing the position of the agent. The second layer consists of the position of the fire. Cells that are on fire are represented by a 1, the rest are set to 0. The third layer represents the fire lines cut by the agent in a similar boolean fashion, resulting in a total of 300 inputs to the agent. This is schematically shown in \ref{fig:visiongrid}.
+The state of the environment, or the observation of the environment as it is visible to the agent, consists of 3 matrices of size $N*M$ with a boolean domain resulting in, after flattening, an array of $3 * N*M$ boolean inputs where $(N, M)$ are the dimensions of the map. Assuming the shape of the map is always square, a map size of $N=10$ elements is represented three times: One layer contains only the agent position, translating to a matrix of zeros except for a single one representing the position of the agent. The second layer consists of the position of the fire. Cells that are on fire are represented by a 1, the rest are set to 0. The third layer represents the fire lines cut by the agent in a similar boolean fashion, resulting in a total of 300 inputs to the agent. This is schematically shown in figure \ref{fig:visiongrid}.
 
 \begin{figure}[h]
     \centering
@@ -71,7 +87,7 @@ The combination of function approximation (the neural network), bootstrapping (T
     \label{fig:expreplay}
 \end{figure}
 
-Instead of training the network on incoming experiences directly, the experiences can be stored in a memory buffer and the network can be trained on a mini-batch of memories randomly sampled from this buffer (see \ref{fig:expreplay}). This helps because neural networks assume that each training sample is identically and independently distributed with regard to the population the algorithm is set up to approximate (Citation needed), and training directly on incoming experiences break this assumption in two regards.
+Instead of training the network on incoming experiences directly, the experiences can be stored in a memory buffer and the network can be trained on a mini-batch of memories randomly sampled from this buffer (see figure \ref{fig:expreplay}). This helps because neural networks assume that each training sample is identically and independently distributed with regard to the population the algorithm is set up to approximate (Citation needed), and training directly on incoming experiences break this assumption in two regards.
 
 For one, consecutive incoming experiences are obviously highly correlated because the environment does not radically change after any action (unless it leads to a terminal state). This means that any experience differs from the previous experience only to the extent to which the environment can change in one update step from a single action from the agent. (Citation needed)
 
