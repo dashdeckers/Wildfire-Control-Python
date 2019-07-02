@@ -6,7 +6,7 @@
 \begin{figure}[h]
     \centering
     \includegraphics[width=\linewidth]{img/Simulation.png}
-    \caption{Visual representation of the cellular automaton. The agent on the left leaves a trail of dug cells and the fire on the right spreads over time.}
+    \caption{Visual representation of the cellular automaton.}
     \label{fig:simulation}
 \end{figure}
 The forest fire is simulated using a cellular automaton. For a visual representation please see Figure \ref{fig:simulation}. Its shape is always square and has either a size of 10 or 14 cells. The green cells represent trees and can ignite under the right circumstances.
@@ -33,7 +33,7 @@ R = \left\{\begin{array}{lr}
 \]
 where~$p$ is the percent of the map undamaged by either fire or digging. We decided to choose a reward function that defines the goal well, and then compensate for the lack of a smooth gradient with demonstration data to lead it towards the sparse rewards. Note that the 2nd and 3rd states are the only terminal states.
 
-Containment of the fire is defined in \ref{alg:containment}. The algorithm returns true as soon as it can find a path, not allowing diagonal movements, between any burning cell and any cell on the border of the map. If there exists a path, then there exists a way for the fire to spread. It uses the A* path-finding algorithm to check for a path between any two points.
+Containment of the fire is defined in Algorithm \ref{alg:containment}. The algorithm returns true as soon as it can find a path, not allowing diagonal movements, between any burning cell and any cell on the border of the map. If there exists a path, then there exists a way for the fire to spread. It uses the A* path-finding algorithm to check for a path between any two points.
 
 \begin{algorithm}
   \caption{Algorithm to check if the fire is contained}
@@ -100,18 +100,18 @@ Instead of training the network on incoming experiences directly, the experience
 
 For one, consecutive incoming experiences are obviously highly correlated because the environment does not radically change after any action (unless it leads to a terminal state). This means that any experience differs from the previous experience only to the extent to which the environment can change in one update step from a single action from the agent. (Citation needed)
 
-The distribution of incoming experiences is also dependent on the agents current policy. If the current policy determines that the agent should head east, then the next experiences recorded by the agent will involve the agent headed east. Apart from the obvious correlation, this can also lead to feedback loops (Explain the loops and cite dqn + other paper)
+The distribution of incoming experiences is also dependent on the agents current policy. If the current policy determines that the agent should head east, then the next experiences recorded by the agent will involve the agent headed east. Apart from the obvious correlation, this can also lead to feedback loops. (EXPLAIN THE LOOPS AND CITE DQN + OTHER PAPER)
 
 % https://arxiv.org/pdf/1511.05952.pdf
 %(Check out the link for good reasons why experience replay is useful. already in .bib file)
 
 % fill out the rest of the references
 
-In addition to stabilising the learning process, this approach also increases sample efficiency by allowing memories to be re-used multiple times until they are discarded when they reach the end of the queue. We can also inject hand-crafted memories into this buffer before learning to provide the agent with demonstration, as will be explained in \ref{sec:demo_data}.
+In addition to stabilising the learning process, this approach also increases sample efficiency by allowing memories to be re-used multiple times until they are discarded when they reach the end of the queue. We can also inject hand-crafted memories into this buffer before learning to provide the agent with demonstration, as will be explained in Section \ref{sec:demo_data}.
 
 
 \subsubsection{Target Network}\label{sec:target_network}
-Another source of instability is that we use the predictions of the network to generate the target values which, combined with the rest of the update rule (shown in figure \ref{fig:ql_sarsa}), directly update the weights of that same network. This can lead to unwanted feedback loops. We can add a delay to the loop to reduce these effects by using a periodically updated, frozen copy of the network to generate the target values instead (as shown in \ref{fig:targetnet}). Every C iterations, the target network is replaced by a copy of the main network. This modification is called Double Q-Learning \citep{hasselt2010double}, and was also used by \citep{mnih2015human} to make the algorithm more stable and prevent divergence.
+Another source of instability is that we use the predictions of the network to generate the target values which, combined with the rest of the update rule (shown in Figure \ref{fig:ql_sarsa}), directly update the weights of that same network. This can lead to unwanted feedback loops. We can add a delay to the loop to reduce these effects by using a periodically updated, frozen copy of the network to generate the target values instead (as shown in Figure \ref{fig:targetnet}). Every C iterations, the target network is replaced by a copy of the main network. This modification is called Double Q-Learning \citep{hasselt2010double}, and was also used by \citep{mnih2015human} to make the algorithm more stable and prevent divergence.
 
 \begin{figure}[h]
     \centering
@@ -145,11 +145,11 @@ It automatically prevents the layer for the state value from estimating anything
 
 
 \subsubsection{Demonstration Data}\label{sec:demo_data}
-Because the reward function defined in section \ref{sec:reward_function} provides only sparse and delayed rewards, the agent might require additional guidance to learn to contain the fire in a reasonable training time. To point it in the right direction, we can fill the memory buffer with demonstration data before learning as mentioned in section \ref{sec:exp_replay}. The agent can then use these memories during the learning process to "see" a possible way to reach the sparse reward.
+Because the reward function defined in Section \ref{sec:reward_function} provides only sparse and delayed rewards, the agent might require additional guidance to learn to contain the fire in a reasonable training time. To point it in the right direction, we can fill the memory buffer with demonstration data before learning as mentioned in Section \ref{sec:exp_replay}. The agent can then use these memories during the learning process to "see" a possible way to reach the sparse reward.
 
-The demonstration data only needs to show the agent how it might be able to collect the containment reward, to this effect we developed a simple algorithm that moves the agent around the fire in a clockwise direction by choosing randomly from one of two possible actions depending on the position of the agent relative to the fire (shown schematically in figure \ref{fig:demodata}). 
+The demonstration data only needs to show the agent how it might be able to collect the containment reward, to this effect we developed a simple algorithm that moves the agent around the fire in a clockwise direction by choosing randomly from one of two possible actions depending on the position of the agent relative to the fire (shown schematically in Figure \ref{fig:demodata}). 
 
-The environment is reset upon containment (as defined in the algorithm \ref{alg:containment}), and if the agent would make a move that would lead to its death, it chooses the other possible action. Only memories leading to successful containments are kept. This results in an average of 35 demonstration data memories per containment of the fire (on the 10x10 map, and around 48 memories on the 14x14 map), and the number of successful containments / episodes required can be specified.
+The environment is reset upon containment (as defined in the Algorithm \ref{alg:containment}), and if the agent would make a move that would lead to its death, it chooses the other possible action. Only memories leading to successful containments are kept. This results in an average of 35 demonstration data memories per containment of the fire on the 10x10 map, and around 48 memories on the 14x14 map. The number of successful containments per episodes required can be specified.
 
 \begin{figure}[h]
     \centering
@@ -163,7 +163,7 @@ The environment is reset upon containment (as defined in the algorithm \ref{alg:
 \subsection{The Experimental Setup}\label{sec:experiment}
 
 \subsubsection{Baseline Algorithm}\label{sec:baseline}
-To be able to reliably compare the performance of the different algorithms, we need a stable baseline. We build on the ideas discussed in section \ref{sec:demo_data} to define the algorithm shown in \ref{alg:baseline}. This algorithm is identical to the demonstration data generation except that it continues until the fire has burnt out, and does not stop as soon as the fire is contained.
+To be able to reliably compare the performance of the different algorithms, we need a stable baseline. We build on the ideas discussed in Section \ref{sec:demo_data} to define the algorithm shown in Algorithm \ref{alg:baseline}. This algorithm is identical to the demonstration data generation except that it continues until the fire has burnt out, and does not stop as soon as the fire is contained.
 
 \begin{algorithm}
   \caption{Baseline algorithm to contain the fire}
@@ -185,6 +185,6 @@ To be able to reliably compare the performance of the different algorithms, we n
 \end{algorithm}
 
 \subsubsection{Collection of Results}\label{sec:datacollection}
-We investigate the performance of both Q-Learning and SARSA, both with and without the dueling network modification for a total of 4 different algorithms.
+We investigate the performance of both Q-Learning and SARSA, both with and without the dueling network architecture modification for a total of 4 different algorithms.
 
-Each algorithm and parameter combination was run 10 times for 10,000 episodes per run. We compared the baseline performance to 2 map sizes (10x10 and 14x14), 3 different amounts of demonstration data (0, 100 and 1000 episodes) and 4 algorithms for a total of 240 runs (260 including the baseline). Because each run took on average 4.5 hours, they were run on the Peregrine computing cluster provided by the University of Groningen.
+Each algorithm and parameter combination was run 10 times for 10,000 episodes per run. We compared the baseline performance to 2 map sizes (10x10 and 14x14), 3 different amounts of demonstration data (0, 100 and 1000 episodes) and 4 algorithms for a total of 240 runs (260 including the baselines). Since each run took more than 6 hours on average, they were calculated on the Peregrine computing cluster provided by the University of Groningen.
