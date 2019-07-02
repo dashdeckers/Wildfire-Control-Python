@@ -8,20 +8,13 @@ Follow these instructions with python 3.6 in a virtual environment!
 
 ### Install the environment:
 `git clone https://github.com/dashdeckers/Wildfire-Control-Python`\
-`cd Wildfire-Control-Python`\
-
-### Play the environment in human mode:
-`make`\
-`python`\
-`import gym, gym_forestfire`\
-`from misc import run_human`\
-`sim = gym.make('gym-forestfire-v0')`\
-`run_human(sim)`
+`cd Wildfire-Control-Python`
+`make`
 
 ## Reinforcement Learning (DQN) Usage:
 
 ### Install dependencies:
 `pip install -r requirements.txt`
 
-### Let the DQN learn and then let it play:
+### Let the algorithm learn and then let it play:
 `python main.py -r -m {amount_of_memories} -e {amount_of_episodes} -t {DQN/SARSA/DDQN/BOTH} -n {name}`
