@@ -11,9 +11,7 @@ specifically the fire spread dynamics
 \subsubsection{The Reward function}\label{sec:reward_function}
 The reward function is a function that maps each state to a value that represents how "good" or desireable that state is. As such, this function is a vital part of the learning process because any reinforcement learning algorithm will rely on the two things that constitute the input to the agent. The quality of the state representation, or in other words how much of- and how well the agent sees the environment, and the quality of the reward function, or how well the agents notion of success corresponds with our notion of success and how easy it is to find optima in the reward landscape.
 
-Apart from determining the optimal policy to be learned by the agent, the reward function also determines the speed at which the agent will be able to learn that policy. To take the gradient descent analogy of a problem landscape, if the reward function produces a smooth gradient to the optimal solution, the agent will be able to find a path to that solution more easily than if the reward resembles flat landscape with sparse spikes in which the value jumps from almost always 0 or negative to a positive reward. In other words, the agent should be provided gradual feedback instead of sparse and delayed rewards in order to facilitate fast and efficient learning.
-
-% provide references for reward claims
+Apart from determining the optimal policy to be learned by the agent, the reward function also determines the speed at which the agent will be able to learn that policy. To take the gradient descent analogy of a problem landscape, if the reward function produces a smooth gradient to the optimal solution, the agent will be able to find a path to that solution more easily than if the reward resembles flat landscape with sparse spikes in which the value jumps from almost always 0 or negative to a positive reward \citep{sutton_barto_2018}. In other words, the agent should be provided gradual feedback instead of sparse and delayed rewards in order to facilitate fast and efficient learning.
 
 Crafting a good reward function for this problem turned out to be quite difficult because it was hard to define a measure of success that is both valid in its formulation and which provides gradual feedback, or a smooth gradient, towards the containment of the fire. We defined the reward function as
 \[
@@ -76,7 +74,10 @@ This vision grid approach can speed up the learning process as well as increase 
 
 
 \subsubsection{Known Problems with Connectionist RL}\label{sec:problems}
-The combination of function approximation (the neural network), bootstrapping (TD methods that update Q-values using estimated return values) and off-policy training (the Q-Learning algorithm) make up the deadly triad \citep{sutton_barto_2018}, which is known to cause instabilities and even divergence in the learning process. There are two well known strategies to reduce this effect and stabilise learning, using experience replay and a target network \citep{mnih2015human}.
+The combination of function approximation (the neural network), bootstrapping (TD methods that update Q-values using estimated return values) and off-policy training (the Q-Learning algorithm) make up the deadly triad \citep{sutton_barto_2018}, which is known to cause instabilities and even divergence in the learning process. As will be clear by the end of this section, all three of these elements are present in some of the algorithms. There are, however, two well known strategies to reduce this effect and stabilise learning: Using experience replay and a target network \citep{mnih2015human}.
+
+\subsubsection{Network Architecture}\label{sec:architecture}
+First, let us define the neural network architecture that will approximate Q, or the mapping of (State, Action) pairs to quality values. We use only a shallow network with one hidden layer of 50 units using a sigmoidal activation function, and a simple output layer with a linear activation.
 
 \subsubsection{Experience Replay}\label{sec:exp_replay}
 
@@ -91,7 +92,7 @@ Instead of training the network on incoming experiences directly, the experience
 
 For one, consecutive incoming experiences are obviously highly correlated because the environment does not radically change after any action (unless it leads to a terminal state). This means that any experience differs from the previous experience only to the extent to which the environment can change in one update step from a single action from the agent. (Citation needed)
 
-The distribution of incoming experiences is also dependent on the agents current policy. If the current policy determines that the agent should head east, then the next experiences recorded by the agent will involve the agent headed east. Apart from the obvious correlation, this can also lead to feedback loops (Explain the loops and cite dqn + paper below)
+The distribution of incoming experiences is also dependent on the agents current policy. If the current policy determines that the agent should head east, then the next experiences recorded by the agent will involve the agent headed east. Apart from the obvious correlation, this can also lead to feedback loops (Explain the loops and cite dqn + other paper)
 
 % https://arxiv.org/pdf/1511.05952.pdf
 %(Check out the link for good reasons why experience replay is useful. already in .bib file)
@@ -102,7 +103,7 @@ In addition to stabilising the learning process, this approach also increases sa
 
 
 \subsubsection{Target Network}\label{sec:target_network}
-Another source of instability is that we use the predictions of the network to generate the target values which, combined with the rest of the update rule (shown in figure \ref{fig:ql_sarsa}), directly update the weights of that same network. This can lead to unwanted feedback loops. We can add a delay to the loop to reduce these effects by using a periodically updated, frozen copy of the network to generate the target values instead (as shown in \ref{fig:targetnet}). Every C iterations, the target network is replaced by a copy of the main network. This modification is called Double Q-Learning \citep{NIPS2010_3964}, and was also used by \citep{mnih2015human} to make the algorithm more stable and prevent divergence.
+Another source of instability is that we use the predictions of the network to generate the target values which, combined with the rest of the update rule (shown in figure \ref{fig:ql_sarsa}), directly update the weights of that same network. This can lead to unwanted feedback loops. We can add a delay to the loop to reduce these effects by using a periodically updated, frozen copy of the network to generate the target values instead (as shown in \ref{fig:targetnet}). Every C iterations, the target network is replaced by a copy of the main network. This modification is called Double Q-Learning \citep{hasselt2010double}, and was also used by \citep{mnih2015human} to make the algorithm more stable and prevent divergence.
 
 \begin{figure}[h]
     \centering
@@ -126,8 +127,6 @@ In Q-learning, the agent follows the $\epsilon$-greedy policy in which we can va
 
 In contrast, SARSA optimizes the same $\epsilon$-greedy policy that it is following. This makes it an on-policy algorithm and should see an increase in learning stability due to one less element of the deadly triad present in the system. Because SARSA updates Q in a way that takes into account the random actions the agent sometimes takes it is expected to find a safer, but less optimal policy \citep{sutton_barto_2018} and report a higher average performance during learning.
 
-% make sure to explain what Q is in the RL section. maybe also what e-greedy looks like?
-
 
 
 \subsubsection{Dueling Networks}\label{sec:dueling}
@@ -142,7 +141,7 @@ Because the reward function defined in section \ref{sec:reward_function} provide
 
 The demonstration data only needs to show the agent how it might be able to collect the containment reward, to this effect we developed a simple algorithm that moves the agent around the fire in a clockwise direction by choosing randomly from one of two possible actions depending on the position of the agent relative to the fire (shown schematically in figure \ref{fig:demodata}). 
 
-The environment is reset upon containment (as defined in the algorithm \ref{alg:containment}), and if the agent would make a move that would lead to its death, it chooses the other possible action. Only memories leading to successful containments are kept. This results in an average of 35 demonstration data memories per containment of the fire, and the number of successful containments required can be specified.
+The environment is reset upon containment (as defined in the algorithm \ref{alg:containment}), and if the agent would make a move that would lead to its death, it chooses the other possible action. Only memories leading to successful containments are kept. This results in an average of 35 demonstration data memories per containment of the fire (on the 10x10 map, and around 48 memories on the 14x14 map), and the number of successful containments / episodes required can be specified.
 
 \begin{figure}[h]
     \centering
@@ -150,8 +149,6 @@ The environment is reset upon containment (as defined in the algorithm \ref{alg:
     \caption{Possible actions to take, based on the agents position relative to the fire}
     \label{fig:demodata}
 \end{figure}
-
-% find and reference the paper introducing the demo data approach
 
 
 
@@ -182,4 +179,4 @@ To be able to reliably compare the performance of the different algorithms, we n
 \subsubsection{Collection of Results}\label{sec:datacollection}
 We investigate the performance of both Q-Learning and SARSA, both with and without the duelling network modification for a total of 4 different algorithms.
 
-Each algorithm and parameter combination was run 10 times for 10,000 episodes per run. We compared the baseline performance to 2 map sizes (10x10, 14x14), 3 different amounts of demonstration data (0, 3,500, 35,000) and 4 algorithms for a total of 240 runs (260 including the baseline). Because each run took on average 4.5 hours, they were run on the Peregrine computing cluster provided by the University of Groningen.
+Each algorithm and parameter combination was run 10 times for 10,000 episodes per run. We compared the baseline performance to 2 map sizes (10x10 and 14x14), 3 different amounts of demonstration data (0, 100 and 1000 episodes) and 4 algorithms for a total of 240 runs (260 including the baseline). Because each run took on average 4.5 hours, they were run on the Peregrine computing cluster provided by the University of Groningen.
