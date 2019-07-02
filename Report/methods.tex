@@ -3,13 +3,21 @@
 \section{Methods}\label{sec:methods}
 
 \subsection{Environment}\label{sec:environment}
-a basic rundown of the simulation, how it works
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\linewidth]{img/simulation.png}
+    \caption{Visual representation of the cellular automaton.}
+    \label{fig:simulation}
+\end{figure}
+The forest fire is simulated using a cellular automaton. For a visual representation please see Figure \ref{fig:simulation}. Its shape is always square and has either a size of 10 or 14 cells. The green cells represent trees and can ignite under the right circumstances.
+The agent (or bulldozer) is represented by the white tile. Wherever it moves it destroys the trees and an empty, inflammable (brown) cell is formed. A line of these dug cells forms a fire line over which the fire cannot spread. The agent has to move each time step, as it is not allowed to idle on the same cell. The agent can only die when it moves into an actively burning (red) cell.
 
 \subsubsection{Fire Spread Dynamics}\label{sec:fire_spread}
-specifically the fire spread dynamics
+When a tree is lit on fire in order to start a forest fire, the cell color switches from green to red in Figure \ref{fig:simulation}. The neighbouring cells start to heat up and switch to yellow. The term neighbouring cells refers to the cells directly north, south, east and west of a burning cell. After some time steps these neighbours reach their ignition thresholds they catch fire themselves. The larger the fire, the more cells are being heated and brought to ignition. This makes larger fires harder to contain. Each tile has a fixed amount of fuel and when it runs out of fuel, the fire dies out. This leaves behind a black burnt tile which cannot be reignited.
+
 
 \subsubsection{The Reward function}\label{sec:reward_function}
-The reward function is a function that maps each state to a value that represents how "good" or desireable that state is. As such, this function is a vital part of the learning process because any reinforcement learning algorithm will rely on the two things that constitute the input to the agent. The quality of the state representation, or in other words how much of- and how well the agent sees the environment, and the quality of the reward function, or how well the agents notion of success corresponds with our notion of success and how easy it is to find optima in the reward landscape.
+The reward function is a function that maps each state to a value that represents how "good" or desirable that state is. As such, this function is a vital part of the learning process because any reinforcement learning algorithm will rely on the two things that constitute the input to the agent. The quality of the state representation, or in other words how much of- and how well the agent sees the environment, and the quality of the reward function, or how well the agents notion of success corresponds with our notion of success and how easy it is to find optima in the reward landscape.
 
 Apart from determining the optimal policy to be learned by the agent, the reward function also determines the speed at which the agent will be able to learn that policy. To take the gradient descent analogy of a problem landscape, if the reward function produces a smooth gradient to the optimal solution, the agent will be able to find a path to that solution more easily than if the reward resembles flat landscape with sparse spikes in which the value jumps from almost always 0 or negative to a positive reward \citep{sutton_barto_2018}. In other words, the agent should be provided gradual feedback instead of sparse and delayed rewards in order to facilitate fast and efficient learning.
 
@@ -132,7 +140,7 @@ In contrast, SARSA optimizes the same $\epsilon$-greedy policy that it is follow
 \subsubsection{Dueling Networks}\label{sec:dueling}
 One limitation of the Q-Network approach is that it is not able to estimate the value of a state and the action separately \citep{wang2015dueling}. This ability can be very useful, since often in states an action has no relevant consequence. The Dueling Network Architecture achieves this by having two streams each predicting different things, instead of one stream predicting both. It is implemented by configuring two hidden layers in parallel, replacing the single hidden layer that is standard in the Q-Network. One of these two layers will estimate the state value, while the other layer will estimate the action advantages for each possible action. The two are merged together with the following formula:
 $$ Q = value + (advantage - mean(advantage))$$
-It automatically prevents the layer for the state value from estimating anything related to the action advantages, since the sum of these advantages is kept at zero. This formula results in the Q-values which can be used no different from the single stream Q-values. All learning techniques and code can be recycled.
+It automatically prevents the layer for the state value from estimating anything related to the action advantages, since the sum of these advantages is kept at zero. This formula results in the Q-values which can be used no different from the single stream Q-values. All learning techniques and code can be recycled. This modification is expected to boost the maximum performance, but especially the speed of learning.
 
 
 
@@ -177,6 +185,6 @@ To be able to reliably compare the performance of the different algorithms, we n
 \end{algorithm}
 
 \subsubsection{Collection of Results}\label{sec:datacollection}
-We investigate the performance of both Q-Learning and SARSA, both with and without the duelling network modification for a total of 4 different algorithms.
+We investigate the performance of both Q-Learning and SARSA, both with and without the dueling network modification for a total of 4 different algorithms.
 
 Each algorithm and parameter combination was run 10 times for 10,000 episodes per run. We compared the baseline performance to 2 map sizes (10x10 and 14x14), 3 different amounts of demonstration data (0, 100 and 1000 episodes) and 4 algorithms for a total of 240 runs (260 including the baseline). Because each run took on average 4.5 hours, they were run on the Peregrine computing cluster provided by the University of Groningen.
