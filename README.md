@@ -11,7 +11,7 @@ Follow these instructions with python 3.6 in a virtual environment!
 `cd Wildfire-Control-Python`
 `make`
 
-## Reinforcement Learning (DQN) Usage:
+## Reinforcement Learning Usage:
 
 ### Install dependencies:
 `pip install -r requirements.txt`
