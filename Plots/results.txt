@@ -1,0 +1,41 @@
+10s 0m
+Base:   Avg: 1130.2 // Top10Avg: 1265.8 // Last10Avg: 1132.3
+DQN:    Avg: -81.5 // Top10Avg: 435.7 // Last10Avg: 253.6
+SARSA:  Avg: -149.6 // Top10Avg: 327.0 // Last10Avg: 180.5
+DDQN:   Avg: 692.1 // Top10Avg: 1187.8 // Last10Avg: 973.4
+BOTH:   Avg: -9.4 // Top10Avg: 382.0 // Last10Avg: 255.0
+
+10s 100m
+Base:   Avg: 1130.2 // Top10Avg: 1265.8 // Last10Avg: 1132.3
+DQN:    Avg: 869.0 // Top10Avg: 1608.8 // Last10Avg: 692.5
+SARSA:  Avg: 642.5 // Top10Avg: 1159.1 // Last10Avg: 791.5
+DDQN:   Avg: 470.7 // Top10Avg: 1272.0 // Last10Avg: 548.3
+BOTH:   Avg: 845.4 // Top10Avg: 1255.1 // Last10Avg: 1040.7
+
+10s 1000m
+Base:   Avg: 1130.2 // Top10Avg: 1265.8 // Last10Avg: 1132.3
+DQN:    Avg: 98.9 // Top10Avg: 1243.7 // Last10Avg: 977.2
+SARSA:  Avg: 1017.5 // Top10Avg: 1726.6 // Last10Avg: 1591.9
+DDQN:   Avg: 825.6 // Top10Avg: 1730.8 // Last10Avg: 1297.5
+BOTH:   Avg: 1333.9 // Top10Avg: 1832.6 // Last10Avg: 1751.3
+
+14s 0m
+Base:   Avg: 1151.4 // Top10Avg: 1363.4 // Last10Avg: 1155.4
+DQN:    Avg: -590.5 // Top10Avg: -326.3 // Last10Avg: -551.0
+SARSA:  Avg: -460.9 // Top10Avg: -226.2 // Last10Avg: -391.5
+DDQN:   Avg: -188.8 // Top10Avg: 177.5 // Last10Avg: -28.1
+BOTH:   Avg: -523.2 // Top10Avg: -262.7 // Last10Avg: -457.0
+
+14s 100m
+Base:   Avg: 1151.4 // Top10Avg: 1363.4 // Last10Avg: 1155.4
+DQN:    Avg: 220.5 // Top10Avg: 1049.0 // Last10Avg: 772.7
+SARSA:  Avg: 412.6 // Top10Avg: 1028.0 // Last10Avg: 647.1
+DDQN:   Avg: 197.4 // Top10Avg: 1225.5 // Last10Avg: 614.0
+BOTH:   Avg: 604.5 // Top10Avg: 1112.0 // Last10Avg: 841.6
+
+14s 1000m
+Base:   Avg: 1151.4 // Top10Avg: 1363.4 // Last10Avg: 1155.4
+DQN:    Avg: -708.8 // Top10Avg: -181.3 // Last10Avg: -387.3
+SARSA:  Avg: 421.8 // Top10Avg: 1393.9 // Last10Avg: 1102.7
+DDQN:   Avg: -11.8 // Top10Avg: 912.5 // Last10Avg: 674.4
+BOTH:   Avg: 1194.0 // Top10Avg: 1830.2 // Last10Avg: 1729.1

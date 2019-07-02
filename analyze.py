@@ -241,21 +241,26 @@ def main():
         baseline_files, first_files, second_files, third_files, \
             fourth_files = ([] for i in range(5))
         #DDQN=27 - DQN=26 - SARSA=28 - BOTH=27
+        size = "10s"
+        mem_set = 4
         for filename in all_filenames:
-            if "Baseline" in filename:
+            if "Baseline" in filename and size in filename:
                 baseline_files.append(filename)
                 continue
-            if "DQN" in filename and len(filename) == (26+0) \
-                and not "DDQN" in filename:
+            if "DQN" in filename and len(filename) == (26+mem_set) \
+                and size in filename and not "DDQN" in filename:
                 first_files.append(filename)
                 continue
-            if "SARSA" in filename and len(filename) == (28+0):
+            if "SARSA" in filename and len(filename) == (28+mem_set) \
+                and size in filename:
                 second_files.append(filename)
                 continue
-            if "DDQN" in filename and len(filename) == (27+0):
+            if "DDQN" in filename and len(filename) == (27+mem_set) \
+                and size in filename:
                 third_files.append(filename)
                 continue
-            if "BOTH" in filename and len(filename) == (27+0):
+            if "BOTH" in filename and len(filename) == (27+mem_set) \
+                and size in filename:
                 fourth_files.append(filename)
                 continue
 
@@ -324,7 +329,7 @@ def main():
         baseline_clr, first_clr, second_clr, third_clr, fourth_clr = \
             ["black", "blue", "orange", "green", "crimson"]
         area_alpha = 0.3
-        Baseline, First, Second, Third, Fourth = (1, 1, 1, 1, 1)
+        Baseline, First, Second, Third, Fourth = (0, 0, 0, 0, 0)
         # Populate the plot
         if Baseline:
             plt.plot(calc_smooth(baseline_avg), label="Baseline", color=baseline_clr)
@@ -356,11 +361,43 @@ def main():
                 calc_smooth(np.add(fourth_avg, fourth_std)), \
                 calc_smooth(np.add(fourth_avg, -fourth_std)), \
                 alpha=area_alpha, color=fourth_clr)
-        # Finish plot
-        plot_setyaxis(-1250, 2000)
-        verify_folder(plots_folder + folder_name)
-        save_filename = plots_folder + folder_name + '/total_rewards_0m.png'
-        plot_finish(save_filename)
+        if Baseline or First or Second or Third or Fourth:
+            plot_setyaxis(-1250, 2000)
+            verify_folder(plots_folder + folder_name)
+            save_filename = plots_folder + folder_name + '/total_rewards_DEV.png'
+            plot_finish(save_filename)
+
+        from statistics import mean
+        # Baseline
+        baseline_single_avg = round(mean(baseline_avg), 1)
+        baseline_avg_sorted = sorted(baseline_avg)
+        baseline_top_avg = round(mean(baseline_avg_sorted[9000:10000]), 1)
+        baseline_last_avg = round(mean(baseline_avg[9000:10000]), 1)
+        print(f"Base:\tAvg: {baseline_single_avg} // Top10Avg: {baseline_top_avg} // Last10Avg: {baseline_last_avg}")
+        # DQN
+        first_single_avg = round(mean(first_avg), 1)
+        first_avg_sorted = sorted(first_avg)
+        first_top_avg = round(mean(first_avg_sorted[9000:10000]), 1)
+        first_last_avg = round(mean(first_avg[9000:10000]), 1)
+        print(f"DQN:\tAvg: {first_single_avg} // Top10Avg: {first_top_avg} // Last10Avg: {first_last_avg}")
+        # SARSA
+        second_single_avg = round(mean(second_avg), 1)
+        second_avg_sorted = sorted(second_avg)
+        second_top_avg = round(mean(second_avg_sorted[9000:10000]), 1)
+        second_last_avg = round(mean(second_avg[9000:10000]), 1)
+        print(f"SARSA:\tAvg: {second_single_avg} // Top10Avg: {second_top_avg} // Last10Avg: {second_last_avg}")
+        # DDQN
+        third_single_avg = round(mean(third_avg), 1)
+        third_avg_sorted = sorted(third_avg)
+        third_top_avg = round(mean(third_avg_sorted[9000:10000]), 1)
+        third_last_avg = round(mean(third_avg[9000:10000]), 1)
+        print(f"DDQN:\tAvg: {third_single_avg} // Top10Avg: {third_top_avg} // Last10Avg: {third_last_avg}")
+        # BOTH
+        fourth_single_avg = round(mean(fourth_avg), 1)
+        fourth_avg_sorted = sorted(fourth_avg)
+        fourth_top_avg = round(mean(fourth_avg_sorted[9000:10000]), 1)
+        fourth_last_avg = round(mean(fourth_avg[9000:10000]), 1)
+        print(f"BOTH:\tAvg: {fourth_single_avg} // Top10Avg: {fourth_top_avg} // Last10Avg: {fourth_last_avg}")
 
 if __name__ == "__main__":
     main()
