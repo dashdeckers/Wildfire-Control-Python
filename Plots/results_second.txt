@@ -1,0 +1,41 @@
+10s 0m
+Base:   Avg: 1129       Stderr: 1.9     Best: 1387
+DQN:    Avg: 221        Stderr: 4.2     Best: 715
+SARSA:  Avg: 132        Stderr: 3.9     Best: 563
+DDQN:   Avg: 956        Stderr: 4.1     Best: 1335
+BOTH:   Avg: 241        Stderr: 2.6     Best: 582
+
+10s 100m
+Base:   Avg: 1129       Stderr: 1.9     Best: 1387
+DQN:    Avg: 878        Stderr: 7.5     Best: 1758
+SARSA:  Avg: 776        Stderr: 4.7     Best: 1292
+DDQN:   Avg: 521        Stderr: 6.8     Best: 1535
+BOTH:   Avg: 1031       Stderr: 3.4     Best: 1312
+
+10s 1000m
+Base:   Avg: 1129       Stderr: 1.9     Best: 1387
+DQN:    Avg: 907        Stderr: 6.7     Best: 1696
+SARSA:  Avg: 1607       Stderr: 2.8     Best: 1748
+DDQN:   Avg: 1369       Stderr: 5.5     Best: 1826
+BOTH:   Avg: 1745       Stderr: 2.5     Best: 1860
+
+14s 0m
+Base:   Avg: 1152       Stderr: 2.8     Best: 1513
+DQN:    Avg: -550       Stderr: 2.9     Best: -139
+SARSA:  Avg: -398       Stderr: 2.4     Best: -92
+DDQN:   Avg: -40        Stderr: 3.0     Best: 349
+BOTH:   Avg: -455       Stderr: 2.6     Best: -44
+
+14s 100m
+Base:   Avg: 1152       Stderr: 2.8     Best: 1513
+DQN:    Avg: 652        Stderr: 7.0     Best: 1629
+SARSA:  Avg: 670        Stderr: 5.3     Best: 1275
+DDQN:   Avg: 667        Stderr: 7.8     Best: 1748
+BOTH:   Avg: 836        Stderr: 4.1     Best: 1249
+
+14s 1000m
+Base:   Avg: 1152       Stderr: 2.8     Best: 1513
+DQN:    Avg: -459       Stderr: 5.0     Best: 411
+SARSA:  Avg: 1057       Stderr: 5.6     Best: 1626
+DDQN:   Avg: 522        Stderr: 7.7     Best: 1534
+BOTH:   Avg: 1713       Stderr: 3.0     Best: 1846
