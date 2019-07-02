@@ -64,57 +64,11 @@
 \bibliographystyle{plainnat}
 \bibliography{literature}
 
-%\clearpage
-%
-%\begin{appendices}
-%    \input{./appendix.tex}
-%    \newpage
-%\end{appendices}
-
-%IMPROVISED APPENDIX - PLS FIX TY
 \clearpage
-\section{Appendix}
-\begin{table}[H]
-\begin{tabular}{|l|r|r|r|r|r|}
-\hline
-\textbf{Experiment Setup} & \multicolumn{1}{l|}{\textbf{Baseline}} & \multicolumn{1}{l|}{\textbf{Q-Network}} & \multicolumn{1}{l|}{\textbf{SARSA}} & \multicolumn{1}{l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Dueling\\ Q-Network\end{tabular}}} & \multicolumn{1}{l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Dueling\\ SARSA\end{tabular}}} \\ \hline
-Size 10, no memories & 1130.2 & -81.5 & -149.6 & 692.1 & -9.4 \\ \hline
-Size 10, 100 memories & 1130.2 & 869.0 & 642.5 & 470.7 & 845.4 \\ \hline
-Size 10, 1000 memories & 1130.2 & 98.9 & 1017.5 & 825.6 & \textbf{1333.9} \\ \hline
-Size 14, no memories & 1151.4 & -590.5 & -460.9 & -188.8 & -523.2 \\ \hline
-Size 14, 100 memories & 1151.4 & -220.5 & 412.6 & 197.4 & 604.5 \\ \hline
-Size 14, 1000 memories & 1151.4 & -708.8 & 421.8 & -11.8 & \textbf{1194.0} \\ \hline
-\end{tabular}
-\caption{Averaged rewards from all training episodes.}
-\label{tab:averages}
-\end{table}
-\begin{table}[H]
-\begin{tabular}{|l|r|r|r|r|r|}
-\hline
-\textbf{Experiment Setup} & \multicolumn{1}{l|}{\textbf{Baseline}} & \multicolumn{1}{l|}{\textbf{Q-Network}} & \multicolumn{1}{l|}{\textbf{SARSA}} & \multicolumn{1}{l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Dueling\\ Q-Network\end{tabular}}} & \multicolumn{1}{l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Dueling\\ SARSA\end{tabular}}} \\ \hline
-Size 10, no memories & 1265.8 & 435.7 & 327.0 & 1187.8 & 382.0 \\ \hline
-Size 10, 100 memories & 1265.8 & \textbf{1608.8} & 1159.1 & \textbf{1272.0} & 1255.1 \\ \hline
-Size 10, 1000 memories & 1265.8 & 1243.7 & \textbf{1726.6} & \textbf{1730.8} & \textbf{1832.6} \\ \hline
-Size 14, no memories & 1363.4 & -326.3 & -226.2 & 177.5 & -262.7 \\ \hline
-Size 14, 100 memories & 1363.4 & 1049.0 & 1028.0 & 1225.5 & 1112.0 \\ \hline
-Size 14, 1000 memories & 1363.4 & -181.3 & \textbf{1393.9} & 912.5 & \textbf{1830.2} \\ \hline
-\end{tabular}
-\caption{Averaged rewards from the best 1000 training episodes.}
-\label{tab:best10averages}
-\end{table}
-\begin{table}[H]
-\begin{tabular}{|l|r|r|r|r|r|}
-\hline
-\textbf{Experiment Setup} & \multicolumn{1}{l|}{\textbf{Baseline}} & \multicolumn{1}{l|}{\textbf{Q-Network}} & \multicolumn{1}{l|}{\textbf{SARSA}} & \multicolumn{1}{l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Dueling\\ Q-Network\end{tabular}}} & \multicolumn{1}{l|}{\textbf{\begin{tabular}[c]{@{}l@{}}Dueling\\ SARSA\end{tabular}}} \\ \hline
-Size 10, no memories & 1132.3 & 253.6 & 180.5 & 973.4 & 255.0 \\ \hline
-Size 10, 100 memories & 1132.3 & 692.5 & 791.5 & 548.3 & 1040.7 \\ \hline
-Size 10, 1000 memories & 1132.3 & 977.2 & \textbf{1591.9} & \textbf{1297.5} & \textbf{1751.3} \\ \hline
-Size 14, no memories & 1155.4 & -551.0 & -391.5 & -28.1 & -457.0 \\ \hline
-Size 14, 100 memories & 1155.4 & 772.7 & 647.1 & 614.0 & 841.6 \\ \hline
-Size 14, 1000 memories & 1155.4 & -387.3 & 1102.7 & 674.4 & \textbf{1729.1} \\ \hline
-\end{tabular}
-\caption{Averaged rewards from the final 1000 training episodes.}
-\label{tab:last10averages}
-\end{table}
+\begin{appendices}
+    \input{./appendix.tex}
+    \newpage
+\end{appendices}
+
 
 \end{document}
