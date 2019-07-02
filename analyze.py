@@ -241,7 +241,7 @@ def main():
         baseline_files, first_files, second_files, third_files, \
             fourth_files = ([] for i in range(5))
         #DDQN=27 - DQN=26 - SARSA=28 - BOTH=27
-        size = "10s"
+        size = "14s"
         mem_set = 4
         for filename in all_filenames:
             if "Baseline" in filename and size in filename:
@@ -368,36 +368,32 @@ def main():
             plot_finish(save_filename)
 
         from statistics import mean
+        average_start, average_stop = (7500, 10000)
         # Baseline
-        baseline_single_avg = round(mean(baseline_avg), 1)
-        baseline_avg_sorted = sorted(baseline_avg)
-        baseline_top_avg = round(mean(baseline_avg_sorted[9000:10000]), 1)
-        baseline_last_avg = round(mean(baseline_avg[9000:10000]), 1)
-        print(f"Base:\tAvg: {baseline_single_avg} // Top10Avg: {baseline_top_avg} // Last10Avg: {baseline_last_avg}")
+        baseline_final_avg = int(mean(baseline_avg[average_start:average_stop]))
+        baseline_stderr = round(stats.sem(baseline_avg[average_start:average_stop]), 1)
+        baseline_best = int(max(baseline_avg[average_start:average_stop]))
+        print(f"Base:\tAvg: {baseline_final_avg}\tStderr: {baseline_stderr}\tBest: {baseline_best}")
         # DQN
-        first_single_avg = round(mean(first_avg), 1)
-        first_avg_sorted = sorted(first_avg)
-        first_top_avg = round(mean(first_avg_sorted[9000:10000]), 1)
-        first_last_avg = round(mean(first_avg[9000:10000]), 1)
-        print(f"DQN:\tAvg: {first_single_avg} // Top10Avg: {first_top_avg} // Last10Avg: {first_last_avg}")
+        first_final_avg = int(mean(first_avg[average_start:average_stop]))
+        first_stderr = round(stats.sem(first_avg[average_start:average_stop]), 1)
+        first_best = int(max(first_avg[average_start:average_stop]))
+        print(f"DQN:\tAvg: {first_final_avg}\tStderr: {first_stderr}\tBest: {first_best}")
         # SARSA
-        second_single_avg = round(mean(second_avg), 1)
-        second_avg_sorted = sorted(second_avg)
-        second_top_avg = round(mean(second_avg_sorted[9000:10000]), 1)
-        second_last_avg = round(mean(second_avg[9000:10000]), 1)
-        print(f"SARSA:\tAvg: {second_single_avg} // Top10Avg: {second_top_avg} // Last10Avg: {second_last_avg}")
+        second_final_avg = int(mean(second_avg[average_start:average_stop]))
+        second_stderr = round(stats.sem(second_avg[average_start:average_stop]), 1)
+        second_best = int(max(second_avg[average_start:average_stop]))
+        print(f"SARSA:\tAvg: {second_final_avg}\tStderr: {second_stderr}\tBest: {second_best}")
         # DDQN
-        third_single_avg = round(mean(third_avg), 1)
-        third_avg_sorted = sorted(third_avg)
-        third_top_avg = round(mean(third_avg_sorted[9000:10000]), 1)
-        third_last_avg = round(mean(third_avg[9000:10000]), 1)
-        print(f"DDQN:\tAvg: {third_single_avg} // Top10Avg: {third_top_avg} // Last10Avg: {third_last_avg}")
+        third_final_avg = int(mean(third_avg[average_start:average_stop]))
+        third_stderr = round(stats.sem(third_avg[average_start:average_stop]), 1)
+        third_best = int(max(third_avg[average_start:average_stop]))
+        print(f"DDQN:\tAvg: {third_final_avg}\tStderr: {third_stderr}\tBest: {third_best}")
         # BOTH
-        fourth_single_avg = round(mean(fourth_avg), 1)
-        fourth_avg_sorted = sorted(fourth_avg)
-        fourth_top_avg = round(mean(fourth_avg_sorted[9000:10000]), 1)
-        fourth_last_avg = round(mean(fourth_avg[9000:10000]), 1)
-        print(f"BOTH:\tAvg: {fourth_single_avg} // Top10Avg: {fourth_top_avg} // Last10Avg: {fourth_last_avg}")
+        fourth_final_avg = int(mean(fourth_avg[average_start:average_stop]))
+        fourth_stderr = round(stats.sem(fourth_avg[average_start:average_stop]), 1)
+        fourth_best = int(max(fourth_avg[average_start:average_stop]))
+        print(f"BOTH:\tAvg: {fourth_final_avg}\tStderr: {fourth_stderr}\tBest: {fourth_best}")
 
 if __name__ == "__main__":
     main()
