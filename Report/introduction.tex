@@ -3,30 +3,47 @@
 \section{Introduction}\label{sec:introduction}
 
 \subsection{Forest Fires}
-The ever increasing temperature around the globe due to global warming brings many consequences. One of which is the increased risk of forest fires. Warmer climates are not only plagued by forest fires more frequently, but also more intense forest fires.  In most cases, beginning wildfires are extinguished before they get out of hand. Sadly, some wildfires escalate into nearly uncontrollable infernos.
+The ever increasing temperature around the globe due to global warming brings many consequences. One of which is the increased risk of forest fires. Warmer climates are plagued by forest fires not only more frequent, but also more intense.  In most cases, beginning wildfires are extinguished before they get out of hand. Sadly, some wildfires escalate into nearly uncontrollable infernos.
 
-Fighting these forest fires is a challenging task. To extinguish a fire one or more of the three required elements has to be eliminated: fuel, heat or oxygen. The ordinary tactic is to remove the heat and oxygen by spraying water or foam from hoses, but large forest fires require more effort to be contained. Possible options include aircraft dropping water bombs, burning down specific areas in a controlled fashion, or using a bulldozer to cut fire lines. The use of these techniques need to be carefully planned by the fire-fighters when constructing a plan. To create the perfect plan is a near impossible job and it is not uncommon for plans to fail and cause the loss of more forest.
+Fighting these forest fires is a challenging task. To extinguish a fire one or more of the three required elements has to be eliminated: fuel, heat or oxygen. The ordinary tactic is to remove the heat and oxygen by spraying water or foam from hoses, but large forest fires require more effort to be contained. Possible options include aircrafts dropping water bombs, burning down specific areas in a controlled fashion, or using a bulldozer to cut fire lines. The use of these techniques need to be carefully planned by the fire-fighters when constructing a plan. To create the perfect plan is a near impossible job and it is not uncommon for plans to fail and cause the loss of more forest.
 
-Not only can forest fires result in the tragic loss of lives and houses, the ecological effect has to be taken into account as well. Trees and plants are a key factor in the carbon cycle \citep{kasischke1995fire}. Using photosynthesis massive amounts of CO$_{2}$ are filtered from the atmosphere and stored. When fires destroy large forests, all this stored CO$_{2}$ is released back into the atmosphere, which is inconsistent with the carbon cycle. Since this CO$_{2}$ is considered a greenhouse gas \citep{houghton1991climate} which boosts the already increasing global warming, this will increases the likelihood and risk of forest fires. The just described has to potential to result in a vicious cycle that is heading towards a warm, fiery planet that may not be able to support life in the future, in the same way it does today. 
+Not only can forest fires result in the tragic loss of lives and houses, the ecological effect has to be taken into account as well. Trees and plants are a key factor in the carbon cycle \citep{kasischke1995fire}. Using photosynthesis massive amounts of CO$_{2}$ are filtered from the atmosphere and stored. When fires destroy large forests, all this stored CO$_{2}$ is released back into the atmosphere, which is inconsistent with the carbon cycle. Since this CO$_{2}$ is considered a greenhouse gas \citep{houghton1991climate} which boosts the already increasing global warming, this will increases the likelihood and risk of forest fires. The just described relationship has the potential to result in a dangerous cycle with grave consequences for the eco system as well as for the habitability of the planet for humans.
 
 Previous research focussed on how to construct a simulator for forest fires and how reinforcement learning algorithms could optimise policies by interacting with such a simulation \citep{wiering1998learning}. Other research explored how enforced sub-populations (ESP) could be used to evolve neural network controllers capable of solving the forest fire problem \citep{wiering2005evolving}.
 
-In this paper we explore how forest fires can be simulated and connectionist reinforcement learning can be used on these simulations to let an agent learn to contain forest fires with the use of a bulldozer. We make use of existing algorithms: Q-Networks \citep{mnih2015human}, SARSA (ADD THE CITATION!) and Dueling Q-Networks \citep{wang2015dueling}. We show that using a simple baseline algorithm to generate demonstration data to be used in experience replay can greatly increase the algorithm's performance. We show that these algorithms, which are based on Q-learning, are able to complete this task successfully in small simulations. We also show that the latter two can be combined into Dueling SARSA which outperforms all, especially in simulations of a larger size where others fail.
-
-%(more basic reasons why forest fires are bad)
-%(more references to marcos papers)
-%(more general information, definitions, analysis of what makes a forest fire and how to prevent it + references)
-%(explain why cutting forest lines is the best choice + references)
-%(explain why DQN is a good idea)
+In this paper we explore how connectionist reinforcement learning can be used to allow an agent to learn how to contain forest fires in a simulated environment by using a bulldozer to cut fire lines. We make use of existing algorithms: Q-Networks \citep{watkins1989learning}, SARSA \citep{rummery1994line} and Dueling Q-Networks \citep{wang2015dueling}. We show that using a simple baseline algorithm to generate demonstration data to be used in experience replay can greatly increase the algorithm's performance. We show that these algorithms, which are based on Q-learning, are able to complete this task successfully in small simulations. We also show that the latter two can be combined into Dueling SARSA which outperforms all, especially in simulations of a larger size where others fail.
 
 Research question: Does connectionist Q-Learning or SARSA, both with or without the dueling network architecture, perform better at containing the spread of a simulated forest fire by cutting fire lines in a simulated environment?
 
 \subsection{Reinforcement Learning}\label{sec:reinforcementlearning}
-Reinforcement learning is a machine learning paradigm typically consisting of two elements. The first is the agent, which represents the reinforcement learning algorithm or in other words, the machine. The second is the environment, which represents what the algorithm is trying to solve or at least perform quite well at. This is typically a game or in this case, a simulated forest fire that should be contained.
+Reinforcement learning is a machine learning paradigm typically consisting of two elements. The first is the agent, which represents the reinforcement learning algorithm, and the second is the environment, which represents what the algorithm is trying to solve or at least perform quite well at. This is typically a game or in this case, a simulated forest fire that should be contained.
 
-% insert (make your own) an image of agent <--> environment interaction including reward function
-At each discrete time step $t=1,2,3...$, the environment provides the agent with an observation $S_t$ and a reward $R_t$, which is obtained by passing the state to the reward function. Then, the agent interacts with the environment by choosing an action A from a set of possible actions, and observes the result of that action in $S_{t+1}$ and $R_{t+1}$. This interaction can be modelled by a Markov Decision Process, or MDP, as long as the Markov property holds: The probability of state $S_{t+1}$ only relies on the previous state $S$. This property indeed holds, as the simulation only requires the current state to produce the next state.
+% use proper set notation
 
-The goal of the agent is to learn what actions to take, given access to the current state $S_t$, to maximize the total cumulative reward from that state to the terminal state $S_T$.
+At each discrete time step $t \in \{1,2,3...,T\}$, the environment provides the agent with an observation $s_t$ and a reward $r_t$, which is obtained by passing the state to the reward function. Then, the agent interacts with the environment by choosing an action $a_t$ from a limited set of possible actions $\mathcal{A}=\{1,...,K\}$, and observes the result of that action in $s_{t+1}$ and $r_{t+1}$. This interaction can be modelled by a Markov Decision Process, or MDP, as long as the Markov property holds: The probability of state $s_{t+1}$ only relies on the previous state $s$. This property indeed holds, as the simulation only requires the current state to produce the next state.
 
-One way to achieve this is by learning the Q-values for each state, or in other words the quality values of each state corresponding to the expected cumulative reward that would be achieved by following the optimal policy from that state forward \citep{sutton_barto_2018}. The approximation of those Q-values can be done via TD methods and the Bellman equations \citep{sutton_barto_2018}, and they would classically be stored in a Q-table but in connectionist reinforcement learning, a neural network is used to approximate the function that takes as an input the state and outputs the estimated Q-values for each action.
+The goal of the agent is to select actions in a way that maximizes the cumulative future reward from the current time step $t$, which is defined as 
+
+\begin{equation}\label{eq:cumulative_reward}
+	R_t = \sum_{t'=t}^{T} \gamma^{t'-t} r_{t'},
+\end{equation}
+
+where $T$ is the time-step at which the game terminates and $\gamma \in [0,1]$ is a discount factor that determines the trade-off between the importance of immediate and delayed rewards. 
+
+A policy $\pi$ is a mapping of states to actions (or distributions over actions). To determine the optimal policy $\pi^*$, that leads to the highest reward as defined in \eqref{eq:cumulative_reward}, we define the optimal action-value function (also known as $Q$) to be
+
+\begin{equation}\label{qfunction}
+	Q^*(s, a) = \max_\pi \sum [R_t \vert s_t=s, a_t=a, \pi]
+\end{equation}
+
+Because this function obeys the Bellman equation, we can estimate this $Q$-function with iterative updates (TD methods and dynamic programming) using
+
+\begin{equation}
+	Q_{i+1}(s, a) = \sum_{s'} [r + \gamma \max_{a'} Q_i(s', a') \vert s, a],
+\end{equation}
+and such a value iteration algorithm will eventually converge to the optimal $Q$-function $Q^*$ as $i \rightarrow \infty$. From this function, the optimal policy can easily be derived by simple taking the highest-valued action in each state. In connectionist reinforcement learning, it is common to approximate this function using a neural network
+
+\begin{equation}
+	Q(s, a; \theta) \approx Q^*(s, a),
+\end{equation}
+where $\theta$ are the parameters, or weights, of the Q-Network.
