@@ -18,8 +18,6 @@ Research question: Does connectionist Q-Learning or SARSA, both with or without 
 \subsection{Reinforcement Learning}\label{sec:reinforcementlearning}
 Reinforcement learning is a machine learning paradigm typically consisting of two elements. The first is the agent, which represents the reinforcement learning algorithm, and the second is the environment, which represents what the algorithm is trying to solve or at least perform quite well at. This is typically a game or in this case, a simulated forest fire that should be contained.
 
-% use proper set notation
-
 At each discrete time step $t \in \{1,2,3...,T\}$, the environment provides the agent with an observation $s_t$ and a reward $r_t$, which is obtained by passing the state to the reward function. Then, the agent interacts with the environment by choosing an action $a_t$ from a limited set of possible actions $\mathcal{A}=\{1,...,K\}$, and observes the result of that action in $s_{t+1}$ and $r_{t+1}$. This interaction can be modelled by a Markov Decision Process, or MDP, as long as the Markov property holds: The probability of state $s_{t+1}$ only relies on the previous state $s$. This property indeed holds, as the simulation only requires the current state to produce the next state.
 
 The goal of the agent is to select actions in a way that maximizes the cumulative future reward from the current time step $t$, which is defined as 
