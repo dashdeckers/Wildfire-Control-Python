@@ -3,9 +3,9 @@
 \section{Results}
 All four algorithms are color-coded consistently throughout all six plots. The lines represent averages of 10 training runs. The error bars are based on the standard error at that point in time.
 
-In Figure \ref{fig:10sized-nomem}, \ref{fig:10sized-100mem} and \ref{fig:10sized-1000mem} we see the three cases where the simulation consists of a grid of 10-by-10 and the algorithms are given no, 100 or 1000 episodes of demonstation data respectively.
+In Figure \ref{fig:10sized-nomem}, \ref{fig:10sized-100mem} and \ref{fig:10sized-1000mem} we see the three cases where the simulation consists of a grid of 10-by-10 and the algorithms are given no, 100 or 1000 episodes of demonstration data respectively.
 
-Firstly, in Figure \ref{fig:10sized-nomem} we see that all algorithms struggle to beat the baseline algorithm. Only the Dueling Q-Networks is able to come near. It offers a greatly increased learning speed and is able to sustain a higher maximum performance level. The other three algorithm perform similarly to each other, but noticable worse than Dueling Q-Networks.
+Firstly, in Figure \ref{fig:10sized-nomem} we see that all algorithms struggle to beat the baseline algorithm. Only the Dueling Q-Networks is able to come near. It offers a greatly increased learning speed and is able to sustain a higher maximum performance level. The other three algorithm perform similarly to each other, but noticeable worse than Dueling Q-Networks.
 
 Secondly, in Figure \ref{fig:10sized-100mem} we see the performance of all algorithms converge. The Dueling Q-Networks which performed better than the others before, has now lost its edge and is now the worst performer. The performance of Q-Networks has greatly increased when fed $\pm 3500$ memories compared to none. It surpasses the baseline algorithm temporarily. SARSA and Dueling SARSA fly under the radar, but also increased their performances given more memories than before.
 

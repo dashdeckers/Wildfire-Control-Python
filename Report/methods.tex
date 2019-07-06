@@ -146,7 +146,7 @@ One limitation of the Q-Network approach is that it is not able to estimate the 
     \Big(A(s, a; \alpha) - \frac{1}{c} \sum\limits_{a'} A(s,a'; \alpha)\Big)
   \end{array}
 \end{equation}
-Here $\alpha$ and $\beta$ denote the two fully connected layers and $c$ the number of action advantages. It automatically prevents the layer for the state value from estimating anything related to the action advantages, since the sum of these advantages is kept at zero. This formula results in the Q-values which can be used no different from the single stream Q-values. All learning techniques and code can be recycled. According to the original paper, this modification is expected to boost the maximum performance and especially the speed of learning. 
+Here $\alpha$ and $\beta$ denote the two fully connected layers and $c$ the number of action advantages. It automatically prevents the layer for the state value from estimating anything related to the action advantages, since the sum of these advantages is kept at zero. This formula results in the Q-values which can be used no different from the single stream Q-values. All learning techniques and code can be recycled. ding Given the results from the original paper, this modification is expected to boost the maximum performance and especially the speed of learning. 
 
 
 
