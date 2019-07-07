@@ -34,7 +34,7 @@ Containment of the fire is defined as
 \begin{equation}\label{eq:containment}
     \sum_{f=1}^\mathcal{F} \sum_{b=1}^\mathcal{B} astar(f, b) = 0,
 \end{equation}
-where f is a burning cell from the set of currently burning cells $\mathcal{F}$ and b is a cell on the border of the map from the fixed set of border cells $\mathcal{B}$. The function $astar$ is defined as
+where $f$ is a burning cell from the set of currently burning cells $\mathcal{F}$ and $b$ is a cell on the border of the map from the fixed set of border cells $\mathcal{B}$. The function $astar$ is defined as
 \begin{equation}\label{eq:astar}
     astar(f, b) = \left\{
         \begin{array}{lr}
@@ -118,7 +118,7 @@ We implemented both $Q$-learning and SARSA to investigate the difference in perf
 
 There are two commonly used policies, the greedy and the $\epsilon$-greedy policy, and both depend on $Q$. The greedy policy simply always chooses the best action to take in the current state at any given time step: $\max_a Q(s_t, a)$. 
 
-The $\epsilon$-greedy policy is similar, but it regulates the exploration / exploitation trade-off with the parameter $\epsilon \in [0,1]$. With a probability of $\epsilon$, this policy chooses a random action and otherwise chooses the best action. By annealing this probability towards 0 over time, we can ensure a high exploration rate in the beginning and then slowly decrease it to switch focus to the exploitation.
+The $\epsilon$-greedy policy is similar, but it regulates the exploration/exploitation trade-off with the parameter $\epsilon \in [0,1]$. With a probability of $\epsilon$, this policy chooses a random action and otherwise chooses the best action. By annealing this probability towards 0 over time, we can ensure a high exploration rate in the beginning and then slowly decrease it to switch focus to the exploitation.
 
 In $Q$-learning the agent follows the $\epsilon$-greedy policy while optimizing the greedy policy, making it an off-policy algorithm. Putting together everything so far, we end up with the following loss function for the base $Q$-Network algorithm:
 \begin{equation}
