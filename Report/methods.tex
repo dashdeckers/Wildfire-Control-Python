@@ -113,7 +113,7 @@ where every $C$ time steps, the weights of the network are copied into the targe
 \end{figure}
 
 
-\subsubsection{$Q$-Learning versus SARSA}\label{sec:ql_sarsa}
+\subsubsection{Q-Learning versus SARSA}\label{sec:ql_sarsa}
 We implemented both $Q$-learning and SARSA to investigate the difference in performance when using an off-policy versus on-policy algorithm. 
 
 There are two commonly used policies, the greedy and the $\epsilon$-greedy policy, and both depend on $Q$. The greedy policy simply always chooses the best action to take in the current state at any given time step: $\max_a Q(s_t, a)$. 
