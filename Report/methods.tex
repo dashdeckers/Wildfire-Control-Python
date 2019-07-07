@@ -24,53 +24,34 @@ We defined the reward function as
         1000, & \text{ Fire is contained }\\
         1000 * (p), & \text{ Fire burns out }\\
         -1000, & \text{ Agent dies }\\
-        -1 & \text{ Otherwise }
+        -1, & \text{ Otherwise }
 
         \end{array}\right\},
 \end{equation}
 where $p$ is the percent of the map undamaged by either fire or digging. Note that this reward function does not produce a smooth gradient, and the performance of the agent will likely suffer as a result.
 
-Containment of the fire is defined in Algorithm \ref{alg:containment}. The algorithm returns true as soon as it can find a path, not allowing diagonal movements, between any burning cell and any cell on the border of the map. If there exists a path, then there exists a way for the fire to spread and so it is not contained. It uses the A* path-finding algorithm to check for a path between any two points.
-
-% equation instead of algorithm? ask marco.
-
-\begin{algorithm}
-  \caption{Algorithm to check if the fire is contained}
-  \label{alg:containment}
-  \begin{algorithmic}[1]
-    \Procedure{fireIsContained}{}
-    \State {F = set of burning cells}
-    \State {f = pop(F)}
-    \State {B = set of burning cells}
-    \State {b = pop(B)}
-    \State {p = astarpath(f, b)}
-    \While {p is not a path}
-    \If {B is empty}
-    \If {F is empty}
-    \State \Return {True}
-    \Else
-    \State {B = set of border cells}
-    \State {f = pop(F)}
-    \EndIf
-    \Else
-    \State {b = pop(B)}
-    \State {p = astarpath(f, b)}
-    \EndIf
-    \EndWhile
-    \State \Return {False}
-    \EndProcedure
-  \end{algorithmic}
-\end{algorithm}
-
+Containment of the fire is defined as
+\begin{equation}\label{eq:containment}
+    \sum_{f=1}^\mathcal{F} \sum_{b=1}^\mathcal{B} astar(f, b) = 0,
+\end{equation}
+where f is a burning cell from the set of currently burning cells $\mathcal{F}$ and b is a cell on the border of the map from the fixed set of border cells $\mathcal{B}$. The function $astar$ is defined as
+\begin{equation}\label{eq:astar}
+    astar(f, b) = \left\{
+        \begin{array}{lr}
+            1, & \text{ A* path exists }\\
+            0, & \text{ Otherwise }
+        \end{array}\right\},
+\end{equation}
+where a path is a sequence of directly connecting cells starting with cell $f$ and ending with cell $b$, determined using the A* path-finding algorithm and not allowing diagonal connections. The intuition is that if there exists a path between any burning cell and any cell on the border of the map, then there exists a way for the fire to spread beyond control and so it is not contained.
 
 
 \subsubsection{The State Representation}\label{sec:state_rep}
-The state of the environment, as it is visible to the agent, consists of 3 matrices of size $N^2$ with a boolean domain resulting in, after flattening, an array of $3 * N^2$ boolean inputs where $N$ is the size of the square map. The environment is thus represented three times: One layer contains only the agent position, translating to a matrix of zeros except for a single one representing the position of the agent. The second layer consists of the position of the fire. Cells that are on fire are represented by a 1, the rest are set to 0. The third layer represents the fire lines cut by the agent in a similar boolean fashion, resulting in a total of 300 inputs to the agent when $N=10$. This is shown graphically in figure \ref{fig:visiongrid}.
+The state of the environment, as it is visible to the agent, consists of 3 matrices of size $N^2$ with a boolean domain resulting in, after flattening, an array of $3 * N^2$ boolean inputs where $N$ is the size of the square map. The environment is thus represented three times: One layer contains only the agent position, translating to a matrix of zeros except for a single one representing the position of the agent. The second layer consists of the position of the fire. Cells that are on fire are represented by a 1, the rest are set to 0. The third layer represents the fire lines cut by the agent in a similar boolean fashion, resulting in a total of 300 inputs to the agent when $N=10$. This is shown graphically in Figure \ref{fig:visiongrid}.
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=1\linewidth]{img/Vision_Grid.png}
-    \caption{A vision grid representation of an example state. Each layer shows an important aspect of the world: Agent position, Fire positions and Fire barrier positions.}
+    \caption{A vision grid representation of an example state. Each layer shows an important aspect of the world: The location of the agent, the fire and of inflammable cells.}
     \label{fig:visiongrid}
 \end{figure}
 
@@ -80,28 +61,26 @@ This vision grid approach can speed up the learning process as well as increase 
 \subsection{The Agent}\label{sec:agent}
 
 \subsubsection{Code Availability}
-The source code can be accessed at https://github.com/dashdeckers/Wildfire-Control-Python.
+The source code, available at https://github.com/dashdeckers/Wildfire-Control-Python, can be accessed and used for non-commercial uses only.
 
 \subsubsection{Known Problems with Connectionist RL}\label{sec:problems}
-The combination of function approximation (the neural network), bootstrapping (TD methods that update $Q$-values using estimated return values) and off-policy training (the $Q$-Learning algorithm) make up the deadly triad \citep{sutton_barto_2018}, which is known to cause instabilities and even divergence in the learning process. This is at least partly due to correlations in the sequence of consecutive observations, the fact that even small updates to $Q$ can change the policy and therefore the data distribution, and the correlations between the $Q$-values $Q(s, a)$ and the target values $Y_t = r_{t+1} + \gamma \max_a Q(s_{t+1}, a; \theta_t)$ \citep{mnih2015human}.
+The combination of function approximation (the neural network), bootstrapping (TD methods that update $Q$-values using estimated return values) and off-policy training (the $Q$-Learning algorithm) make up the deadly triad \citep{sutton_barto_2018}, which is known to cause instabilities and even divergence in the learning process. This is at least partly due to correlations in the sequence of consecutive observations, the fact that even small updates to $Q$ can change the policy and therefore the data distribution, and the correlations between the $Q$-values $Q(s_t, a_t; \theta_t)$ and the target values $Y_t = r_{t+1} + \gamma \max_a Q(s_{t+1}, a; \theta_t)$ \citep{mnih2015human}.
 
-As will be clear by the end of this section, all three of these elements are present in some of the algorithms. There are, however, two well known strategies to reduce this effect and stabilise learning: Using experience replay and a target network.
+As will be clear by the end of this section, all three of these elements of the deadly triad are present in some of the algorithms. There are, however, two well known strategies to reduce this effect and stabilise learning: Using experience replay and a target network.
 
 \subsubsection{Network Architecture}\label{sec:architecture}
-First we define the neural network architecture that will approximate $Q$, or the action-value function. We use only a shallow network with one hidden layer of 50 units using a sigmoidal activation function, and a simple output layer with a linear activation. The network takes as an input a state $s$, consisting of an array of size $3*N^2$, and outputs an array of size 4 corresponding to the $Q$-values of taking any of the 4 possible actions $a$ in that state.
+First we define the neural network architecture that will approximate $Q$, or the action-value function. We use only a shallow network with one hidden layer of 50 units using a sigmoidal activation function, and a simple output layer with a linear activation. The network takes as an input a state $s$, consisting of an array of size $3*N^2$, and outputs an array of size 4 corresponding to the $Q$-values of taking any of the 4 possible actions $a$ in that state. We used the Adam optimizer to train this network.
 
 \subsubsection{Experience Replay}\label{sec:exp_replay}
 \begin{figure}[h]
     \centering
     \includegraphics[width=1\linewidth]{img/Experience_Replay.png}
-    \caption{Schematic structure of experience replay}
+    \caption{Schematic structure of the experience replay process}
     \label{fig:expreplay}
 \end{figure}
 Instead of training the network on incoming experiences $e_t=(s_t,a_t,r_t,s_{t+1})$ at each time step $t$ directly, the experiences can be stored in a memory buffer $B_t=\{e_1,...e_t\}$ and the network can be trained on a mini-batch of memories randomly sampled from this buffer $(s,a,r,s') \sim U(B)$ (see Figure \ref{fig:expreplay}). The buffer $B$ allows for $M$ experiences to be stored until it is full, at which point the oldest memories will be discarded to make room for new ones.
 
-This helps because neural networks assume that each training sample is identically and independently distributed from the population, which is in this case the environment that the algorithm is set up to approximate, and training directly on incoming experiences breaks this assumption in two regards.
-
-% cite the I.I.D assumption
+This helps because neural networks assume that each training sample is identically and independently distributed from the population, which is in this case the environment that the algorithm is set up to approximate, and training directly on incoming experiences violates this assumption in two regards.
 
 For one, consecutive incoming experiences are obviously highly correlated because the environment does not radically change after any action (unless it is a terminal state). This means that any experience differs from the previous experience only to the extent to which the environment can change in one update step from a single action from the agent.
 
@@ -117,41 +96,52 @@ Another source of instability arises when we use the predictions of the network 
 \end{equation}
 where $\alpha$ is the learning rate and the target $Y_t$ is defined as
 \begin{equation}\label{eq:target}
-    Y^{}_t \equiv r_{t+1} + \gamma \max_a Q(s_{t+1}, a; \theta_t).
+    Y_t \equiv r_{t+1} + \gamma \max_a Q(s_{t+1}, a; \theta_t).
 \end{equation}
 
 The update rule in \eqref{eq:update_rule} resembles stochastic gradient descent, updating the value $Q(s_t, a_t; \theta_t)$ towards the target value $Y_t$. Using the same network can lead to unwanted feedback loops. A delay to the loop can be added to reduce these effects by using a periodically updated, frozen copy of the network with weights $\theta^-$ to generate the target values instead (as shown schematically in Figure \ref{fig:targetnet})
-\begin{equation}
-    Y^{NEW}_t \equiv r_{t+1} + \gamma \max_a Q(s_{t+1}, a; \theta_t^-),
+\begin{equation}\label{eq:target_target}
+    Y^{Target}_t \equiv r_{t+1} + \gamma \max_a Q(s_{t+1}, a; \theta_t^-),
 \end{equation}
 where every $C$ time steps, the weights of the network are copied into the target network $\theta_t^- = \theta_t$. This modification was also used by \cite{mnih2015human} alongside experience replay to make the algorithm more stable and dramatically increase its performance.
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=1\linewidth]{img/Target_Network.png}
-    \caption{Highlighting the schematic difference of using a target network}
+    \caption{Using a target network to add a delay to the feedback loop. The main network affects (copies itself into) the target network only every $C$ iterations.}
     \label{fig:targetnet}
 \end{figure}
 
 
-\subsubsection{Q-Learning versus SARSA}\label{sec:ql_sarsa}
+\subsubsection{$Q$-Learning versus SARSA}\label{sec:ql_sarsa}
 We implemented both $Q$-learning and SARSA to investigate the difference in performance when using an off-policy versus on-policy algorithm. 
+
+There are two commonly used policies, the greedy and the $\epsilon$-greedy policy, and both depend on $Q$. The greedy policy simply always chooses the best action to take in the current state at any given time step: $\max_a Q(s_t, a)$. 
+
+The $\epsilon$-greedy policy is similar, but it regulates the exploration / exploitation trade-off with the parameter $\epsilon \in [0,1]$. With a probability of $\epsilon$, this policy chooses a random action and otherwise chooses the best action. By annealing this probability towards 0 over time, we can ensure a high exploration rate in the beginning and then slowly decrease it to switch focus to the exploitation.
+
+In $Q$-learning the agent follows the $\epsilon$-greedy policy while optimizing the greedy policy, making it an off-policy algorithm. Putting together everything so far, we end up with the following loss function for the base $Q$-Network algorithm:
+\begin{equation}
+    L_i(\theta_i)= \sum_{(s,a,r,s') \sim U(B)}[(Y^{Target}-Q(s,a,\theta_i))^2].
+\end{equation}
+Where the $Y^{Target}$ is the target function defined in \eqref{eq:target_target}.
+
+In SARSA however, as the acronym suggests, we also save the next action to the memory buffer with the tuple (s,a,r,s',a'). This way the agent can both follow and optimize for the same $\epsilon$-greedy policy, making this an on-policy algorithm with the loss function:
+\begin{equation}
+    L_i(\theta_i)= \sum_{(s,a,r,s',a') \sim U(B)}[(Y^{SARSA}-Q(s,a,\theta_i))^2].
+\end{equation}
+with
+\begin{equation}\label{eq:target_sarsa}
+    Y^{SARSA}_t \equiv r_{t+1} + \gamma Q(s_{t+1}, a_{t+1}; \theta_t^-),
+\end{equation}
+and should see an increase in learning stability due to one less element of the deadly triad present in the system. Because SARSA updates $Q$ in a way that takes into account the random actions the agent sometimes takes it is expected to find a safer, but less optimal policy \citep{sutton_barto_2018} and report a higher average performance during learning. See Figure \ref{fig:ql_sarsa} for a simple side by side comparison of the two algorithms.
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=1\linewidth]{img/SARSA_QL.png}
-    \caption{Comparison of the Q-Learning and SARSA algorithms}
+    \caption{Side-by-side comparison of the Q-Learning and SARSA algorithms}
     \label{fig:ql_sarsa}
 \end{figure}
-
-% show both update rules as equations
-% make equations for both policies
-% listen to proofread comments
-
-In $Q$-learning, the agent follows the $\epsilon$-greedy policy in which we can vary the degree of exploration by adjusting $\epsilon$, the probability of taking a random action as opposed to the best action according to $Q$. This parameter allows for the exploration rate to start off with a high value such as 1, which causes the agent to choose only random actions, and then slowly decay over time to allow the agent to exploit its knowledge about the environment. At the same, $Q$ is updated in a way that optimizes the greedy policy (see figure \ref{fig:ql_sarsa}). This is an off-policy algorithm.
-
-In contrast, SARSA optimizes the same $\epsilon$-greedy policy that it is following. This makes it an on-policy algorithm and should see an increase in learning stability due to one less element of the deadly triad present in the system. Because SARSA updates $Q$ in a way that takes into account the random actions the agent sometimes takes it is expected to find a safer, but less optimal policy \citep{sutton_barto_2018} and report a higher average performance during learning.
-
 
 
 \subsubsection{Dueling Networks}\label{sec:dueling}
@@ -164,7 +154,7 @@ One limitation of the $Q$-Network approach is that it is not able to estimate th
   \end{array}
 \end{equation}
 
-Here, $\alpha$ and $\beta$ denote the two fully connected layers and $c$ the number of action advantages. This equation automatically prevents the layer for the state value from estimating anything related to the action advantages, since the sum of the advantages is kept at zero. The equation results in the $Q$-values which can be used in the same way as the single stream Q-values. All learning techniques and code can be recycled. Given the results from the original paper, this modification is expected to boost the maximum performance and especially the speed of learning. 
+Here, $\alpha$ and $\beta$ denote the weights of the two fully connected layers and $c$ the number of action advantages. This equation automatically prevents the layer for the state value from estimating anything related to the action advantages, since the sum of the advantages is kept at zero. The equation results in the $Q$-values which can be used in the same way as the single stream Q-values. All learning techniques and code can be recycled. Given the results from the original paper, this modification is expected to boost the maximum performance and especially the speed of learning. 
 
 
 
@@ -173,12 +163,12 @@ Because the reward function defined in Section \ref{sec:reward_function} provide
 
 The demonstration data only needs to show the agent how it might be able to collect the containment reward, to this effect we developed a simple algorithm that moves the agent around the fire in a clockwise direction by choosing randomly from one of two possible actions depending on the position of the agent relative to the fire (shown schematically in Figure \ref{fig:demodata}). 
 
-The environment is reset upon containment (as defined in Algorithm \ref{alg:containment}), and if the agent chooses an action that would lead to its death, it chooses the other possible action instead. Only memories leading to successful containments are stored. This results in an average of 35 demonstration data memories per containment of the fire on the 10x10 map, and around 48 memories on the 14x14 map. The number of successful containments per episodes required can be specified.
+The environment is reset upon containment (as defined in \eqref{eq:containment}), and if the agent chooses an action that would lead to its death, it chooses the other possible action instead. Only memories leading to successful containments are stored. This results in an average of 35 demonstration data memories per containment of the fire on the 10x10 map, and around 48 memories on the 14x14 map. The number of successful containments per episodes required can be specified.
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=1\linewidth]{img/Demo-data_Baseline.png}
-    \caption{Possible actions to take, based on the agents position relative to the fire}
+    \caption{The possible actions for the agent to take, based on the position (quadrant) of the agent relative to the origin of the fire}
     \label{fig:demodata}
 \end{figure}
 

@@ -31,7 +31,7 @@ where $T$ is the time-step at which the game terminates and $\gamma \in [0,1]$ i
 A policy $\pi$ is a mapping of states to actions (or distributions over actions). To determine the optimal policy $\pi^*$, that leads to the highest reward as defined in \eqref{eq:cumulative_reward}, we define the optimal action-value function (also known as $Q$) to be
 
 \begin{equation}\label{qfunction}
-	Q^*(s, a) = \max_\pi \sum [R_t \vert s_t=s, a_t=a, \pi]
+	Q^*(s, a) = \max_\pi \sum_{t=1}^T [R_t \vert s_t=s, a_t=a, \pi]
 \end{equation}
 
 Because this function obeys the Bellman equation, we can estimate this $Q$-function with iterative updates (TD methods and dynamic programming) using
