@@ -199,6 +199,23 @@ To be able to reliably compare the performance of the different algorithms, we n
 \end{algorithm}
 
 \subsubsection{Collection of Results}\label{sec:datacollection}
-We investigate the performance of both Q-Learning and SARSA, both with and without the dueling network architecture modification for a total of 4 different algorithms.
+We investigate the performance of both Q-Learning and SARSA, both with and without the dueling network architecture modification, for a total of 4 different algorithms. The hyper-parameters we used, are shown in Table \ref{tab:hyperparameters}. 
 
 Each algorithm and parameter combination was run 10 times for 10,000 episodes per run. We compared the baseline performance to 2 map sizes ($N=10$ and $N=14$), 3 different amounts of demonstration data (0, 100 and 1000 episodes) and 4 algorithms for a total of 240 runs (260 including the baselines). Since each run took approximately 4.5 hours on average, they were calculated on the Peregrine computing cluster provided by the University of Groningen.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+Memory size & 20000 \\ \hline
+Batch size & 32 \\ \hline
+Target update ($C$) & 20 \\ \hline
+Gamma ($\gamma$) & 0.999 \\ \hline
+Alpha ($\alpha$) & 0.005 \\ \hline
+Epsilon decay ($\epsilon$) & 0.01 \\ \hline
+Epsilon maximum & 1 \\ \hline
+Epsilon minimum & 0.005 \\ \hline
+\end{tabular}
+\caption{All relevant hyper-parameters used in the training process.}
+\label{tab:hyperparameters}
+\end{table}
