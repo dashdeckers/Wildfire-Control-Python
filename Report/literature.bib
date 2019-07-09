@@ -1,26 +1,27 @@
 % Climate change
 @book{houghton1991climate,
   title={Climate change},
-  author={Houghton, John Theodore and Jenkins, Geoffrey J and Ephraums, Jim J},
+  author={Houghton, J. and Jenkins, T. and Ephraums, G.},
+  publisher={Cambridge University Press},
+  address={Cambridge (UK)},
+  edition={3},
   year={1991}
 }
 
 % Basic forest fire/carbon stuff
 @article{kasischke1995fire,
   title={Fire, global warming, and the carbon balance of boreal forests},
-  author={Kasischke, Eric S and Christensen Jr, NL and Stocks, Brian J},
+  author={Kasischke, E. and Christensen Jr, N. and Stocks, B.},
   journal={Ecological applications},
   volume={5},
-  number={2},
-  pages={437--451},
+  pages={437-451},
   year={1995},
-  publisher={Wiley Online Library}
 }
 
 % Original DQN Paper (well, second edition)
 @article{mnih2015human,
   title={Human-level control through deep reinforcement learning},
-  author={Mnih, Volodymyr and Kavukcuoglu, Koray and Silver, David and Rusu, Andrei A and Veness, Joel and Bellemare, Marc G and Graves, Alex and Riedmiller, Martin and Fidjeland, Andreas K and Ostrovski, Georg and others},
+  author={Mnih, V. and Kavukcuoglu, K. and Silver, D. and Rusu, A. and Andrei, A. and Veness, J. and Bellemare, M. and Fidjeland, K. and Ostrovski, G. et al.},
   journal={Nature},
   volume={518},
   number={7540},
@@ -32,43 +33,47 @@
 % Policy correlation feedback loops
 @inproceedings{tsitsiklis1997analysis,
   title={Analysis of temporal-diffference learning with function approximation},
-  author={Tsitsiklis, John N and Van Roy, Benjamin},
+  author={Tsitsiklis, J. and Van Roy, B.},
   booktitle={Advances in neural information processing systems},
-  pages={1075--1081},
+  pages={1075-1081},
   year={1997}
 }
 
 % SARSA
-@book{rummery1994line,
+@techreport{rummery1994line,
   title={On-line Q-learning using connectionist systems},
-  author={Rummery, Gavin A and Niranjan, Mahesan},
-  volume={37},
+  author={Rummery, G. and Niranjan, M.},
   year={1994},
-  publisher={University of Cambridge, Department of Engineering Cambridge, England}
+  institution={University of Cambridge, Department of Engineering Cambridge, England}
 }
 
 % Q-Learning
-@article{watkins1989learning,
+@phdthesis{watkins1989learning,
   title={Learning from delayed rewards},
   author={Watkins, Christopher John Cornish Hellaby},
   year={1989},
-  publisher={King's College, Cambridge}
+  school={University of Cambridge}
 }
 
 % The big book
 @book{sutton_barto_2018, 
-  title={Reinforcement learning: an introduction}, 
-  publisher={The MIT Press.}, 
-  author={Sutton, Richard S. and Barto, Andrew G.}, 
+  title={Reinforcement Learning: an Introduction}, 
+  publisher={The MIT Press}, 
+  edition={2},
+  author={Sutton, R. and Barto, A.}, 
   year={2018}
- }
+}
 
 % Double Q-Learning
+% !NEVER MENTIONED!
 @inproceedings{hasselt2010double,
   title={Double Q-learning},
-  author={Hasselt, Hado V},
+  author={Hasselt, H.V.},
+  editor={Lafferty, J. and Williams, C. and Shawe-Taylor, J. and Zemel, R. and Culotta, A.},
   booktitle={Advances in Neural Information Processing Systems},
-  pages={2613--2621},
+  volume={23},
+  pages={2613-2621},
+  publisher={Curran Associates, Inc.},
   year={2010}
 }
 
@@ -89,44 +94,57 @@
   url="https://doi.org/10.1007/BF00992699"
 }
 
+% Self-improving reactive..
+% !NEVER MENTIONED!
+@article{lin1992self,
+  title={Self-improving reactive agents based on reinforcement learning, planning and teaching},
+  journal={Machine Learning},
+  volume={8},
+  number={3},
+  pages={293-321},
+  year={1992}
+}
+
 % Hindsight actual benefits of experience replay
 @article{schaul2015prioritized,
   title={Prioritized experience replay},
-  author={Schaul, Tom and Quan, John and Antonoglou, Ioannis and Silver, David},
+  author={Schaul, T. and Quan, J. and Antonoglou, I. and Silver, D.},
   journal={arXiv preprint arXiv:1511.05952},
   year={2015}
 }
 
 % Vision grids (Marco)
 @inproceedings{knegt2018opponent,
-  title={Opponent Modelling in the Game of Tron using Reinforcement Learning.},
-  author={Knegt, Stefan JL and Drugan, Madalina M and Wiering, Marco A},
-  booktitle={ICAART (2)},
-  pages={29--40},
+  title={Opponent Modelling in the Game of Tron using Reinforcement Learning},
+  author={Knegt, S.J.L. and Drugan, M.M. and Wiering, M.A.},
+  booktitle={International Conference on Agents and Artificial Intelligence},
   year={2018}
 }
 
 % Dueling Q-Networks
 @article{wang2015dueling,
-  title={Dueling network architectures for deep reinforcement learning},
-  author={Wang, Ziyu and Schaul, Tom and Hessel, Matteo and Van Hasselt, Hado and Lanctot, Marc and De Freitas, Nando},
-  journal={arXiv preprint arXiv:1511.06581},
+  title={Dueling Network Architectures for Deep Reinforcement Learning},
+  author={Wang, Z. and De Freitas, N. and Lanctot, M.},
+  journal={arXiv e-prints},
   year={2015}
 }
 
 % Wiering 1
-@article{wiering1998learning,
+@inproceedings{wiering1998learning,
   title={Learning to control forest fires},
-  author={Wiering, MA and Dorigo, Marco},
+  author={Wiering, M.A. and Doringo, M.},
+  editor={Haasis, H. and Ranze, K.},
   year={1998},
-  publisher={Metropolis Verlag}
+  booktitle={Proceedings of the 12th international Symposium on 'Computer Science for Environmental Protection'},
+  pages={378-388}
 }
 
 % Wiering 2
 @inproceedings{wiering2005evolving,
   title={Evolving neural networks for forest fire control},
-  author={Wiering, MA and Mignogna, Fillipo and Maassen, Bernard},
-  booktitle={Proceedings of the 14th Belgian-Dutch Conference on Machine Learning},
-  pages={113--120},
+  author={Wiering, M.A. and Midgogna, F. and Maassen, B.},
+  editor={van Otterlo, M. and Poel, M. and Nijholt, A.},
+  booktitle={Benelearn '05: Proceedings of the 14th Belgian-Dutch Conference on Machine Learning},
+  pages={113-120},
   year={2005}
 }
