@@ -9,18 +9,18 @@ Fighting these forest fires is a challenging task. To extinguish a fire one or m
 
 Not only can forest fires result in the tragic loss of lives and houses, the ecological effect has to be taken into account as well. Trees and plants are a key factor in the carbon cycle \citep{kasischke1995fire}. Using photosynthesis massive amounts of CO$_{2}$ are filtered from the atmosphere and stored. When fires destroy large forests, all this stored CO$_{2}$ is released back into the atmosphere, which is inconsistent with the carbon cycle. Since this CO$_{2}$ is considered a greenhouse gas \citep{houghton1991climate} which boosts the already increasing global warming, this will increases the likelihood and risk of forest fires. The just described relationship has the potential to result in a dangerous cycle with grave consequences for the eco system as well as for the habitability of the planet for humans.
 
-In light of the seriousness of the problem there is still not much research being done in the field of artificial intelligence, to optimize the coordination of fire fighting efforts. Previous research mostly focussed on the detection and prediction forest fires, but exceptions include investigations into how to construct a simulator for forest fires and how reinforcement learning algorithms could optimise policies by interacting with such a simulation \citep{wiering1998learning}, research exploring how enforced sub-populations (ESP) could be used to evolve neural network controllers capable of solving the forest fire problem \citep{wiering2005evolving}, and a model of multi-agent coordination in fire fighting scenarios \citep{moura2007fighting}.
+In light of the seriousness of the problem there is still not much research being done in the field of artificial intelligence to optimize the coordination of fire fighting efforts. Previous research mostly focussed on the detection and prediction of forest fires, but exceptions include investigations into how to construct a simulator for forest fires and how reinforcement learning algorithms could optimise policies by interacting with such a simulation \citep{wiering1998learning}, research exploring how enforced sub-populations (ESP) could be used to evolve neural network controllers capable of solving the forest fire problem \citep{wiering2005evolving}, and a model of multi-agent coordination in fire fighting scenarios \citep{moura2007fighting}.
 
-In this paper we explore how connectionist reinforcement learning can be used to allow an agent to learn how to contain forest fires in a simulated environment by using a bulldozer to cut fire lines. We make use of existing algorithms: Q-Networks \citep{watkins1989learning}, SARSA \citep{rummery1994line} and Dueling Q-Networks \citep{wang2015dueling}. We show that using a simple baseline algorithm to generate demonstration data to be used in experience replay can greatly increase the algorithm's performance. We show that these algorithms, which are based on Q-learning, are able to complete this task successfully in small simulations. We also show that the latter two can be combined into Dueling SARSA which outperforms all, especially in simulations of a larger size where others fail.
+In this paper we explore how connectionist reinforcement learning (RL) can be used to allow an agent to learn how to contain forest fires in a simulated environment by using a bulldozer to cut fire lines. We make use of existing algorithms: $Q$-Learning \citep{watkins1989learning}, SARSA \citep{rummery1994line} and Dueling $Q$-Networks \citep{wang2015dueling}. We show that using a simple baseline algorithm to generate demonstration data to be used in experience replay can greatly increase the algorithm's performance. We show that these algorithms are able to complete this task successfully in small simulations. We also introduce a new RL algorithm, Dueling SARSA, which combines the latter two and outperforms all, especially in simulations of a larger size where others fail.
 
-Research question: Does connectionist Q-Learning or SARSA, both with or without the dueling network architecture, perform better at containing the spread of a simulated forest fire by cutting fire lines in a simulated environment?
+Our research question is: Does connectionist $Q$-Learning or SARSA, both with or without the dueling network architecture, perform better at containing the spread of a simulated forest fire by cutting fire lines in a simulated environment?
 
 \subsection{Reinforcement Learning}\label{sec:reinforcementlearning}
-Reinforcement learning is a machine learning paradigm typically consisting of two elements. The first is the agent, which represents the reinforcement learning algorithm, and the second is the environment, which represents what the algorithm is trying to solve or at least perform quite well at. This is typically a game or in this case, a simulated forest fire that should be contained.
+Reinforcement learning is a machine learning paradigm typically consisting of two elements. The first is the agent, which represents the reinforcement learning algorithm, and the second is the environment, which represents what the algorithm is trying to solve. This is typically a game or in this case, a simulated forest fire that should be contained.
 
-At each discrete time step $t \in \{1,2,3...,T\}$, the environment provides the agent with an observation $s_t$ and a reward $r_t$, which is obtained by passing the state to the reward function. Then, the agent interacts with the environment by choosing an action $a_t$ from a limited set of possible actions $\mathcal{A}=\{1,...,K\}$, and observes the result of that action in $s_{t+1}$ and $r_{t+1}$. This interaction can be modelled by a Markov Decision Process, or MDP, as long as the Markov property holds: The probability of state $s_{t+1}$ only relies on the previous state $s$. This property indeed holds, as the simulation only requires the current state to produce the next state.
+At each discrete time step $t \in \{1,2,3...,T\}$, the environment provides the agent with an observation $s_t$. Then, the agent interacts with the environment by choosing an action $a_t$ from a limited set of possible actions $\mathcal{A}=\{1,...,K\}$, and observes the result of that action in state $s_{t+1}$ and the obtained reward $r_t$. This interaction can be modelled by a Markov Decision Process, or MDP, as long as the Markov property holds: The probability of state $s_{t+1}$ only relies on the previous state $s_t$ and the performed action $a_t$. This property indeed holds, as the simulation only requires the current state and agent action to produce the next state.
 
-The goal of the agent is to select actions in a way that maximizes the cumulative future reward from the current time step $t$, which is defined as 
+The goal of the agent is to select actions in a way that maximizes the cumulative future reward from the current time step $t$, which is defined as:
 
 \begin{equation}\label{eq:cumulative_reward}
 	R_t = \sum_{t'=t}^{T} \gamma^{t'-t} r_{t'},
@@ -28,10 +28,10 @@ The goal of the agent is to select actions in a way that maximizes the cumulativ
 
 where $T$ is the time-step at which the game terminates and $\gamma \in [0,1]$ is a discount factor that determines the trade-off between the importance of immediate and delayed rewards. 
 
-A policy $\pi$ is a mapping of states to actions (or distributions over actions). To determine the optimal policy $\pi^*$, that leads to the highest reward as defined in \eqref{eq:cumulative_reward}, we define the optimal action-value function (also known as $Q$) to be
+A policy $\pi$ is a mapping of states to actions (or distribution over actions). To determine the optimal policy $\pi^*$, that leads to the highest reward as defined in Equation \eqref{eq:cumulative_reward}, we define the optimal action-value function (also known as $Q^*$) to be:
 
 \begin{equation}\label{qfunction}
-	Q^*(s, a) = \max_\pi \sum_{t=1}^T [R_t \vert s_t=s, a_t=a, \pi]
+	Q^*(s, a) = \max_\pi \sum_{t=1}^T [r_t \vert s_t=s, a_t=a, \pi]
 \end{equation}
 
 Because this function obeys the Bellman equation, we can estimate this $Q$-function with iterative updates (TD methods and dynamic programming) using
@@ -42,6 +42,6 @@ Because this function obeys the Bellman equation, we can estimate this $Q$-funct
 and such a value iteration algorithm will eventually converge to the optimal $Q$-function $Q^*$ as $i \rightarrow \infty$. From this function, the optimal policy can easily be derived by simple taking the highest-valued action in each state. In connectionist reinforcement learning, it is common to approximate this function using a neural network
 
 \begin{equation}
-	Q(s, a; \theta) \approx Q^*(s, a),
+	Q(s, a; \theta) \approx Q(s, a),
 \end{equation}
-where $\theta$ are the parameters, or weights, of the Q-Network.
+where $\theta$ are the parameters, or weights, of the $Q$-Network.
