@@ -155,7 +155,7 @@ Because the reward function defined in Section \ref{sec:reward_function} provide
 
 The demonstration data only needs to show the agent how it might be able to collect the containment reward, to this effect we developed a simple algorithm that moves the agent around the fire in a clockwise direction. It does this by choosing randomly from one of two possible actions, unless one of the actions would lead to the death of the agent in which case it chooses the safe action. The two possible actions depend on the position of the agent relative to the fire (This is shown schematically in Figure \ref{fig:demodata}).
 
-The environment is reset upon containment as defined in Equation \eqref{eq:containment}. Only memories (transitions) leading to successful containments are stored. This results in an average of 35 memories per episode, or containment of the fire, on the 10x10 map, and around 48 memories per episode on the 14x14 map. The number of episodes of demonstration data required can be specified.
+The environment is reset upon containment as defined in Equation \eqref{eq:containment}. Only memories (transitions) leading to successful containments are stored. This results in an average of 35 memories per episode, or containments of the fire, on the 10x10 map, and around 48 memories per episode on the 14x14 map. The number of episodes of demonstration data required can be specified.
 
 \begin{figure}[h]
     \centering
