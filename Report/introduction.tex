@@ -18,29 +18,28 @@ Our research question is: Does connectionist $Q$-Learning or SARSA, both with or
 \subsection{Reinforcement Learning}\label{sec:reinforcementlearning}
 Reinforcement learning is a machine learning paradigm typically consisting of two elements. The first is the agent, which represents the reinforcement learning algorithm, and the second is the environment, which represents what the algorithm is trying to solve. This is typically a game or in this case, a simulated forest fire that should be contained.
 
-At each discrete time step $t \in \{1,2,3...,T\}$, the environment provides the agent with an observation $s_t$. Then, the agent interacts with the environment by choosing an action $a_t$ from a limited set of possible actions $\mathcal{A}=\{1,...,K\}$, and observes the result of that action in state $s_{t+1}$ and the obtained reward $r_t$. This interaction can be modelled by a Markov Decision Process, or MDP, as long as the Markov property holds: The probability of state $s_{t+1}$ only relies on the previous state $s_t$ and the performed action $a_t$. This property indeed holds, as the simulation only requires the current state and agent action to produce the next state.
+At each discrete time step $t \in \{1,2,3...,T\}$, the environment provides the agent with an observation $s_t \in \mathcal{S}$. Then, the agent interacts with the environment by choosing an action $a_t$ from a limited set of possible actions $\mathcal{A}=\{1,...,K\}$, and observes the result of that action in state $s_{t+1}$ and the obtained reward $r_t$. This interaction can be modelled by a Markov Decision Process, or MDP, as long as the Markov property holds: The probability of state $s_{t+1}$ only relies on the previous state $s_t$ and the performed action $a_t$. This property indeed holds, as the simulation only requires the current state and agent action to produce the next state.
 
 The goal of the agent is to select actions in a way that maximizes the cumulative future reward from the current time step $t$, which is defined as:
-
 \begin{equation}\label{eq:cumulative_reward}
 	R_t = \sum_{t'=t}^{T} \gamma^{t'-t} r_{t'},
 \end{equation}
-
 where $T$ is the time-step at which the game terminates and $\gamma \in [0,1]$ is a discount factor that determines the trade-off between the importance of immediate and delayed rewards. 
 
 A policy $\pi$ is a mapping of states to actions (or distribution over actions). To determine the optimal policy $\pi^*$, that leads to the highest reward as defined in Equation \eqref{eq:cumulative_reward}, we define the optimal action-value function (also known as $Q^*$) to be:
-
 \begin{equation}\label{qfunction}
 	Q^*(s, a) = \max_\pi \sum_{t=1}^T [r_t \vert s_t=s, a_t=a, \pi]
 \end{equation}
 
-Because this function obeys the Bellman equation, we can estimate this $Q$-function with iterative updates (TD methods and dynamic programming) using
-
+We can estimate this $Q$-function using temporal difference and dynamic programming methods through iterative updates to the Bellman equation
 \begin{equation}
-	Q_{i+1}(s, a) = \sum_{s'} [r + \gamma \max_{a'} Q_i(s', a') \vert s, a],
+	\begin{array}{c}
+		Q_{i+1}(s, a) = \sum_{s'} P(s' \vert s, a) [R(s,a,s') + \\
+		\gamma \max_{a'} Q_i(s', a')],
+	\end{array}
 \end{equation}
-and such a value iteration algorithm will eventually converge to the optimal $Q$-function $Q^*$ as $i \rightarrow \infty$. From this function, the optimal policy can easily be derived by simple taking the highest-valued action in each state. In connectionist reinforcement learning, it is common to approximate this function using a neural network
-
+where $P(s'\vert s,a)$ is the probability of observing state $s'$ after executing action $a$ in state $s$, and $R(s,a,s')$ is the reward obtained after executing action $a$ in state $s$ and ending up in state $s'$.
+Such a value iteration algorithm will eventually converge to the optimal $Q$-function $Q^*$ as $i \rightarrow \infty$. From this function, the optimal policy can easily be derived by simple taking the highest-valued action in each state. In connectionist reinforcement learning, it is common to approximate this function using a neural network
 \begin{equation}
 	Q(s, a; \theta) \approx Q(s, a),
 \end{equation}
