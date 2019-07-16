@@ -146,7 +146,7 @@ One limitation of the $Q$-Network approach is that it is not able to estimate th
 
 Here, $\alpha$ and $\beta$ denote the weights of the two fully connected layers and $c$ the number of actions. This equation automatically prevents the layer for the state value from estimating anything related to the action advantages, since the sum of the advantages is kept at zero. The equation results in the $Q$-values which can be used in the same way as the single stream Q-values. All learning techniques and code can be recycled, and the target network and experience replay is also used. Given the results from the original paper, this modification is expected to boost the maximum performance and especially the speed of learning. 
 
-\subsubsection{Dueling SARSA}\label{sec:duelingsarsa})
+\subsubsection{Dueling SARSA}\label{sec:duelingsarsa}
 As well as combining dueling networks with $Q$-Learning, we also combine on-policy SARSA with the dueling network architecture to introduce a new RL algorithm, Dueling SARSA. We expect this algorithm to benefit from both modifications for a twice improved performance and both increased learning speed and learning stability. Just as the other three algorithms, Dueling SARSA also uses the target network and experience replay.
 
 
