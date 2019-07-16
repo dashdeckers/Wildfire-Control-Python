@@ -135,7 +135,7 @@ This should lead to an increase in learning stability due to one less element of
 
 
 \subsubsection{Dueling Networks}\label{sec:dueling}
-One limitation of the $Q$-Network approach is that it is not able to estimate the value of a state and the action separately \citep{wang2015dueling}. This ability can be very useful, since often in states an action has no relevant consequence. The Dueling Network Architecture achieves this by having two streams each predicting different things, instead of one stream predicting both. It is implemented by configuring two hidden layers in parallel, replacing the single hidden layer that is standard in the Q-Network. One of these two layers will estimate the state value $V$, while the other layer will estimate the action advantages $A$ for all possible actions. The two are merged together according to Equation \eqref{eq:dueling}. This equation differs from the original paper, since here we do not use any convolutional layers.
+One limitation of the $Q$-Network approach is that it is not able to estimate the value of a state and the action separately \citep{wang2015dueling}. This ability can be very useful, since often in states an action has no relevant consequence. The dueling network architecture achieves this by having two streams each predicting different things, instead of one stream predicting both. It is implemented by configuring two hidden layers in parallel, replacing the single hidden layer that is standard in the Q-Network. One of these two layers will estimate the state value $V$, while the other layer will estimate the action advantages $A$ for all possible actions. The two are merged together according to Equation \eqref{eq:dueling}. This equation differs from the original paper, since here we do not use any convolutional layers.
 
 \begin{equation} \label{eq:dueling}
   \begin{array}{l}
@@ -144,9 +144,10 @@ One limitation of the $Q$-Network approach is that it is not able to estimate th
   \end{array}
 \end{equation}
 
-Here, $\alpha$ and $\beta$ denote the weights of the two fully connected layers and $c$ the number of actions. This equation automatically prevents the layer for the state value from estimating anything related to the action advantages, since the sum of the advantages is kept at zero. The equation results in the $Q$-values which can be used in the same way as the single stream Q-values. All learning techniques and code can be recycled. Given the results from the original paper, this modification is expected to boost the maximum performance and especially the speed of learning. 
+Here, $\alpha$ and $\beta$ denote the weights of the two fully connected layers and $c$ the number of actions. This equation automatically prevents the layer for the state value from estimating anything related to the action advantages, since the sum of the advantages is kept at zero. The equation results in the $Q$-values which can be used in the same way as the single stream Q-values. All learning techniques and code can be recycled, and the target network and experience replay is also used. Given the results from the original paper, this modification is expected to boost the maximum performance and especially the speed of learning. 
 
-Futhermore, we introduce a new RL algorithm, Dueling SARSA, that combines both the dueling network architecture and the on-policy SARSA algorithm. This algorithm, as well as the other three algorithms that we investigate, also use the target network and experience replay.
+\subsubsection{Dueling SARSA}\label{sec:duelingsarsa})
+As well as combining dueling networks with $Q$-Learning, we also combine on-policy SARSA with the dueling network architecture to introduce a new RL algorithm, Dueling SARSA. We expect this algorithm to benefit from both modifications for a twice improved performance and both increased learning speed and learning stability. Just as the other three algorithms, Dueling SARSA also uses the target network and experience replay.
 
 
 \subsubsection{Demonstration Data}\label{sec:demo_data}
