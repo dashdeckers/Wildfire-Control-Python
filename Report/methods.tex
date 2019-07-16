@@ -51,11 +51,11 @@ The state of the environment, as it is visible to the agent, consists of 3 matri
 \begin{figure}[h]
     \centering
     \includegraphics[width=1\linewidth]{img/Vision_Grid.png}
-    \caption{A vision grid representation of an example state. Each layer shows an important aspect of the world: The location of the agent, the fire and of inflammable cells.}
+    \caption{An example of the state representation. Each layer shows an important aspect of the world: The location of the agent, the fire and of inflammable cells.}
     \label{fig:visiongrid}
 \end{figure}
 
-This vision grid approach can speed up the learning process as well as increase performance \citep{knegt2018opponent}. Indeed it had a noticeable effect on the performance and learning speed of our implementation compared to a single matrix representing the gray-scaled map as input, likely because the agent can more easily differentiate between important attributes due to the boolean domain, and because only the relevant information is presented. Furthermore, the agent can now see whether the cell it is occupying is already dug or not.
+This state representation can speed up the learning process as well as increase performance \citep{knegt2018opponent}. Indeed it had a noticeable effect on the performance and learning speed of our implementation compared to a single matrix representing the gray-scaled map as input, likely because the agent can more easily differentiate between important attributes due to the boolean domain, and because only the relevant information is presented. Furthermore, the agent can now see whether the cell it is occupying is already dug or not.
 
 
 \subsection{RL Algorithm}\label{sec:agent}
@@ -77,7 +77,7 @@ First we define the neural network architecture\footnote{The source code is avai
 \end{figure}
 Instead of training the network on incoming experiences $e_t=(s_t,a_t,r_t,s_{t+1})$ at each time step $t$ directly, the experiences can be stored in a memory buffer $B_t=\{e_1,...e_t\}$ and the network can be trained on a mini-batch of memories randomly sampled from this buffer $(s,a,r,s') \sim U(B)$ (see Figure \ref{fig:expreplay}). The buffer $B$ allows for $M$ experiences to be stored until it is full, at which point the oldest memories will be discarded to make room for new ones.
 
-This helps because neural networks assume that each training sample is identically and independently distributed from the population, which is in this case the environment that the algorithm is set up to approximate, and training directly on incoming experiences violates this assumption in two regards.
+This helps because neural networks assume that each training sample is identically and independently distributed from the population, which is in this case the set of $Q$-values that the network is set up to approximate, and training directly on incoming experiences violates this assumption in two regards.
 
 For one, consecutive incoming experiences are obviously highly correlated because the environment does not radically change after any action (unless it is a terminal state). This means that any experience differs from the previous experience only to the extent to which the environment can change in one update step from a single action from the agent.
 
