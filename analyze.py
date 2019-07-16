@@ -371,27 +371,27 @@ def main():
         average_start, average_stop = (7500, 10000)
         # Baseline
         baseline_final_avg = int(mean(baseline_avg[average_start:average_stop]))
-        baseline_stderr = round(stats.sem(baseline_avg[average_start:average_stop]), 1)
+        baseline_stderr = int(mean(baseline_std[average_start:average_stop]))
         baseline_best = int(max(baseline_avg[average_start:average_stop]))
         print(f"Base:\tAvg: {baseline_final_avg}\tStderr: {baseline_stderr}\tBest: {baseline_best}")
         # DQN
         first_final_avg = int(mean(first_avg[average_start:average_stop]))
-        first_stderr = round(stats.sem(first_avg[average_start:average_stop]), 1)
+        first_stderr = int(mean(first_std[average_start:average_stop]))
         first_best = int(max(first_avg[average_start:average_stop]))
         print(f"DQN:\tAvg: {first_final_avg}\tStderr: {first_stderr}\tBest: {first_best}")
         # SARSA
         second_final_avg = int(mean(second_avg[average_start:average_stop]))
-        second_stderr = round(stats.sem(second_avg[average_start:average_stop]), 1)
+        second_stderr = int(mean(second_std[average_start:average_stop]))
         second_best = int(max(second_avg[average_start:average_stop]))
         print(f"SARSA:\tAvg: {second_final_avg}\tStderr: {second_stderr}\tBest: {second_best}")
         # DDQN
         third_final_avg = int(mean(third_avg[average_start:average_stop]))
-        third_stderr = round(stats.sem(third_avg[average_start:average_stop]), 1)
+        third_stderr = int(mean(third_std[average_start:average_stop]))
         third_best = int(max(third_avg[average_start:average_stop]))
         print(f"DDQN:\tAvg: {third_final_avg}\tStderr: {third_stderr}\tBest: {third_best}")
         # BOTH
         fourth_final_avg = int(mean(fourth_avg[average_start:average_stop]))
-        fourth_stderr = round(stats.sem(fourth_avg[average_start:average_stop]), 1)
+        fourth_stderr = int(mean(fourth_std[average_start:average_stop]))
         fourth_best = int(max(fourth_avg[average_start:average_stop]))
         print(f"BOTH:\tAvg: {fourth_final_avg}\tStderr: {fourth_stderr}\tBest: {fourth_best}")
 
