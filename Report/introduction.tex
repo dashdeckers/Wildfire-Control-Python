@@ -33,7 +33,7 @@ A policy $\pi$ is a mapping of states to actions (or distribution over actions).
 	Q^*(s, a) = \max_\pi \sum_{t=1}^T [r_t \vert s_t=s, a_t=a, \pi]
 \end{equation}
 
-We can estimate this $Q$-function using temporal difference and dynamic programming methods through iterative updates to the Bellman equation
+We can compute this $Q$-function using dynamic programming methods through iterative updates to the Bellman equation:
 \begin{equation}
 	\begin{array}{c}
 		Q_{i+1}(s, a) = \sum_{s'} P(s' \vert s, a) [R(s,a,s') + \\
@@ -41,7 +41,7 @@ We can estimate this $Q$-function using temporal difference and dynamic programm
 	\end{array}
 \end{equation}
 where $P(s'\vert s,a)$ is the probability of observing state $s'$ after executing action $a$ in state $s$, and $R(s,a,s')$ is the reward obtained after executing action $a$ in state $s$ and ending up in state $s'$.
-Such a value iteration algorithm will eventually converge to the optimal $Q$-function $Q^*$ as $i \rightarrow \infty$. From this function, the optimal policy can easily be derived by simple taking the highest-valued action in each state. In connectionist reinforcement learning, it is common to approximate this function using a neural network
+Such a value iteration algorithm will eventually converge to the optimal $Q$-function $Q^*$ as $i \rightarrow \infty$. From this function, the optimal policy can easily be derived by simple taking the highest-valued action in each state. In practice, the transition function is not known and there can be a huge number of states, and therefore dynamic programming cannot be used. In this case, connectionist reinforcement learning can be used. In connectionist reinforcement learning, it is common to approximate this function using a neural network;
 \begin{equation}
 	Q(s, a; \theta) \approx Q(s, a),
 \end{equation}
