@@ -7,8 +7,14 @@ Follow these instructions with python 3.6 in a virtual environment!
 ## Install dependencies:
 `pip install -r requirements.txt`
 
+## Create A* files:
+`make -C pyastar/`
+
 ## Let the algorithm learn and then let it play:
 `python main.py -r -m {amount_of_memories} -e {amount_of_episodes} -t {DQN/SARSA/DDQN/BOTH} -n {name}`
 
-## Play as the agent
+## Play as the agent:
 `python main.py -t Human`
+
+## For more information:
+`python main.py -h`

@@ -1,7 +1,7 @@
 import math
 import random as r
 import numpy as np
-import pyastar
+from pyastar import pyastar
 from collections import deque
 
 from .utility import (
